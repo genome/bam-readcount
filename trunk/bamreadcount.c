@@ -13,13 +13,14 @@ KHASH_MAP_INIT_STR(r2l, str_p)
 
 //Struct to store info to be passed around    
 typedef struct {
-    faidx_t *fai;   //index into fasta file
-    int tid;        //reference id 
-    char *ref;      //reference sequence
-    int min_mapq;   //minimum mapping qualitiy to use
-    int beg,end;    //start and stop of region
-    int len;        //length of currently loaded reference sequence
-    samfile_t *in;  //bam file 
+    faidx_t *fai;       //index into fasta file
+    int tid;            //reference id 
+    char *ref;          //reference sequence
+    int min_mapq;       //minimum mapping qualitiy to use
+    int beg,end;        //start and stop of region
+    int len;            //length of currently loaded reference sequence
+    samfile_t *in;      //bam file 
+    int distribution;   //whether or not to display all mapping qualities
 } pileup_data_t;
 
 // callback for bam_fetch()
@@ -41,18 +42,27 @@ unsigned char bam_nt16_canonical_table[16] = { 0,1,2,5,
 // callback for bam_plbuf_init()
 static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *pl, void *data)
 {
-	pileup_data_t *tmp = (pileup_data_t*)data;
+    pileup_data_t *tmp = (pileup_data_t*)data;
 
-    //set up data structures to count bases
-    unsigned char possible_calls = (unsigned char) strlen(bam_canonical_nt_table);
-    unsigned int *read_counts = calloc(possible_calls,sizeof(unsigned int));
-    unsigned int *sum_base_qualities = calloc(possible_calls,sizeof(unsigned int));  
-    unsigned int *sum_map_qualities = calloc(possible_calls,sizeof(unsigned int));
-    
-    int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold
-	if ((int)pos >= tmp->beg && (int)pos < tmp->end) {
-        //loop over the bases
+    if ((int)pos >= tmp->beg && (int)pos < tmp->end) {
+
+        //set up data structures to count bases
+        unsigned char possible_calls = (unsigned char) strlen(bam_canonical_nt_table);
+        unsigned int *read_counts = calloc(possible_calls,sizeof(unsigned int));
+        unsigned int *sum_base_qualities = calloc(possible_calls,sizeof(unsigned int));  
+        unsigned int *sum_map_qualities = calloc(possible_calls,sizeof(unsigned int));
+        unsigned int **mapping_qualities = calloc(possible_calls, sizeof(unsigned int*));
+        unsigned int *num_mapping_qualities = calloc(possible_calls, sizeof(unsigned int));
+
+        int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold
+        
+        //allocate enough mem to store relevant mapping qualities
         int i;
+        for(i = 0; i < possible_calls; i++) {
+            mapping_qualities[i] = calloc(n, sizeof(unsigned int));
+        }
+        
+        //loop over the bases, recycling i here. 
         for(i = 0; i < n; ++i) {
             const bam_pileup1_t *base = pl + i; //get base index
             if(!base->is_del && base->b->core.qual >= tmp->min_mapq) {
@@ -61,35 +71,57 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 read_counts[c] ++; //calloc should 0 out the mem
                 sum_base_qualities[c] += bam1_qual(base->b)[base->qpos];
                 sum_map_qualities[c] += base->b->core.qual; 
+                mapping_qualities[c][num_mapping_qualities[c]++] = base->b->core.qual;  //using post-increment here to alter stored number of mapping_qualities while using the previous number as the index to store. Tricky, sort of.
+                
             }
         }
+        
         //print out information on position and reference base and depth
         printf("%s\t%d\t%c\t%d", tmp->in->header->target_name[tid], pos + 1, (tmp->ref && (int)pos < tmp->len) ? tmp->ref[pos] : 'N', mapq_n );
         //print out the base information
         //Note that if there is 0 depth then that averages are reported as 0
         unsigned char j;
         for(j = 0; j < possible_calls; ++j) { 
-            printf("\t%c:%d:%0.02f:%0.02f", bam_canonical_nt_table[j], read_counts[j], read_counts[j] ? (float)sum_map_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_base_qualities[j]/read_counts[j] : 0);
+            if(tmp->distribution) {
+                printf("\t%c:%d:", bam_canonical_nt_table[j], read_counts[j]);
+                for(i = 0; i < num_mapping_qualities[j]; i++) {
+                    if(i != 0) {
+                        printf(",");
+                    }
+                    printf("%d",mapping_qualities[j][i]);
+                }
+            }
+            else {
+                printf("\t%c:%d:%0.02f:%0.02f", bam_canonical_nt_table[j], read_counts[j], read_counts[j] ? (float)sum_map_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_base_qualities[j]/read_counts[j] : 0);
+            }
         }
         printf("\n");
+        free(read_counts);
+        free(sum_base_qualities);
+        free(sum_map_qualities);
+        //recycling i again
+        for(i = 0; i < possible_calls; i++) {
+            free(mapping_qualities[i]);
+        }
+        free(mapping_qualities);
+        free(num_mapping_qualities);
     }
-    free(read_counts);
-    free(sum_base_qualities);
-    free(sum_map_qualities);
+    
 	return 0;
 }
 
 int main(int argc, char *argv[])
 {
-    int c;
+    int c,distribution = 0;
 	char *fn_fa = 0, *fn_pos = 0;
 	pileup_data_t *d = (pileup_data_t*)calloc(1, sizeof(pileup_data_t));
 	d->tid = -1, d->min_mapq = 0;
-	while ((c = getopt(argc, argv, "q:f:l:")) >= 0) {
+	while ((c = getopt(argc, argv, "q:f:l:d")) >= 0) {
 		switch (c) {
 		case 'q': d->min_mapq = atoi(optarg); break;
 		case 'l': fn_pos = strdup(optarg); break;
 		case 'f': fn_fa = strdup(optarg); break;
+        case 'd': distribution = 1; break;          
 		default: fprintf(stderr, "Unrecognizd option '-%c'.\n", c); return 1;
 		}
 	}
@@ -98,7 +130,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Usage: bam-readcount <bam_file> [region]\n");
         fprintf(stderr, "        -q INT    filtering reads with mapping quality less than INT [%d]\n", d->min_mapq);
         fprintf(stderr, "        -f FILE   reference sequence in the FASTA format\n");
-        fprintf(stderr, "        -l FILE   list of regions to report readcounts within\n\n");
+        fprintf(stderr, "        -l FILE   list of regions to report readcounts within\n");
+        fprintf(stderr, "        -d        report the mapping qualities as a comma separated list\n\n");
         fprintf(stderr, "This program reports readcounts for each base at each position requested.\n");
         fprintf(stderr, "It also reports the average base quality of these bases and mapping quality of\n");
         fprintf(stderr, "the reads containing each base.\n\nThe format is as follows:\nchr\tposition\treference_base\tbase:count:avg_basequality:avg_mapping_quality\t...\n");
@@ -108,6 +141,7 @@ int main(int argc, char *argv[])
 	}
 	if (fn_fa) d->fai = fai_load(fn_fa);
 	d->beg = 0; d->end = 0x7fffffff;
+    d->distribution = distribution;
 	d->in = samopen(argv[optind], "rb", 0);
 	if (d->in == 0) {
 		fprintf(stderr, "Fail to open BAM file %s\n", argv[optind]);
