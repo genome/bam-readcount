@@ -17,6 +17,7 @@ typedef struct {
     int tid;            //reference id 
     char *ref;          //reference sequence
     int min_mapq;       //minimum mapping qualitiy to use
+    int min_bq;       //minimum mapping qualitiy to use
     int beg,end;        //start and stop of region
     int len;            //length of currently loaded reference sequence
     samfile_t *in;      //bam file 
@@ -51,6 +52,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         unsigned int *read_counts = calloc(possible_calls,sizeof(unsigned int));
         unsigned int *sum_base_qualities = calloc(possible_calls,sizeof(unsigned int));  
         unsigned int *sum_map_qualities = calloc(possible_calls,sizeof(unsigned int));
+        unsigned int *sum_single_ended_map_qualities = calloc(possible_calls,sizeof(unsigned int));
         unsigned int **mapping_qualities = calloc(possible_calls, sizeof(unsigned int*));
         unsigned int *num_mapping_qualities = calloc(possible_calls, sizeof(unsigned int));
 
@@ -65,12 +67,28 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         //loop over the bases, recycling i here. 
         for(i = 0; i < n; ++i) {
             const bam_pileup1_t *base = pl + i; //get base index
-            if(!base->is_del && base->b->core.qual >= tmp->min_mapq) {
+            if(!base->is_del && base->b->core.qual >= tmp->min_mapq && bam1_qual(base->b)[base->qpos] >= tmp->min_bq) {
                 mapq_n++;
                 int c = (int) bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos)];   //convert to index
                 read_counts[c] ++; //calloc should 0 out the mem
                 sum_base_qualities[c] += bam1_qual(base->b)[base->qpos];
                 sum_map_qualities[c] += base->b->core.qual; 
+
+                //grab the single ended mapping qualities for testing
+                if(base->b->core.flag & BAM_FPROPER_PAIR) {
+                    uint8_t *sm_tag_ptr = bam_aux_get(base->b, "SM");
+                    if(sm_tag_ptr) {
+                        sum_single_ended_map_qualities[c] += bam_aux2i(sm_tag_ptr);
+                    }
+                    else {
+                        fprintf(stderr,"Couldn't grab single-end mapping quality for read %s. Check to see if SM tag is in BAM\n",bam1_qname(base->b));
+                    }
+                }
+                else {
+                    //just add in the mapping quality as the single ended quality
+                    sum_single_ended_map_qualities[c] += base->b->core.qual;
+                }
+                
                 mapping_qualities[c][num_mapping_qualities[c]++] = base->b->core.qual;  //using post-increment here to alter stored number of mapping_qualities while using the previous number as the index to store. Tricky, sort of.
                 
             }
@@ -92,13 +110,14 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 }
             }
             else {
-                printf("\t%c:%d:%0.02f:%0.02f", bam_canonical_nt_table[j], read_counts[j], read_counts[j] ? (float)sum_map_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_base_qualities[j]/read_counts[j] : 0);
+                printf("\t%c:%d:%0.02f:%0.02f:%0.02f", bam_canonical_nt_table[j], read_counts[j], read_counts[j] ? (float)sum_map_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_base_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_single_ended_map_qualities[j]/read_counts[j] : 0);
             }
         }
         printf("\n");
         free(read_counts);
         free(sum_base_qualities);
         free(sum_map_qualities);
+        free(sum_single_ended_map_qualities);
         //recycling i again
         for(i = 0; i < possible_calls; i++) {
             free(mapping_qualities[i]);
@@ -115,10 +134,11 @@ int main(int argc, char *argv[])
     int c,distribution = 0;
 	char *fn_fa = 0, *fn_pos = 0;
 	pileup_data_t *d = (pileup_data_t*)calloc(1, sizeof(pileup_data_t));
-	d->tid = -1, d->min_mapq = 0;
-	while ((c = getopt(argc, argv, "q:f:l:d")) >= 0) {
+	d->tid = -1, d->min_mapq = 0, d->min_bq = 0;
+	while ((c = getopt(argc, argv, "q:f:l:db:")) >= 0) {
 		switch (c) {
 		case 'q': d->min_mapq = atoi(optarg); break;
+		case 'b': d->min_bq = atoi(optarg); break;
 		case 'l': fn_pos = strdup(optarg); break;
 		case 'f': fn_fa = strdup(optarg); break;
         case 'd': distribution = 1; break;          
@@ -129,12 +149,13 @@ int main(int argc, char *argv[])
         fprintf(stderr, "\n");
         fprintf(stderr, "Usage: bam-readcount <bam_file> [region]\n");
         fprintf(stderr, "        -q INT    filtering reads with mapping quality less than INT [%d]\n", d->min_mapq);
+        fprintf(stderr, "        -b INT    don't include reads where the base quality is less than INT [%d]\n", d->min_bq);
         fprintf(stderr, "        -f FILE   reference sequence in the FASTA format\n");
         fprintf(stderr, "        -l FILE   list of regions to report readcounts within\n");
         fprintf(stderr, "        -d        report the mapping qualities as a comma separated list\n\n");
         fprintf(stderr, "This program reports readcounts for each base at each position requested.\n");
-        fprintf(stderr, "It also reports the average base quality of these bases and mapping quality of\n");
-        fprintf(stderr, "the reads containing each base.\n\nThe format is as follows:\nchr\tposition\treference_base\tbase:count:avg_basequality:avg_mapping_quality\t...\n");
+        fprintf(stderr, "It also reports the average base quality of these bases and mapping qualities of\n");
+        fprintf(stderr, "the reads containing each base.\n\nThe format is as follows:\nchr\tposition\treference_base\tbase:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality\t...\n");
                 
         fprintf(stderr, "\n");
 		return 1;
