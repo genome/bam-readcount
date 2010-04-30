@@ -55,6 +55,9 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         unsigned int *sum_single_ended_map_qualities = calloc(possible_calls,sizeof(unsigned int));
         unsigned int **mapping_qualities = calloc(possible_calls, sizeof(unsigned int*));
         unsigned int *num_mapping_qualities = calloc(possible_calls, sizeof(unsigned int));
+        unsigned int *num_plus_strand = calloc(possible_calls, sizeof(unsigned int));
+        unsigned int *num_minus_strand = calloc(possible_calls, sizeof(unsigned int));
+        float *sum_base_location = calloc(possible_calls, sizeof(float));
 
         int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold
         
@@ -73,6 +76,23 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 read_counts[c] ++; //calloc should 0 out the mem
                 sum_base_qualities[c] += bam1_qual(base->b)[base->qpos];
                 sum_map_qualities[c] += base->b->core.qual; 
+                
+                //add in strand info
+                if(base->b->core.flag & BAM_FREVERSE) {
+                    //mapped to the reverse strand
+                    num_minus_strand[c]++;
+
+                    //calculate position on read as percent
+                    sum_base_location[c] += (float)(base->b->core.l_qseq - base->qpos)/(float) base->b->core.l_qseq;
+                }
+                else {
+                    //must be mapped to the plus strand
+                    num_plus_strand[c]++;
+
+                    //calculate position on read as percent
+                    sum_base_location[c] += (base->qpos + 1.0)/(float) base->b->core.l_qseq;
+                }
+                
 
                 //grab the single ended mapping qualities for testing
                 if(base->b->core.flag & BAM_FPROPER_PAIR) {
@@ -110,7 +130,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 }
             }
             else {
-                printf("\t%c:%d:%0.02f:%0.02f:%0.02f", bam_canonical_nt_table[j], read_counts[j], read_counts[j] ? (float)sum_map_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_base_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_single_ended_map_qualities[j]/read_counts[j] : 0);
+                printf("\t%c:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f", bam_canonical_nt_table[j], read_counts[j], read_counts[j] ? (float)sum_map_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_base_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_single_ended_map_qualities[j]/read_counts[j] : 0, num_plus_strand[j], num_minus_strand[j], read_counts[j] ? sum_base_location[j]/read_counts[j] : 0);
             }
         }
         printf("\n");
@@ -155,7 +175,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "        -d        report the mapping qualities as a comma separated list\n\n");
         fprintf(stderr, "This program reports readcounts for each base at each position requested.\n");
         fprintf(stderr, "It also reports the average base quality of these bases and mapping qualities of\n");
-        fprintf(stderr, "the reads containing each base.\n\nThe format is as follows:\nchr\tposition\treference_base\tbase:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality\t...\n");
+        fprintf(stderr, "the reads containing each base.\n\nThe format is as follows:\nchr\tposition\treference_base\tbase:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction\t...\n");
                 
         fprintf(stderr, "\n");
 		return 1;
