@@ -42,7 +42,7 @@ sub untagged_version {
 sub parse_rev {
     my $rev = shift;
 
-    my $exe_suffix = "-$rev";
+    my $exe_suffix = "-unstable";
     my $full_version = $rev;
     my $commit = $rev;
     my $dirty = is_dirty;
@@ -53,7 +53,6 @@ sub parse_rev {
         $commit = $5;
     }
     if ($dirty) {
-        $exe_suffix .= "-dirty";
         $full_version .= "-dirty";
         $commit .= "-dirty";
     }
