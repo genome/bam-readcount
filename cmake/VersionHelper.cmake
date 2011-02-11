@@ -1,5 +1,5 @@
 execute_process(
-    COMMAND ${CMAKE_SOURCE_DIR}/cmake/gitrev.pl
+    COMMAND ${CMAKE_SOURCE_DIR}/build-common/bin/gitrev.pl
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     OUTPUT_VARIABLE VERSION_DATA
     ERROR_VARIABLE VERSION_ERR
