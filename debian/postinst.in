@@ -16,7 +16,7 @@
 # the debian-policy package
 
 
-EXECUTABLES="snvcmp joinx"
+EXECUTABLES="bam-readcount"
 PRIORITY=@DEFAULT_ETC_ALTERNATIVES_PRIORITY@
 
 set -e

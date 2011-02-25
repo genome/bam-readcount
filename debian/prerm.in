@@ -15,7 +15,7 @@
 # the debian-policy package
 
 
-EXECUTABLES="snvcmp joinx"
+EXECUTABLES="bam-readcount"
 
 set -e
 
