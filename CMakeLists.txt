@@ -9,7 +9,7 @@ include(VersionHelper)
 include(ProjectHelper)
 
 if (CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_C_FLAGS "-std=c99 -Wall")
+    set(CMAKE_C_FLAGS "-D_GNU_SOURCE -Wall")
 endif ()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
