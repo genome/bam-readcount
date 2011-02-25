@@ -1,0 +1,3 @@
+[submodule "build-common"]
+	path = build-common
+	url = ssh://git/srv/git/build-common.git
