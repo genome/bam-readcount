@@ -31,18 +31,18 @@ typedef struct {
 KHASH_MAP_INIT_STR(indels, indel_stat_t)
 
 
-    //Struct to store info to be passed around    
-    typedef struct {
-        faidx_t *fai;       //index into fasta file
-        int tid;            //reference id 
-        char *ref;          //reference sequence
-        int min_mapq;       //minimum mapping qualitiy to use
-        int min_bq;       //minimum mapping qualitiy to use
-        int beg,end;        //start and stop of region
-        int len;            //length of currently loaded reference sequence
-        samfile_t *in;      //bam file 
-        int distribution;   //whether or not to display all mapping qualities
-    } pileup_data_t;
+//Struct to store info to be passed around    
+typedef struct {
+    faidx_t *fai;       //index into fasta file
+    int tid;            //reference id 
+    char *ref;          //reference sequence
+    int min_mapq;       //minimum mapping qualitiy to use
+    int min_bq;       //minimum mapping qualitiy to use
+    int beg,end;        //start and stop of region
+    int len;            //length of currently loaded reference sequence
+    samfile_t *in;      //bam file 
+    int distribution;   //whether or not to display all mapping qualities
+} pileup_data_t;
 
 //struct to store reference for passing to fetch func
 typedef struct { 
@@ -51,8 +51,7 @@ typedef struct {
 } fetch_data_t;
 
 // callback for bam_fetch()
-static int fetch_func(const bam1_t *b, void *data)
-{
+static int fetch_func(const bam1_t *b, void *data) {
     //retrieve reference
     fetch_data_t* fetch_data = (fetch_data_t*) data;
     char *ref = *(fetch_data->ref_pointer);
@@ -81,17 +80,13 @@ static int fetch_func(const bam1_t *b, void *data)
                 if(read_base != ref_base && ref_base != 15 && read_base != 0) {
                     //mismatch, so store the qualities
                     sum_of_mismatch_qualities += bam1_qual(b)[current_base_position]; 
-
                 }
             }
             if(j < op_length) break;
             reference_position += op_length;
             read_position += op_length;
-
         } else if(op == BAM_CDEL || op == BAM_CREF_SKIP) {  //ignoring indels
             reference_position += op_length;
-
-
         } else if(op ==BAM_CINS) { //ignoring indels
             read_position += op_length;
         }
@@ -116,7 +111,6 @@ static int fetch_func(const bam1_t *b, void *data)
     bam_aux_append(b, "ZL",'i',4, (uint8_t*) &left_clip); 
 
     //inefficiently scan again to determine the distance in leftmost read coordinates to the first Q2 base
-    //TODO Try doing 3' end instead. This would allow clipping, Q2 and unclipped non-Q2 reads equally?
     int three_prime_index = -1;
     int q2_pos = -1;
     int k;
@@ -586,7 +580,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "        -d        report the mapping qualities as a comma separated list\n\n");
         fprintf(stderr, "This program reports readcounts for each base at each position requested.\n");
         fprintf(stderr, "It also reports the average base quality of these bases and mapping qualities of\n");
-        fprintf(stderr, "the reads containing each base.\n\nThe format is as follows:\nchr\tposition\treference_base\tbase:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction\tavg_sum_mismatch_qualitiest\tnum_q2_containing_reads\tavg_distance_to_q2_start_in_q2_reads\tavg_clipped_length\tavg_distance_to_effective_3p_end...\n");
+        fprintf(stderr, "the reads containing each base.\n\nThe format is as follows:\nchr\tposition\treference_base\tbase:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualitiest:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end...\n");
 
         fprintf(stderr, "\n");
         return 1;
