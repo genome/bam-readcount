@@ -59,7 +59,7 @@ static int fetch_func(const bam1_t *b, void *data) {
     //calculate single nucleotide mismatches and sum their qualities 
     uint8_t *seq = bam1_seq(b);
     uint32_t *cigar = bam1_cigar(b);
-    bam1_core_t *core = &(b->core);
+    const bam1_core_t *core = &(b->core);
     int i, reference_position, read_position;
     uint32_t sum_of_mismatch_qualities=0;
     int left_clip = 0;
@@ -106,9 +106,9 @@ static int fetch_func(const bam1_t *b, void *data) {
         }
     }
     //store the value on the read, we're assuming it is always absent. This assumption may fail. Future proof if this idea has value
-    bam_aux_append(b, "UQ",'i',4, (uint8_t*) &sum_of_mismatch_qualities); 
-    bam_aux_append(b, "ZC",'i',4, (uint8_t*) &clipped_length); 
-    bam_aux_append(b, "ZL",'i',4, (uint8_t*) &left_clip); 
+    bam_aux_append((bam1_t *) b, "UQ",'i',4, (uint8_t*) &sum_of_mismatch_qualities); 
+    bam_aux_append((bam1_t *) b, "ZC",'i',4, (uint8_t*) &clipped_length); 
+    bam_aux_append((bam1_t *) b, "ZL",'i',4, (uint8_t*) &left_clip); 
 
     //inefficiently scan again to determine the distance in leftmost read coordinates to the first Q2 base
     int three_prime_index = -1;
@@ -149,10 +149,10 @@ static int fetch_func(const bam1_t *b, void *data) {
         }
     }
 
-    bam_aux_append(b, "ZQ",'i',4, (uint8_t*) &q2_pos); 
+    bam_aux_append((bam1_t *)b, "ZQ",'i',4, (uint8_t*) &q2_pos); 
 
     //STORE Effective 3' end
-    bam_aux_append(b, "Z3",'i',4, (uint8_t*) &three_prime_index); 
+    bam_aux_append((bam1_t *)b, "Z3",'i',4, (uint8_t*) &three_prime_index); 
 
     //This just pushes all reads into the pileup buffer
     bam_plbuf_t *buf = fetch_data->pileup_buffer;
