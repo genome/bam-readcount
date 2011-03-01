@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(joinx_app)
+project(bam-readcount)
 
 set(SOURCES bamreadcount.c)
 
