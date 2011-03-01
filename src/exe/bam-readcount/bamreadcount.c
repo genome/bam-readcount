@@ -212,6 +212,10 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             const bam_pileup1_t *base = pl + i; //get base index
             if(!base->is_del && base->b->core.qual >= tmp->min_mapq && bam1_qual(base->b)[base->qpos] >= tmp->min_bq) {
                 mapq_n++;
+
+                //determine if we have an indel or not
+                indel_stat_t dummy; //rather than do lots of test just do the indel math on this thing
+                indel_stat_t *indel_stat = &dummy;
                 if(base->indel != 0 && tmp->ref) {
                     //indel containing read exists here
                     //will need to
@@ -268,124 +272,29 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                         //found the site and we can free the allele string
                         free(allele);
                     }
-                    indel_stat_t *indel_stat = &(kh_value(hash, indel));
-                    indel_stat->read_count++;
-                    indel_stat->sum_map_qualities += base->b->core.qual;
-                    if(base->b->core.flag & BAM_FREVERSE) {
-                        //mapped to the reverse strand
-                        indel_stat->num_minus_strand++;
-                    }
-                    else {
-                        //must be mapped to the plus strand
-                        indel_stat->num_plus_strand++;
-                    }
-
-                    //grab the left clip 
-                    int32_t left_clip = 0;
-                    uint8_t *zl_tag_ptr = bam_aux_get(base->b, "ZL");
-                    if(zl_tag_ptr) {
-                        left_clip = bam_aux2i(zl_tag_ptr);
-                    }
-                    else {
-                        fprintf(stderr, "Couldn't grab the left clip index of the read for read %s.",  bam1_qname(base->b));
-                    }
-
-                    //grab the clipped length 
-                    int32_t clipped_length=0;
-                    uint8_t *zc_tag_ptr = bam_aux_get(base->b, "ZC");
-                    if(zc_tag_ptr) {
-                        //TODO retrieve clipping length from tag
-                        clipped_length = bam_aux2i(zc_tag_ptr);
-                        indel_stat->sum_of_clipped_lengths += clipped_length;
-
-                        //calculate distance from center of read as an absolute value
-                        //float read_center = (float)base->b->core.l_qseq/2.0;
-                        float read_center = (float)clipped_length/2.0;
-                        indel_stat->sum_indel_location += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
-                    }
-                    else {
-                        fprintf(stderr, "Couldn't grab the clipped length of the read for read %s.",  bam1_qname(base->b));
-                    }
-
-                    //grab the single ended mapping qualities for testing
-                    if(base->b->core.flag & BAM_FPROPER_PAIR) {
-                        uint8_t *sm_tag_ptr = bam_aux_get(base->b, "SM");
-                        if(sm_tag_ptr) {
-                            indel_stat->sum_single_ended_map_qualities += bam_aux2i(sm_tag_ptr);
-                        }
-                        else {
-                            fprintf(stderr,"Couldn't grab single-end mapping quality for read %s. Check to see if SM tag is in BAM\n",bam1_qname(base->b));
-                        }
-                    }
-                    else {
-                        //just add in the mapping quality as the single ended quality
-                        indel_stat->sum_single_ended_map_qualities += base->b->core.qual;
-                    }
-
-                    //grab out the number of mismatches
-                    uint8_t *nm_tag_ptr = bam_aux_get(base->b, "NM");
-                    if(nm_tag_ptr) {
-                        indel_stat->sum_number_of_mismatches += bam_aux2i(nm_tag_ptr) / (float) clipped_length;
-                    }
-                    else {
-                        fprintf(stderr, "Couldn't grab number of mismatches for read %s. Check to see if NM tag is in BAM\n", bam1_qname(base->b));
-                    }
-
-                    //hopefully grab out our sum of qualities
-                    uint8_t *uq_tag_ptr = bam_aux_get(base->b, "UQ");
-                    if(uq_tag_ptr) {
-                        indel_stat->sum_of_mismatch_qualities += bam_aux2i(uq_tag_ptr);
-                    }
-                    else {
-                        fprintf(stderr, "Couldn't grab the sum of mismatch qualities for read %s. Guess the compiler wasn't lying about const\n",  bam1_qname(base->b));
-                    }
-
-                    //hopefully grab out our first q2 base index 
-                    uint8_t *zq_tag_ptr = bam_aux_get(base->b, "ZQ");
-                    if(zq_tag_ptr) {
-                        int32_t q2_val = bam_aux2i(zq_tag_ptr);
-                        if(q2_val > -1) {
-                            //this is in read coordinates. Ignores clipping as q2 may be clipped
-                            indel_stat->sum_q2_distance += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
-                            indel_stat->num_q2_reads++;
-                        }
-                    }
-                    else {
-                        fprintf(stderr, "Couldn't grab the position of the first Q2 base for read %s. Guess the compiler wasn't lying about const\n",  bam1_qname(base->b));
-                    }
-
-
-                    //hopefully grab out our first q2 base index 
-                    uint8_t *z3_tag_ptr = bam_aux_get(base->b, "Z3");
-                    if(z3_tag_ptr) {
-                        int32_t three_prime_index = bam_aux2i(z3_tag_ptr);
-                        //this is in read coordinates. 
-                        indel_stat->sum_3p_distance += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
-                    }
-                    else {
-                        fprintf(stderr, "Couldn't grab the position of the first Q2 base for read %s. Guess the compiler wasn't lying about const\n",  bam1_qname(base->b));
-                    }
-
-                    //1) generate allele //DONE
-                    //2) look up if allele has been found before (do this by creating a hash on the allele string)
-                    //3) if not, then create a place to store the stats
-                    //4) if so, then add to that place
-                    //
+                    indel_stat = &(kh_value(hash, indel));
                 }
+                indel_stat->read_count++;
+                indel_stat->sum_map_qualities += base->b->core.qual;
+                
+                //the following are done regardless of whether or not there is an indel
                 int c = (int) bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos)];   //convert to index
                 read_counts[c] ++; //calloc should 0 out the mem
                 sum_base_qualities[c] += bam1_qual(base->b)[base->qpos];
                 sum_map_qualities[c] += base->b->core.qual; 
                 //add in strand info
+                //TODO STORE THIS TO avoid repetitively calculating for indels
                 if(base->b->core.flag & BAM_FREVERSE) {
                     //mapped to the reverse strand
                     num_minus_strand[c]++;
                     sum_base_cycle_location[c] += base->qpos;  //this should give you the distance to the last base
+                    indel_stat->num_minus_strand++;
                 }
                 else {
                     //must be mapped to the plus strand
                     num_plus_strand[c]++;
                     sum_base_cycle_location[c] += (base->b->core.l_qseq - 1) - base->qpos;  //this should give you the distance to the last base
+                    indel_stat->num_plus_strand++;
                 }
 
                 //grab the left clip 
@@ -405,11 +314,13 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     //TODO retrieve clipping length from tag
                     clipped_length = bam_aux2i(zc_tag_ptr);
                     sum_of_clipped_lengths[c] += clipped_length;
+                    indel_stat->sum_of_clipped_lengths += clipped_length;
 
                     //calculate distance from center of read as an absolute value
                     //float read_center = (float)base->b->core.l_qseq/2.0;
                     float read_center = (float)clipped_length/2.0;
                     sum_base_location[c] += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
+                    indel_stat->sum_indel_location += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
                 }
                 else {
                     fprintf(stderr, "Couldn't grab the clipped length of the read for read %s.",  bam1_qname(base->b));
@@ -419,7 +330,9 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 if(base->b->core.flag & BAM_FPROPER_PAIR) {
                     uint8_t *sm_tag_ptr = bam_aux_get(base->b, "SM");
                     if(sm_tag_ptr) {
-                        sum_single_ended_map_qualities[c] += bam_aux2i(sm_tag_ptr);
+                        int32_t single_ended_map_qual = bam_aux2i(sm_tag_ptr);
+                        sum_single_ended_map_qualities[c] += single_ended_map_qual;
+                        indel_stat->sum_single_ended_map_qualities += single_ended_map_qual;
                     }
                     else {
                         fprintf(stderr,"Couldn't grab single-end mapping quality for read %s. Check to see if SM tag is in BAM\n",bam1_qname(base->b));
@@ -428,12 +341,15 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 else {
                     //just add in the mapping quality as the single ended quality
                     sum_single_ended_map_qualities[c] += base->b->core.qual;
+                    indel_stat->sum_single_ended_map_qualities += base->b->core.qual;
                 }
 
                 //grab out the number of mismatches
                 uint8_t *nm_tag_ptr = bam_aux_get(base->b, "NM");
                 if(nm_tag_ptr) {
-                    sum_number_of_mismatches[c] += bam_aux2i(nm_tag_ptr) / (float) clipped_length;
+                    int32_t number_mismatches = bam_aux2i(nm_tag_ptr);
+                    sum_number_of_mismatches[c] += number_mismatches / (float) clipped_length;
+                    indel_stat->sum_number_of_mismatches += number_mismatches / (float) clipped_length;
                 }
                 else {
                     fprintf(stderr, "Couldn't grab number of mismatches for read %s. Check to see if NM tag is in BAM\n", bam1_qname(base->b));
@@ -442,7 +358,9 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 //hopefully grab out our sum of qualities
                 uint8_t *uq_tag_ptr = bam_aux_get(base->b, "UQ");
                 if(uq_tag_ptr) {
-                    sum_of_mismatch_qualities[c] += bam_aux2i(uq_tag_ptr);
+                    int32_t mismatch_sum = bam_aux2i(uq_tag_ptr);
+                    sum_of_mismatch_qualities[c] += mismatch_sum;
+                    indel_stat->sum_of_mismatch_qualities += mismatch_sum;
                 }
                 else {
                     fprintf(stderr, "Couldn't grab the sum of mismatch qualities for read %s. Guess the compiler wasn't lying about const\n",  bam1_qname(base->b));
@@ -456,6 +374,8 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                         //this is in read coordinates. Ignores clipping as q2 may be clipped
                         sum_q2_distance[c] += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
                         num_q2_reads[c]++;
+                        indel_stat->sum_q2_distance += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
+                        indel_stat->num_q2_reads++;
                     }
                 }
                 else {
@@ -470,11 +390,11 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     //this is in read coordinates. 
                     sum_3p_distance[c] += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
                     distances_to_3p[c][num_distances_to_3p[c]++] = (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
+                    indel_stat->sum_3p_distance += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
                 }
                 else {
                     fprintf(stderr, "Couldn't grab the position of the first Q2 base for read %s. Guess the compiler wasn't lying about const\n",  bam1_qname(base->b));
                 }
-
 
                 mapping_qualities[c][num_mapping_qualities[c]++] = base->b->core.qual;  //using post-increment here to alter stored number of mapping_qualities while using the previous number as the index to store. Tricky, sort of.
 
