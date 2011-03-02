@@ -105,11 +105,6 @@ static int fetch_func(const bam1_t *b, void *data) {
             }
         }
     }
-    //store the value on the read, we're assuming it is always absent. This assumption may fail. Future proof if this idea has value
-    bam_aux_append((bam1_t *) b, "UQ",'i',4, (uint8_t*) &sum_of_mismatch_qualities); 
-    bam_aux_append((bam1_t *) b, "ZC",'i',4, (uint8_t*) &clipped_length); 
-    bam_aux_append((bam1_t *) b, "ZL",'i',4, (uint8_t*) &left_clip); 
-
     //inefficiently scan again to determine the distance in leftmost read coordinates to the first Q2 base
     int three_prime_index = -1;
     int q2_pos = -1;
@@ -148,11 +143,16 @@ static int fetch_func(const bam1_t *b, void *data) {
             three_prime_index = q2_pos;
         }
     }
-
-    bam_aux_append((bam1_t *)b, "ZQ",'i',4, (uint8_t*) &q2_pos); 
-
-    //STORE Effective 3' end
-    bam_aux_append((bam1_t *)b, "Z3",'i',4, (uint8_t*) &three_prime_index); 
+    uint8_t temp[5*4+1];
+    temp[5*4]=0;
+    memcpy(temp, &sum_of_mismatch_qualities,4);
+    memcpy(temp+4, &clipped_length,4);
+    memcpy(temp+8, &left_clip,4);
+    memcpy(temp+12, &three_prime_index,4);
+    memcpy(temp+16, &q2_pos,4);
+    
+    //store the value on the read, we're assuming it is always absent. This assumption may fail. Future proof if this idea has value
+    bam_aux_append((bam1_t *)b, "ZR",'Z',5*4+1, (uint8_t*) &temp); 
 
     //This just pushes all reads into the pileup buffer
     bam_plbuf_t *buf = fetch_data->pileup_buffer;
@@ -297,34 +297,50 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     indel_stat->num_plus_strand++;
                 }
 
-                //grab the left clip 
                 int32_t left_clip = 0;
-                uint8_t *zl_tag_ptr = bam_aux_get(base->b, "ZL");
-                if(zl_tag_ptr) {
-                    left_clip = bam_aux2i(zl_tag_ptr);
-                }
-                else {
-                    fprintf(stderr, "Couldn't grab the left clip index of the read for read %s.",  bam1_qname(base->b));
-                }
+                int32_t clipped_length = base->b->core.l_qseq;
+                int32_t mismatch_sum = 0;
+                int32_t q2_val = 0;
+                int32_t three_prime_index = 0;
+                
+                //hopefully grab out our calculated per/read values 
+                uint8_t *tag_ptr = bam_aux_get(base->b, "ZR") + 1;
+                if(tag_ptr) {
+                    mismatch_sum = (int32_t)*(int32_t*)(tag_ptr);
+                    clipped_length = (int32_t)*(int32_t*)(tag_ptr+4);
+                    left_clip = (int32_t)*(int32_t*)(tag_ptr+8);
+                    three_prime_index = (int32_t)*(int32_t*)(tag_ptr+12);
+                    q2_val = (int32_t)*(int32_t*)(tag_ptr+16);
 
-                //grab the clipped length 
-                int32_t clipped_length=0;
-                uint8_t *zc_tag_ptr = bam_aux_get(base->b, "ZC");
-                if(zc_tag_ptr) {
-                    //TODO retrieve clipping length from tag
-                    clipped_length = bam_aux2i(zc_tag_ptr);
+                    sum_of_mismatch_qualities[c] += mismatch_sum;
+                    indel_stat->sum_of_mismatch_qualities += mismatch_sum;
+
+
+                    if(q2_val > -1) {
+                        //this is in read coordinates. Ignores clipping as q2 may be clipped
+                        sum_q2_distance[c] += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
+                        num_q2_reads[c]++;
+                        indel_stat->sum_q2_distance += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
+                        indel_stat->num_q2_reads++;
+                    }
+                    sum_3p_distance[c] += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
+                    distances_to_3p[c][num_distances_to_3p[c]++] = (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
+                    indel_stat->sum_3p_distance += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
+
                     sum_of_clipped_lengths[c] += clipped_length;
                     indel_stat->sum_of_clipped_lengths += clipped_length;
-
                     //calculate distance from center of read as an absolute value
                     //float read_center = (float)base->b->core.l_qseq/2.0;
                     float read_center = (float)clipped_length/2.0;
                     sum_base_location[c] += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
                     indel_stat->sum_indel_location += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
+
                 }
                 else {
-                    fprintf(stderr, "Couldn't grab the clipped length of the read for read %s.",  bam1_qname(base->b));
+                    fprintf(stderr, "Couldn't grab the generated tag for readname %s.\n",  bam1_qname(base->b));
                 }
+
+
 
                 //grab the single ended mapping qualities for testing
                 if(base->b->core.flag & BAM_FPROPER_PAIR) {
@@ -355,46 +371,6 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     fprintf(stderr, "Couldn't grab number of mismatches for read %s. Check to see if NM tag is in BAM\n", bam1_qname(base->b));
                 }
 
-                //hopefully grab out our sum of qualities
-                uint8_t *uq_tag_ptr = bam_aux_get(base->b, "UQ");
-                if(uq_tag_ptr) {
-                    int32_t mismatch_sum = bam_aux2i(uq_tag_ptr);
-                    sum_of_mismatch_qualities[c] += mismatch_sum;
-                    indel_stat->sum_of_mismatch_qualities += mismatch_sum;
-                }
-                else {
-                    fprintf(stderr, "Couldn't grab the sum of mismatch qualities for read %s. Guess the compiler wasn't lying about const\n",  bam1_qname(base->b));
-                }
-
-                //hopefully grab out our first q2 base index 
-                uint8_t *zq_tag_ptr = bam_aux_get(base->b, "ZQ");
-                if(zq_tag_ptr) {
-                    int32_t q2_val = bam_aux2i(zq_tag_ptr);
-                    if(q2_val > -1) {
-                        //this is in read coordinates. Ignores clipping as q2 may be clipped
-                        sum_q2_distance[c] += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
-                        num_q2_reads[c]++;
-                        indel_stat->sum_q2_distance += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
-                        indel_stat->num_q2_reads++;
-                    }
-                }
-                else {
-                    fprintf(stderr, "Couldn't grab the position of the first Q2 base for read %s. Guess the compiler wasn't lying about const\n",  bam1_qname(base->b));
-                }
-
-
-                //hopefully grab out our first q2 base index 
-                uint8_t *z3_tag_ptr = bam_aux_get(base->b, "Z3");
-                if(z3_tag_ptr) {
-                    int32_t three_prime_index = bam_aux2i(z3_tag_ptr);
-                    //this is in read coordinates. 
-                    sum_3p_distance[c] += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
-                    distances_to_3p[c][num_distances_to_3p[c]++] = (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
-                    indel_stat->sum_3p_distance += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
-                }
-                else {
-                    fprintf(stderr, "Couldn't grab the position of the first Q2 base for read %s. Guess the compiler wasn't lying about const\n",  bam1_qname(base->b));
-                }
 
                 mapping_qualities[c][num_mapping_qualities[c]++] = base->b->core.qual;  //using post-increment here to alter stored number of mapping_qualities while using the previous number as the index to store. Tricky, sort of.
 
