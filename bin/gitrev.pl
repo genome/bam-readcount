@@ -13,6 +13,11 @@ sub git {
     return $output;
 }
 
+sub is_git_repo {
+    eval { git("status"); };
+    return !$@;
+}
+
 sub is_dirty {
     my $status = git("status --porcelain");
     return $status ne "";
@@ -61,6 +66,14 @@ sub parse_rev {
 
 sub commit_hash {
     return git("rev-parse --short HEAD");
+}
+
+
+if (!is_git_repo) {
+    print "-unstable ";
+    print "unstable ";
+    print "nogit\n";
+    exit 0;
 }
 
 if (!is_dirty and is_tagged) {
