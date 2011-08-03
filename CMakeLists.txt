@@ -16,7 +16,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "-Wall")
 endif ()
 
-find_package(Samtools 0.1.9 REQUIRED)
+find_package(Samtools 0.1.17 REQUIRED)
 include_directories(${Samtools_INCLUDE_DIRS})
 
 # make sure to pick up headers from library dirs
