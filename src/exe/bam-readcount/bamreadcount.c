@@ -55,6 +55,7 @@ static int fetch_func(const bam1_t *b, void *data) {
     //retrieve reference
     fetch_data_t* fetch_data = (fetch_data_t*) data;
     char *ref = *(fetch_data->ref_pointer);
+    //FIXME Won't want to do this if refseq is not included
 
     //calculate single nucleotide mismatches and sum their qualities 
     uint8_t *seq = bam1_seq(b);
@@ -65,6 +66,9 @@ static int fetch_func(const bam1_t *b, void *data) {
     int left_clip = 0;
     int clipped_length = core->l_qseq;
     int right_clip = core->l_qseq;
+
+    int last_mismatch_position = -1;
+    int last_mismatch_qual = 0;
 
     for(i = read_position = 0, reference_position = core->pos; i < core->n_cigar; ++i) {
         int j;
@@ -79,7 +83,25 @@ static int fetch_func(const bam1_t *b, void *data) {
                 if(ref[reference_position + j] == 0) break; //out of bounds on reference
                 if(read_base != ref_base && ref_base != 15 && read_base != 0) {
                     //mismatch, so store the qualities
-                    sum_of_mismatch_qualities += bam1_qual(b)[current_base_position]; 
+                    int qual = bam1_qual(b)[current_base_position];
+                    if(last_mismatch_position != -1) {
+                        if(last_mismatch_position + 1 != current_base_position) {
+                            //not an adjacent mismatch
+                            sum_of_mismatch_qualities += last_mismatch_qual;
+                            last_mismatch_qual = qual; 
+                            last_mismatch_position = current_base_position;
+                        }
+                        else {
+                            if(last_mismatch_qual < qual) {
+                                last_mismatch_qual = qual;
+                            }
+                            last_mismatch_position = current_base_position;
+                        }
+                    }
+                    else {
+                        last_mismatch_position = i;
+                        last_mismatch_qual = qual;
+                    }
                 }
             }
             if(j < op_length) break;
@@ -105,6 +127,9 @@ static int fetch_func(const bam1_t *b, void *data) {
             }
         }
     }
+    //add in any remaining mismatch sums; should be 0 if no mismatch
+    sum_of_mismatch_qualities += last_mismatch_qual;
+
     //inefficiently scan again to determine the distance in leftmost read coordinates to the first Q2 base
     int three_prime_index = -1;
     int q2_pos = -1;
@@ -168,6 +193,7 @@ unsigned char bam_nt16_canonical_table[16] = { 0,1,2,5,
     5,5,5,5};
 
 // callback for bam_plbuf_init()
+// TODO allow for a simplified version that calculates less
 static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *pl, void *data)
 {
     pileup_data_t *tmp = (pileup_data_t*)data;
@@ -236,6 +262,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                         int indel_base;
                         for(indel_base = 0; indel_base < abs(base->indel); indel_base++) {
                             //scan indel allele off the reference
+                            //FIXME this will break with no reference
                             allele[indel_base+1] = tmp->ref[pos + indel_base + 1];
                         }
                         allele[indel_base + 1] = '\0';  //null terminate the string
@@ -304,6 +331,8 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 int32_t three_prime_index = 0;
                 
                 //hopefully grab out our calculated per/read values 
+                //FIXME these will be unavailable if there is no reference
+                //TODO Make sure the defaults on the above are reasonable if there is nothing available
                 uint8_t *tag_ptr = bam_aux_get(base->b, "ZR") + 1;
                 if(tag_ptr) {
                     mismatch_sum = (int32_t)*(int32_t*)(tag_ptr);
@@ -444,6 +473,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         free(num_q2_reads);
         free(sum_of_clipped_lengths);
         free(sum_3p_distance);
+        free(sum_base_cycle_location);
     }
 
     return 0;
@@ -542,6 +572,7 @@ int main(int argc, char *argv[])
                     d->end = end;
                     if (d->fai && ref != d->tid) {
                         free(d->ref);
+                        //would this be faster to just grab small chunks? Probably at some level, but not at others. How would chunking affect the indel allele calculations? Those assume that the indel allele is present in the ref and potentially occupy more than just the region of interest 
                         d->ref = fai_fetch(d->fai, d->in->header->target_name[ref], &d->len);
                         d->tid = ref;
                     }
@@ -578,6 +609,7 @@ int main(int argc, char *argv[])
     }
     else {
         if (argc - optind == 1) { // if a region is not specified
+            //FIXME this currently crashes and burns because it doesn't hit the pre-processing in fetch_func
             sampileup(d->in, -1, pileup_func, d);
         } else {
             int ref;
@@ -606,6 +638,16 @@ int main(int argc, char *argv[])
             bam_index_destroy(idx);
             bam_plbuf_destroy(buf);
         }
+        if(d->ref) {
+            free(d->ref);
+        }
+        if(d->fai) {
+            fai_destroy(d->fai);
+        }
+        if(fn_fa) {
+            free(fn_fa);
+        }
+        free(f);
     }
     samclose(d->in);
     return 0;
