@@ -99,7 +99,7 @@ static int fetch_func(const bam1_t *b, void *data) {
                         }
                     }
                     else {
-                        last_mismatch_position = i;
+                        last_mismatch_position = current_base_position;
                         last_mismatch_qual = qual;
                     }
                 }
