@@ -211,7 +211,6 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         unsigned int *num_plus_strand = calloc(possible_calls, sizeof(unsigned int));
         unsigned int *num_minus_strand = calloc(possible_calls, sizeof(unsigned int));
         float *sum_base_location = calloc(possible_calls, sizeof(float));
-        float *sum_base_cycle_location = calloc(possible_calls, sizeof(float));
         float *sum_q2_distance = calloc(possible_calls, sizeof(float));
         unsigned int *num_q2_reads = calloc(possible_calls, sizeof(unsigned int));
         float *sum_number_of_mismatches = calloc(possible_calls,sizeof(float));
@@ -314,13 +313,11 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 if(base->b->core.flag & BAM_FREVERSE) {
                     //mapped to the reverse strand
                     num_minus_strand[c]++;
-                    sum_base_cycle_location[c] += base->qpos;  //this should give you the distance to the last base
                     indel_stat->num_minus_strand++;
                 }
                 else {
                     //must be mapped to the plus strand
                     num_plus_strand[c]++;
-                    sum_base_cycle_location[c] += (base->b->core.l_qseq - 1) - base->qpos;  //this should give you the distance to the last base
                     indel_stat->num_plus_strand++;
                 }
 
@@ -430,7 +427,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
 
             }
             else {
-                printf("\t%c:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f:%0.02f:%0.02f:%d:%0.02f:%0.02f:%0.02f:%0.02f", bam_canonical_nt_table[j], read_counts[j], read_counts[j] ? (float)sum_map_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_base_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_single_ended_map_qualities[j]/read_counts[j] : 0, num_plus_strand[j], num_minus_strand[j], read_counts[j] ? sum_base_location[j]/read_counts[j] : 0, read_counts[j] ? (float) sum_number_of_mismatches[j]/read_counts[j] : 0, read_counts[j] ? (float) sum_of_mismatch_qualities[j]/read_counts[j] : 0, num_q2_reads[j], read_counts[j] ? (float) sum_q2_distance[j]/num_q2_reads[j] : 0, read_counts[j] ? (float) sum_of_clipped_lengths[j]/read_counts[j] : 0,read_counts[j] ? (float) sum_3p_distance[j]/read_counts[j] : 0, read_counts[j] ? (float) sum_base_cycle_location[j]/read_counts[j] : 0);
+                printf("\t%c:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f:%0.02f:%0.02f:%d:%0.02f:%0.02f:%0.02f", bam_canonical_nt_table[j], read_counts[j], read_counts[j] ? (float)sum_map_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_base_qualities[j]/read_counts[j] : 0, read_counts[j] ? (float)sum_single_ended_map_qualities[j]/read_counts[j] : 0, num_plus_strand[j], num_minus_strand[j], read_counts[j] ? sum_base_location[j]/read_counts[j] : 0, read_counts[j] ? (float) sum_number_of_mismatches[j]/read_counts[j] : 0, read_counts[j] ? (float) sum_of_mismatch_qualities[j]/read_counts[j] : 0, num_q2_reads[j], read_counts[j] ? (float) sum_q2_distance[j]/num_q2_reads[j] : 0, read_counts[j] ? (float) sum_of_clipped_lengths[j]/read_counts[j] : 0,read_counts[j] ? (float) sum_3p_distance[j]/read_counts[j] : 0);
             }
         }
         //here print out indels if they exist
@@ -473,7 +470,6 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         free(num_q2_reads);
         free(sum_of_clipped_lengths);
         free(sum_3p_distance);
-        free(sum_base_cycle_location);
     }
 
     return 0;
