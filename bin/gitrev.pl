@@ -81,7 +81,7 @@ if (!is_git_repo) {
     exit 0;
 }
 
-my $rev = tagged_version || "";
+my $rev = tagged_version || untagged_version;
 
 my ($exe_suffix, $full_version, $commit, $dirty) = parse_rev($rev);
 print "$exe_suffix ";
