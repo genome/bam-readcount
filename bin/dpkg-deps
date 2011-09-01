@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Dpkg::Shlibs::Objdump;
+
+die "Usage: $0 <executable>\n" if @ARGV != 1;
+
+my $exe = shift @ARGV;
+my $obj = Dpkg::Shlibs::Objdump::Object->new($exe);
+my @libs = $obj->get_needed_libraries;
+my %pkgs;
+my @search_path = ("/lib", "/usr/lib");
+for my $lib (@libs) {
+    my @dirs = grep { -e "$_/$lib" } @search_path;
+    die "Unable to find library $lib" unless @dirs;
+
+    $lib = "$dirs[0]/$lib";
+
+    my $pkg = `dpkg --search $lib | head -n1 | cut -d: -f1 2> /dev/null`;
+    die "Unable to locate package for library $lib" unless $pkg;
+    chomp $pkg;
+    my $ver = `dpkg -l $pkg 2> /dev/null | tail -n1 | awk '{print \$3}'`;
+    chomp $ver;
+    $pkgs{$pkg} = "$pkg (>= $ver)";
+}
+
+print join(", ", sort values %pkgs) . "\n";
