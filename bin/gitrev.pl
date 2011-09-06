@@ -47,20 +47,22 @@ sub untagged_version {
 sub parse_rev {
     my $rev = shift;
 
+    $rev =~ s/^v//g;
+
     my $exe_suffix = "-unstable";
-    my $full_version = $rev;
+    my $full_version = "$rev-unstable";
     my $commit = $rev;
     my $dirty = is_dirty;
 
-    if ($rev =~ /^v([0-9]+)\.([0-9]+)\.([0-9]+)-([0-9]+)-g(.*)/) {
+    if ($rev =~ /^([0-9]+)\.([0-9]+)\.([0-9]+)-([0-9]+)-g(.*)/) {
         $exe_suffix = "$1.$2";
         $full_version = "$1.$2.$3";
         $commit = $5;
 
         my $commits_past_tag = $4;
         if ($commits_past_tag > 0) {
-            $exe_suffix .= "-$commits_past_tag-unstable";
-            $full_version .= "-$commits_past_tag-$commit";
+            $exe_suffix = "$1.$2.$3-$commits_past_tag-unstable";
+            $full_version = "$1.$2.$3-unstable-$commits_past_tag-$commit";
         }
     }
     if ($dirty) {
