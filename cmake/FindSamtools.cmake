@@ -22,7 +22,7 @@ libfind_package(Samtools ZLIB)
 find_path(Samtools_INCLUDE_DIR
     NAMES bam.h #bgzf.h faidx.h glf.h ksort.h kstring.h
     PATHS ${SAMTOOLS_SEARCH_DIRS}
-    PATH_SUFFIXES include ${_samtools_ver_path}
+    PATH_SUFFIXES include include/samtools ${_samtools_ver_path}
     HINTS ENV SAMTOOLS_ROOT
 )
 
@@ -31,7 +31,7 @@ find_library(Samtools_LIBRARY
     NAMES bam libbam.a bam.a
     PATHS ${Samtools_INCLUDE_DIR} ${SAMTOOLS_SEARCH_DIRS}
     NO_DEFAULT_PATH
-    PATH_SUFFIXES lib ${_samtools_ver_path}
+    PATH_SUFFIXES lib lib64 ${_samtools_ver_path}
     HINTS ENV SAMTOOLS_ROOT
 )
 
