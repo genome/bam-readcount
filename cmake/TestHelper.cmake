@@ -1,6 +1,11 @@
 macro(def_test testName)
     add_executable(Test${testName} Test${testName}.cpp ${COMMON_SOURCES})
     target_link_libraries(Test${testName} ${TEST_LIBS} ${GTEST_BOTH_LIBRARIES})
-    add_test(Test${testName} Test${testName})
+    if($ENV{BC_UNIT_TEST_VG})
+        add_test(NAME Test${testName} COMMAND valgrind --error-exitcode=1 $<TARGET_FILE:Test${testName}>)
+    else()
+        add_test(NAME Test${testName} COMMAND Test${testName})
+    endif()
+
     set_tests_properties(Test${testName} PROPERTIES LABELS unit)
 endmacro(def_test testName)
