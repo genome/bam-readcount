@@ -20,7 +20,7 @@ libfind_package(Samtools ZLIB)
 
 # Include dir
 find_path(Samtools_INCLUDE_DIR
-    NAMES bam.h #bgzf.h faidx.h glf.h ksort.h kstring.h
+    NAMES bam.h ${SAMTOOLS_ADDITIONAL_HEADERS}
     PATHS ${SAMTOOLS_SEARCH_DIRS}
     PATH_SUFFIXES include ${_samtools_ver_path}
     HINTS ENV SAMTOOLS_ROOT
