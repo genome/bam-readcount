@@ -46,6 +46,8 @@ typedef struct {
 
 //struct to store reference for passing to fetch func
 typedef struct { 
+    const char* seq_name;
+    int ref_len;
     char **ref_pointer;
     bam_plbuf_t* pileup_buffer;
 } fetch_data_t;
@@ -79,8 +81,16 @@ static int fetch_func(const bam1_t *b, void *data) {
             for(j = 0; j < op_length; j++) {
                 int current_base_position = read_position + j;
                 int read_base = bam1_seqi(seq, current_base_position);
-                int ref_base = bam_nt16_table[(int)ref[reference_position + j]];
-                if(ref[reference_position + j] == 0) break; //out of bounds on reference
+                int refpos = reference_position + j;
+                int ref_base;
+                if(refpos >= fetch_data->ref_len) {
+                    fprintf(stderr, "Request for position %d in sequence %s is > length of %d\n",
+                        refpos, fetch_data->seq_name, fetch_data->ref_len);
+                    break;
+                }
+                ref_base = bam_nt16_table[(int)ref[refpos]];
+
+                if(ref[refpos] == 0) break; //out of bounds on reference
                 if(read_base != ref_base && ref_base != 15 && read_base != 0) {
                     //mismatch, so store the qualities
                     int qual = bam1_qual(b)[current_base_position];
@@ -574,6 +584,8 @@ int main(int argc, char *argv[])
                     }
                     bam_plbuf_t *buf = bam_plbuf_init(pileup_func, d); // initialize pileup
                     f->pileup_buffer = buf;
+                    f->ref_len = d->len;
+                    f->seq_name = d->in->header->target_name[d->tid];
                     f->ref_pointer = &(d->ref);
                     bam_fetch(d->in->x.bam, idx, ref, d->beg, d->end, f, fetch_func);
                     bam_plbuf_push(0, buf); // finalize pileup
