@@ -25,7 +25,7 @@ class IntegrationTest():
     def inputFiles(self, *names):
         rv = []
         for n in names:
-            rv.extend(glob(os.path.join(self.data_dir, n)))
+            rv.extend(sorted(glob(os.path.join(self.data_dir, n))))
         if len(rv) == 0:
             raise IOError("No file matching %s not found in %s" %(
                 ", ".join(names),
