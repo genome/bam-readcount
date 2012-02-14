@@ -5,6 +5,7 @@
 #include "faidx.h"
 #include "khash.h"
 #include <stdio.h>
+#include <unistd.h>
 
 typedef char *str_p;
 KHASH_MAP_INIT_STR(s, int)

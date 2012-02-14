@@ -1,4 +1,4 @@
-h1.bam-readcount 
+h1. bam-readcount 
 
 p. The purpose of this program is to generate metrics at single nucleotide positions.
 Help is currently available on the commandline if you do not supply the program
@@ -8,14 +8,14 @@ h2. Build Dependencies
 
 * git
 * cmake 2.8+ ("cmake.org":http://cmake.org)
-* samtools 0.1.6 ("sourceforge download page":http://sourceforge.net/projects/samtools/files/samtools/0.1.6/)
-** Newer versions will *NOT* work with bam-readcount
+* samtools ("sourceforge download page":http://sourceforge.net/projects/samtools/files/samtools/)
+** We have tested as new as version 0.1.17 with no trouble. Older versions may not have been tested, but we anticipate they should work.
 
 h2. Build Instructions
 
 h3. Build Samtools
 
-* Download and extract samtools 0.1.6 to a directory of your choosing.
+* Download and extract samtools to a directory of your choosing.
 * Enter that directory and run make
 * Set an environment variable called SAMTOOLS_ROOT to point to this directory. 
 ** For example (if you are using bash), you can use @export SAMTOOLS_ROOT=`pwd`@ if you are still in the samtools directory or simply @export SAMTOOLS_ROOT=/path/to/samtools@ otherwise.
@@ -34,10 +34,6 @@ bc..         cmake /path/to/bam-readcount/repo
 p. The binary can then be found in the bin/ subdirectory of your build directory.
 
 h2. FAQ
-
-h3. I get lots of compile errors indicating that files are missing. How do I fix this?
-
-bam-readcount requires that it be linked to an old version of samtools (v0.1.6). This typically happens because you have attempted to link to a newer version.
 
 h3. I get errors from cmake about missing modules. How do I fix this?
 
