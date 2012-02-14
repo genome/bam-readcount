@@ -44,6 +44,9 @@ bam-readcount contains a git submodule called build-common. It contains helper m
 # Replace the empty build-common subdirectory in the sniper directory with directory you just created.
 # Resume following the build instructions.
 
+h3. I get a segfault when attempting to run on a whole bam file.
+This is a known bug that will be addressed in future versions. In most cases, you will only need read counts on a subset of positions and specifying the sites of interest is functional. Should you need to run the entire genome through then running by chromosome and concatenating the results should be a decent workaround (e.g. like bam-readcount -f ref.fasta some.bam chr1). 
+
 h2. User Support
 
 p. Please mail genome-dev@genome.wustl.edu with problems or questions.
