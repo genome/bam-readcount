@@ -84,10 +84,10 @@ static int fetch_func(const bam1_t *b, void *data) {
                 int read_base = bam1_seqi(seq, current_base_position);
                 int refpos = reference_position + j;
                 int ref_base;
-                if(refpos >= fetch_data->ref_len) {
-                    fprintf(stderr, "Request for position %d in sequence %s is > length of %d\n",
+                if(fetch_data->ref_len && refpos >= fetch_data->ref_len) {
+                    fprintf(stderr, "Request for position %d in sequence %s is > length of %d, abort.\n",
                         refpos, fetch_data->seq_name, fetch_data->ref_len);
-                    break;
+                    exit(1);
                 }
                 ref_base = bam_nt16_table[(int)ref[refpos]];
 
@@ -528,8 +528,8 @@ int main(int argc, char *argv[])
     }
     if(fn_pos) {
         FILE* fp = fopen(fn_pos,"r");
-        if(fn_pos == NULL) {
-            fprintf(stderr, "Failed to open region list\n");
+        if(fp == NULL) {
+            fprintf(stderr, "Failed to open region list file: %s\n", fn_pos);
             return 1;
         }
         bam_index_t *idx;
@@ -585,8 +585,13 @@ int main(int argc, char *argv[])
                     }
                     bam_plbuf_t *buf = bam_plbuf_init(pileup_func, d); // initialize pileup
                     f->pileup_buffer = buf;
-                    f->ref_len = d->len;
-                    f->seq_name = d->in->header->target_name[d->tid];
+                    if (d->fai) {
+                        f->ref_len = d->len;
+                        f->seq_name = d->in->header->target_name[d->tid];
+                    } else {
+                        f->ref_len = 0;
+                        f->seq_name = 0;
+                    }
                     f->ref_pointer = &(d->ref);
                     bam_fetch(d->in->x.bam, idx, ref, d->beg, d->end, f, fetch_func);
                     bam_plbuf_push(0, buf); // finalize pileup
