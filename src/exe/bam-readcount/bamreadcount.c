@@ -84,7 +84,7 @@ static int fetch_func(const bam1_t *b, void *data) {
                 int read_base = bam1_seqi(seq, current_base_position);
                 int refpos = reference_position + j;
                 int ref_base;
-                if(fetch_data->ref_len && refpos >= fetch_data->ref_len) {
+                if(fetch_data->ref_len && refpos > fetch_data->ref_len) {
                     fprintf(stderr, "Request for position %d in sequence %s is > length of %d, abort.\n",
                         refpos, fetch_data->seq_name, fetch_data->ref_len);
                     exit(1);
