@@ -85,9 +85,9 @@ static int fetch_func(const bam1_t *b, void *data) {
                 int refpos = reference_position + j;
                 int ref_base;
                 if(fetch_data->ref_len && refpos > fetch_data->ref_len) {
-                    fprintf(stderr, "Request for position %d in sequence %s is > length of %d, abort.\n",
+                    fprintf(stderr, "WARNING: Request for position %d in sequence %s is > length of %d!\n",
                         refpos, fetch_data->seq_name, fetch_data->ref_len);
-                    exit(1);
+                    continue;
                 }
                 ref_base = bam_nt16_table[(int)ref[refpos]];
 
