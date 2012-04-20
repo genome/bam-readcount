@@ -22,7 +22,7 @@ libfind_package(Samtools ZLIB)
 find_path(Samtools_INCLUDE_DIR
     NAMES ${SAMTOOLS_ADDITIONAL_HEADERS} bam.h
     PATHS ${SAMTOOLS_SEARCH_DIRS}
-    PATH_SUFFIXES include include/samtools ${_samtools_ver_path}
+    PATH_SUFFIXES include include/sam include/bam include/samtools${_samtools_ver_path}
     HINTS ENV SAMTOOLS_ROOT
 )
 
