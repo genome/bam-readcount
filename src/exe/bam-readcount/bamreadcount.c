@@ -509,9 +509,11 @@ int main(int argc, char *argv[])
         fprintf(stderr, "        -q INT    filtering reads with mapping quality less than INT [%d]\n", d->min_mapq);
         fprintf(stderr, "        -b INT    don't include reads where the base quality is less than INT [%d]\n", d->min_bq);
         fprintf(stderr, "        -f FILE   reference sequence in the FASTA format\n");
-        fprintf(stderr, "        -l FILE   list of regions to report readcounts within\n");
+        fprintf(stderr, "        -l FILE   list of regions to report readcounts within.\n");
         fprintf(stderr, "        -d        report the mapping qualities as a comma separated list\n\n");
         fprintf(stderr, "This program reports readcounts for each base at each position requested.\n");
+        fprintf(stderr, "\nPositions should be requested via the -l option as chromosome, start, stop\nwhere the coordinates are 1-based and each field is separated by whitespace.\n");
+        fprintf(stderr, "\nA single region may be requested on the command-line similarly to samtools view\n(i.e. bam-readcount -f ref.fa some.bam 1:150-150).\n\n");
         fprintf(stderr, "It also reports the average base quality of these bases and mapping qualities of\n");
         fprintf(stderr, "the reads containing each base.\n\nThe format is as follows:\nchr\tposition\treference_base\tbase:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualitiest:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end...\n");
 
