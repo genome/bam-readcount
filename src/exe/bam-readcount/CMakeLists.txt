@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(bam-readcount)
 
-set(SOURCES bamreadcount.c)
+set(SOURCES bamreadcount.cpp)
 
 set(EXECUTABLE_NAME bam-readcount)
 add_executable(${EXECUTABLE_NAME} ${SOURCES})
