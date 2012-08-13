@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fstream>
+#include <string>
 
 typedef char *str_p;
 KHASH_MAP_INIT_STR(s, int)
@@ -543,8 +544,7 @@ int main(int argc, char *argv[])
             return 1;
         }
         //Now iterate through and do calculations for each one
-        char const* line = NULL; 
-        char *ref_name; 
+        std::string ref_name;
         int beg; 
         int end; 
         int ref;
@@ -564,48 +564,39 @@ int main(int argc, char *argv[])
             }
         }
         h = (khash_t(s)*)d->in->header->hash;
-        size_t length;
         std::string lineBuf;
-        while(getline(fp, lineBuf)) {
-            line = lineBuf.data();
-            if(sscanf(line,"%as%i%i",&ref_name, &beg, &end)==3) {
-                iter = kh_get(s, h, ref_name);
-                if(iter == kh_end(h)) {
-                    fprintf(stderr, "%s not found in bam file. Region %s %i %i skipped.\n",ref_name,ref_name,beg,end);
-                    free(ref_name);
-                }
-                else {
-                    // ref id exists
-                    //fprintf(stderr, "%s %i %i scanned in\n",ref_name,beg,end);
-                    ref = kh_value(h,iter);  
-                    //fprintf(stderr, "%i %i %i scanned in\n",ref,beg,end);
-                    free(ref_name);
-                    d->beg = beg-1;
-                    d->end = end;
-                    if (d->fai && ref != d->tid) {
-                        free(d->ref);
-                        //would this be faster to just grab small chunks? Probably at some level, but not at others. How would chunking affect the indel allele calculations? Those assume that the indel allele is present in the ref and potentially occupy more than just the region of interest 
-                        d->ref = fai_fetch(d->fai, d->in->header->target_name[ref], &d->len);
-                        d->tid = ref;
-                    }
-                    bam_plbuf_t *buf = bam_plbuf_init(pileup_func, d); // initialize pileup
-                    f->pileup_buffer = buf;
-                    if (d->fai) {
-                        f->ref_len = d->len;
-                        f->seq_name = d->in->header->target_name[d->tid];
-                    } else {
-                        f->ref_len = 0;
-                        f->seq_name = 0;
-                    }
-                    f->ref_pointer = &(d->ref);
-                    bam_fetch(d->in->x.bam, idx, ref, d->beg, d->end, f, fetch_func);
-                    bam_plbuf_push(0, buf); // finalize pileup
-                    bam_plbuf_destroy(buf);
-
-                }
+        while(fp >> ref_name >> beg >> end) { //getline(fp, lineBuf)) {
+            iter = kh_get(s, h, ref_name.c_str());
+            if(iter == kh_end(h)) {
+                fprintf(stderr, "%s not found in bam file. Region %s %i %i skipped.\n",ref_name.c_str(),ref_name.c_str(),beg,end);
             }
             else {
-                free(ref_name);
+                // ref id exists
+                //fprintf(stderr, "%s %i %i scanned in\n",ref_name,beg,end);
+                ref = kh_value(h,iter);  
+                //fprintf(stderr, "%i %i %i scanned in\n",ref,beg,end);
+                d->beg = beg-1;
+                d->end = end;
+                if (d->fai && ref != d->tid) {
+                    free(d->ref);
+                    //would this be faster to just grab small chunks? Probably at some level, but not at others. How would chunking affect the indel allele calculations? Those assume that the indel allele is present in the ref and potentially occupy more than just the region of interest 
+                    d->ref = fai_fetch(d->fai, d->in->header->target_name[ref], &d->len);
+                    d->tid = ref;
+                }
+                bam_plbuf_t *buf = bam_plbuf_init(pileup_func, d); // initialize pileup
+                f->pileup_buffer = buf;
+                if (d->fai) {
+                    f->ref_len = d->len;
+                    f->seq_name = d->in->header->target_name[d->tid];
+                } else {
+                    f->ref_len = 0;
+                    f->seq_name = 0;
+                }
+                f->ref_pointer = &(d->ref);
+                bam_fetch(d->in->x.bam, idx, ref, d->beg, d->end, f, fetch_func);
+                bam_plbuf_push(0, buf); // finalize pileup
+                bam_plbuf_destroy(buf);
+
             }
         }
         bam_index_destroy(idx);
