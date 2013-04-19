@@ -582,7 +582,7 @@ int main(int argc, char *argv[])
         while(getline(fp, lineBuf)) {
             std::stringstream ss(lineBuf);
             if (!(ss >> ref_name >> beg >> end))
-                break;
+                continue;
 
             iter = kh_get(s, h, ref_name.c_str());
             if(iter == kh_end(h)) {
