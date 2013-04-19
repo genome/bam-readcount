@@ -23,21 +23,21 @@ include_directories(${Samtools_INCLUDE_DIRS})
 include_directories("src/lib")
 
 # unit tests
-#find_package(GTest)
-#if(GTEST_FOUND)
-    #message("Google Test framework found, building unit tests")
-    #enable_testing(true)
-    #add_projects(test/lib)
-#else()
-    #message("Google Test framework not found, no tests will be built")
-    #message("GTest is available at http://code.google.com/p/googletest/")
-    #message("Ubuntu users can likely sudo apt-get install gtest")
-#endif()
+find_package(GTest)
+if(GTEST_FOUND)
+    message("Google Test framework found, building unit tests")
+    enable_testing(true)
+    add_projects(test/lib)
+else()
+    message("Google Test framework not found, no tests will be built")
+    message("GTest is available at http://code.google.com/p/googletest/")
+    message("Ubuntu users can likely sudo apt-get install gtest")
+endif()
 
 # main project
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-#add_projects(src/lib)
+add_projects(src/lib)
 add_projects(src/exe)
 
 include(PackageInfo.cmake)

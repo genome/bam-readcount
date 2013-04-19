@@ -1,4 +1,9 @@
-#define _GNU_SOURCE
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE
+#endif
+
+#include "bamrc/auxfields.hpp"
+
 #include <stdio.h>
 #include <string.h>
 #include "sam.h"
@@ -8,6 +13,7 @@
 #include <unistd.h>
 #include <fstream>
 #include <string>
+
 
 typedef char *str_p;
 KHASH_MAP_INIT_STR(s, int)
@@ -190,7 +196,14 @@ static int fetch_func(const bam1_t *b, void *data) {
     memcpy(temp+16, &q2_pos,4);
     
     //store the value on the read, we're assuming it is always absent. This assumption may fail. Future proof if this idea has value
-    bam_aux_append((bam1_t *)b, "ZR",'Z',5*4+1, (uint8_t*) &temp); 
+    aux_zm_t zm;
+    zm.sum_of_mismatch_qualities = sum_of_mismatch_qualities;
+    zm.clipped_length = clipped_length;
+    zm.left_clip = left_clip;
+    zm.three_prime_index = three_prime_index;
+    zm.q2_pos = q2_pos;
+    std::string zm_str = zm.to_string();
+    bam_aux_append((bam1_t *)b, "Zm", 'Z', zm_str.size() + 1, (uint8_t*)&zm_str[0]);
 
     //This just pushes all reads into the pileup buffer
     bam_plbuf_t *buf = fetch_data->pileup_buffer;
@@ -343,13 +356,14 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 //hopefully grab out our calculated per/read values 
                 //FIXME these will be unavailable if there is no reference
                 //TODO Make sure the defaults on the above are reasonable if there is nothing available
-                uint8_t *tag_ptr = bam_aux_get(base->b, "ZR") + 1;
+                uint8_t *tag_ptr = bam_aux_get(base->b, "Zm") + 1;
                 if(tag_ptr) {
-                    mismatch_sum = (int32_t)*(int32_t*)(tag_ptr);
-                    clipped_length = (int32_t)*(int32_t*)(tag_ptr+4);
-                    left_clip = (int32_t)*(int32_t*)(tag_ptr+8);
-                    three_prime_index = (int32_t)*(int32_t*)(tag_ptr+12);
-                    q2_val = (int32_t)*(int32_t*)(tag_ptr+16);
+                    aux_zm_t zm = aux_zm_t::from_string((char const*)tag_ptr);
+                    mismatch_sum = zm.sum_of_mismatch_qualities;
+                    clipped_length = zm.clipped_length;
+                    left_clip = zm.left_clip;
+                    three_prime_index = zm.three_prime_index;
+                    q2_val = zm.q2_pos;
 
                     sum_of_mismatch_qualities[c] += mismatch_sum;
                     indel_stat->sum_of_mismatch_qualities += mismatch_sum;
@@ -565,7 +579,11 @@ int main(int argc, char *argv[])
         }
         h = (khash_t(s)*)d->in->header->hash;
         std::string lineBuf;
-        while(fp >> ref_name >> beg >> end) { //getline(fp, lineBuf)) {
+        while(getline(fp, lineBuf)) {
+            std::stringstream ss(lineBuf);
+            if (!(ss >> ref_name >> beg >> end))
+                break;
+
             iter = kh_get(s, h, ref_name.c_str());
             if(iter == kh_end(h)) {
                 fprintf(stderr, "%s not found in bam file. Region %s %i %i skipped.\n",ref_name.c_str(),ref_name.c_str(),beg,end);
