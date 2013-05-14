@@ -19,6 +19,9 @@ endif ()
 find_package(Samtools 0.1.17 REQUIRED)
 include_directories(${Samtools_INCLUDE_DIRS})
 
+find_package(Threads)
+link_libraries(${CMAKE_THREAD_LIBS_INIT})
+
 # make sure to pick up headers from library dirs
 include_directories("src/lib")
 
