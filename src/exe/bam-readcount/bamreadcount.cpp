@@ -3,8 +3,10 @@
 #endif
 
 #include "bamrc/auxfields.hpp"
+#include "bamrc/ReadWarnings.hpp"
 
 #include <stdio.h>
+#include <memory>
 #include <string.h>
 #include "sam.h"
 #include "faidx.h"
@@ -12,6 +14,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fstream>
+#include <iostream>
 #include <string>
 
 
@@ -40,26 +43,28 @@ typedef struct {
 KHASH_MAP_INIT_STR(indels, indel_stat_t)
 
 
-//Struct to store info to be passed around    
+//Struct to store info to be passed around
 typedef struct {
     faidx_t *fai;       //index into fasta file
-    int tid;            //reference id 
+    int tid;            //reference id
     char *ref;          //reference sequence
     int min_mapq;       //minimum mapping qualitiy to use
     int min_bq;       //minimum mapping qualitiy to use
     int beg,end;        //start and stop of region
     int len;            //length of currently loaded reference sequence
-    samfile_t *in;      //bam file 
+    samfile_t *in;      //bam file
     int distribution;   //whether or not to display all mapping qualities
 } pileup_data_t;
 
 //struct to store reference for passing to fetch func
-typedef struct { 
+typedef struct {
     const char* seq_name;
     int ref_len;
     char **ref_pointer;
     bam_plbuf_t* pileup_buffer;
 } fetch_data_t;
+
+static std::auto_ptr<ReadWarnings> WARN;
 
 // callback for bam_fetch()
 static int fetch_func(const bam1_t *b, void *data) {
@@ -68,7 +73,7 @@ static int fetch_func(const bam1_t *b, void *data) {
     char *ref = *(fetch_data->ref_pointer);
     //FIXME Won't want to do this if refseq is not included
 
-    //calculate single nucleotide mismatches and sum their qualities 
+    //calculate single nucleotide mismatches and sum their qualities
     uint8_t *seq = bam1_seq(b);
     uint32_t *cigar = bam1_cigar(b);
     const bam1_core_t *core = &(b->core);
@@ -107,7 +112,7 @@ static int fetch_func(const bam1_t *b, void *data) {
                         if(last_mismatch_position + 1 != current_base_position) {
                             //not an adjacent mismatch
                             sum_of_mismatch_qualities += last_mismatch_qual;
-                            last_mismatch_qual = qual; 
+                            last_mismatch_qual = qual;
                             last_mismatch_position = current_base_position;
                         }
                         else {
@@ -194,7 +199,7 @@ static int fetch_func(const bam1_t *b, void *data) {
     memcpy(temp+8, &left_clip,4);
     memcpy(temp+12, &three_prime_index,4);
     memcpy(temp+16, &q2_pos,4);
-    
+
     //store the value on the read, we're assuming it is always absent. This assumption may fail. Future proof if this idea has value
     aux_zm_t zm;
     zm.sum_of_mismatch_qualities = sum_of_mismatch_qualities;
@@ -229,7 +234,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         //set up data structures to count bases
         unsigned char possible_calls = (unsigned char) strlen(bam_canonical_nt_table);
         unsigned int *read_counts = (unsigned int*)calloc(possible_calls,sizeof(unsigned int));
-        unsigned int *sum_base_qualities = (unsigned int*)calloc(possible_calls,sizeof(unsigned int));  
+        unsigned int *sum_base_qualities = (unsigned int*)calloc(possible_calls,sizeof(unsigned int));
         unsigned int *sum_map_qualities = (unsigned int*)calloc(possible_calls,sizeof(unsigned int));
         unsigned int *sum_single_ended_map_qualities = (unsigned int*)calloc(possible_calls,sizeof(unsigned int));
         unsigned int **mapping_qualities = (unsigned int**)calloc(possible_calls, sizeof(unsigned int*));
@@ -258,7 +263,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             distances_to_3p[i] = (float*)calloc(n, sizeof(float));
         }
 
-        //loop over the bases, recycling i here. 
+        //loop over the bases, recycling i here.
         for(i = 0; i < n; ++i) {
             const bam_pileup1_t *base = pl + i; //get base index
             if(!base->is_del && base->b->core.qual >= tmp->min_mapq && bam1_qual(base->b)[base->qpos] >= tmp->min_bq) {
@@ -328,12 +333,12 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 }
                 indel_stat->read_count++;
                 indel_stat->sum_map_qualities += base->b->core.qual;
-                
+
                 //the following are done regardless of whether or not there is an indel
                 int c = (int) bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos)];   //convert to index
                 read_counts[c] ++; //calloc should 0 out the mem
                 sum_base_qualities[c] += bam1_qual(base->b)[base->qpos];
-                sum_map_qualities[c] += base->b->core.qual; 
+                sum_map_qualities[c] += base->b->core.qual;
                 //add in strand info
                 //TODO STORE THIS TO avoid repetitively calculating for indels
                 if(base->b->core.flag & BAM_FREVERSE) {
@@ -352,8 +357,8 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 int32_t mismatch_sum = 0;
                 int32_t q2_val = 0;
                 int32_t three_prime_index = 0;
-                
-                //hopefully grab out our calculated per/read values 
+
+                //hopefully grab out our calculated per/read values
                 //FIXME these will be unavailable if there is no reference
                 //TODO Make sure the defaults on the above are reasonable if there is nothing available
                 uint8_t *tag_ptr = bam_aux_get(base->b, "Zm") + 1;
@@ -390,7 +395,8 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
 
                 }
                 else {
-                    fprintf(stderr, "Couldn't grab the generated tag for readname %s.\n",  bam1_qname(base->b));
+                    //fprintf(stderr, "Couldn't grab the generated tag for readname %s.\n",  bam1_qname(base->b));
+                    WARN->warn(ReadWarnings::Zm_TAG_MISSING, bam1_qname(base->b));
                 }
 
 
@@ -404,7 +410,8 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                         indel_stat->sum_single_ended_map_qualities += single_ended_map_qual;
                     }
                     else {
-                        fprintf(stderr,"Couldn't grab single-end mapping quality for read %s. Check to see if SM tag is in BAM\n",bam1_qname(base->b));
+                        WARN->warn(ReadWarnings::SM_TAG_MISSING, bam1_qname(base->b));
+                        //fprintf(stderr,"Couldn't grab single-end mapping quality for read %s. Check to see if SM tag is in BAM\n",bam1_qname(base->b));
                     }
                 }
                 else {
@@ -421,7 +428,8 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     indel_stat->sum_number_of_mismatches += number_mismatches / (float) clipped_length;
                 }
                 else {
-                    fprintf(stderr, "Couldn't grab number of mismatches for read %s. Check to see if NM tag is in BAM\n", bam1_qname(base->b));
+                    //fprintf(stderr, "Couldn't grab number of mismatches for read %s. Check to see if NM tag is in BAM\n", bam1_qname(base->b));
+                    WARN->warn(ReadWarnings::NM_TAG_MISSING, bam1_qname(base->b));
                 }
 
 
@@ -435,7 +443,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         //print out the base information
         //Note that if there is 0 depth then that averages are reported as 0
         unsigned char j;
-        for(j = 0; j < possible_calls; ++j) { 
+        for(j = 0; j < possible_calls; ++j) {
             unsigned int iter;
             if(tmp->distribution) {
                 printf("\t%c:%d:", bam_canonical_nt_table[j], read_counts[j]);
@@ -507,17 +515,20 @@ int main(int argc, char *argv[])
 {
     int c,distribution = 0;
     char *fn_fa = 0, *fn_pos = 0;
+    int64_t max_warnings = -1;
+
     pileup_data_t *d = (pileup_data_t*)calloc(1, sizeof(pileup_data_t));
     fetch_data_t *f = (fetch_data_t*)calloc(1, sizeof(pileup_data_t));
     d->tid = -1, d->min_mapq = 0, d->min_bq = 0;
-    while ((c = getopt(argc, argv, "q:f:l:db:")) >= 0) {
+    while ((c = getopt(argc, argv, "q:f:l:db:w:")) >= 0) {
         switch (c) {
             case 'q': d->min_mapq = atoi(optarg); break;
             case 'b': d->min_bq = atoi(optarg); break;
             case 'l': fn_pos = strdup(optarg); break;
             case 'f': fn_fa = strdup(optarg); break;
-            case 'd': distribution = 1; break;          
-            default: fprintf(stderr, "Unrecognizd option '-%c'.\n", c); return 1;
+            case 'd': distribution = 1; break;
+            case 'w': max_warnings = atoi(optarg); break;
+            default: fprintf(stderr, "Unrecognized option '-%c'.\n", c); return 1;
         }
     }
     if (argc - optind == 0) {
@@ -527,7 +538,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "        -b INT    don't include reads where the base quality is less than INT [%d]\n", d->min_bq);
         fprintf(stderr, "        -f FILE   reference sequence in the FASTA format\n");
         fprintf(stderr, "        -l FILE   list of regions to report readcounts within.\n");
-        fprintf(stderr, "        -d        report the mapping qualities as a comma separated list\n\n");
+        fprintf(stderr, "        -d        report the mapping qualities as a comma separated list\n");
+        fprintf(stderr, "        -w        maximum number of warnings of each type to emit [unlimited]\n\n");
         fprintf(stderr, "This program reports readcounts for each base at each position requested.\n");
         fprintf(stderr, "\nPositions should be requested via the -l option as chromosome, start, stop\nwhere the coordinates are 1-based and each field is separated by whitespace.\n");
         fprintf(stderr, "\nA single region may be requested on the command-line similarly to samtools view\n(i.e. bam-readcount -f ref.fa some.bam 1:150-150).\n\n");
@@ -537,6 +549,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "\n");
         return 1;
     }
+    WARN.reset(new ReadWarnings(std::cerr, max_warnings));
+
     if (fn_fa) d->fai = fai_load(fn_fa);
     d->beg = 0; d->end = 0x7fffffff;
     d->distribution = distribution;
@@ -559,8 +573,8 @@ int main(int argc, char *argv[])
         }
         //Now iterate through and do calculations for each one
         std::string ref_name;
-        int beg; 
-        int end; 
+        int beg;
+        int end;
         int ref;
 
 
@@ -591,13 +605,13 @@ int main(int argc, char *argv[])
             else {
                 // ref id exists
                 //fprintf(stderr, "%s %i %i scanned in\n",ref_name,beg,end);
-                ref = kh_value(h,iter);  
+                ref = kh_value(h,iter);
                 //fprintf(stderr, "%i %i %i scanned in\n",ref,beg,end);
                 d->beg = beg-1;
                 d->end = end;
                 if (d->fai && ref != d->tid) {
                     free(d->ref);
-                    //would this be faster to just grab small chunks? Probably at some level, but not at others. How would chunking affect the indel allele calculations? Those assume that the indel allele is present in the ref and potentially occupy more than just the region of interest 
+                    //would this be faster to just grab small chunks? Probably at some level, but not at others. How would chunking affect the indel allele calculations? Those assume that the indel allele is present in the ref and potentially occupy more than just the region of interest
                     d->ref = fai_fetch(d->fai, d->in->header->target_name[ref], &d->len);
                     d->tid = ref;
                 }

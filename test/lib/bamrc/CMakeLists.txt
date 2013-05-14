@@ -4,3 +4,4 @@ set(TEST_LIBS )
 include_directories(${GTEST_INCLUDE_DIRS})
 
 def_test(AuxFields)
+def_test(ReadWarnings)
