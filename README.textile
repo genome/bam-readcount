@@ -1,8 +1,58 @@
 h1. bam-readcount 
 
 p. The purpose of this program is to generate metrics at single nucleotide positions.
+There are number of metrics generated which can be useful for filtering out false positive calls.
 Help is currently available on the commandline if you do not supply the program
 any arguments.
+
+Usage: bam-readcount <bam_file> [region]
+        -q INT    filtering reads with mapping quality less than INT [0]
+        -b INT    don't include reads where the base quality is less than INT [0]
+        -f FILE   reference sequence in the FASTA format
+        -l FILE   list of regions to report readcounts within
+        -d        report the mapping qualities as a comma separated list
+
+This program reports readcounts for each base at each position requested.
+It also reports the average base quality of these bases and mapping qualities of
+the reads containing each base.
+
+The list of regions should be formatted as chromosome start and end. Each field should be tab separated and coordinates should be 1-based.
+The optional region specification on the command line should follow the same format as that used for samtools (chr:start-stop)
+
+The output format is as follows:
+chr	position	reference_base	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end   ...
+
+Each tab separated field contains the following information, each one is tab-separated:
+
+base -> the base that all reads following in this field contain at the reported position i.e. C
+
+count -> the number of reads containing the base
+
+avg_mapping_quality -> the mean mapping quality of reads containing the base
+
+avg_basequality -> the mean base quality for these reads
+
+avg_se_mapping_quality -> mean single ended mapping quality
+
+num_plus_strand -> number of reads on the plus/forward strand
+
+num_minus_strand -> number of reads on the minus/reverse strand
+
+avg_pos_as_fraction -> average position on the read as a fraction (calculated with respect to the length after clipping)
+
+avg_num_mismatches_as_fraction -> average number of mismatches on these reads per base
+
+avg_sum_mismatch_qualities -> average sum of the base qualities of mismatches in the reads
+
+num_q2_containing_reads -> number of reads with q2 runs at the 3' end
+
+avg_distance_to_q2_start_in_q2_reads -> average distance of position (as fraction of unclipped read length) to the start of the q2 run
+
+avg_clipped_length -> average clipped read length of reads
+
+avg_distance_to_effective_3p_end -> average distance to the 3' prime end of the read (as fraction of unclipped read length)
+
+
 
 h2. Build Dependencies
 
