@@ -52,6 +52,7 @@ typedef struct {
     int min_bq;       //minimum mapping qualitiy to use
     int beg,end;        //start and stop of region
     int len;            //length of currently loaded reference sequence
+    int max_cnt;       //maximum depth to set on the pileup buffer 
     samfile_t *in;      //bam file
     int distribution;   //whether or not to display all mapping qualities
 } pileup_data_t;
@@ -519,14 +520,15 @@ int main(int argc, char *argv[])
 
     pileup_data_t *d = (pileup_data_t*)calloc(1, sizeof(pileup_data_t));
     fetch_data_t *f = (fetch_data_t*)calloc(1, sizeof(pileup_data_t));
-    d->tid = -1, d->min_mapq = 0, d->min_bq = 0;
-    while ((c = getopt(argc, argv, "q:f:l:db:w:")) >= 0) {
+    d->tid = -1, d->min_mapq = 0, d->min_bq = 0, d->max_cnt = 10000000;
+    while ((c = getopt(argc, argv, "q:f:l:Db:w:d:")) >= 0) {
         switch (c) {
             case 'q': d->min_mapq = atoi(optarg); break;
             case 'b': d->min_bq = atoi(optarg); break;
+            case 'd': d->max_cnt = atoi(optarg); break;
             case 'l': fn_pos = strdup(optarg); break;
             case 'f': fn_fa = strdup(optarg); break;
-            case 'd': distribution = 1; break;
+            case 'D': distribution = 1; break;
             case 'w': max_warnings = atoi(optarg); break;
             default: fprintf(stderr, "Unrecognized option '-%c'.\n", c); return 1;
         }
@@ -536,9 +538,10 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Usage: bam-readcount <bam_file> [region]\n");
         fprintf(stderr, "        -q INT    filtering reads with mapping quality less than INT [%d]\n", d->min_mapq);
         fprintf(stderr, "        -b INT    don't include reads where the base quality is less than INT [%d]\n", d->min_bq);
+        fprintf(stderr, "        -d INT    max depth to avoid excessive memory usage [%d]\n", d->max_cnt);
         fprintf(stderr, "        -f FILE   reference sequence in the FASTA format\n");
         fprintf(stderr, "        -l FILE   list of regions to report readcounts within.\n");
-        fprintf(stderr, "        -d        report the mapping qualities as a comma separated list\n");
+        fprintf(stderr, "        -D        report the mapping qualities as a comma separated list\n");
         fprintf(stderr, "        -w        maximum number of warnings of each type to emit [unlimited]\n\n");
         fprintf(stderr, "This program reports readcounts for each base at each position requested.\n");
         fprintf(stderr, "\nPositions should be requested via the -l option as chromosome, start, stop\nwhere the coordinates are 1-based and each field is separated by whitespace.\n");
@@ -616,6 +619,7 @@ int main(int argc, char *argv[])
                     d->tid = ref;
                 }
                 bam_plbuf_t *buf = bam_plbuf_init(pileup_func, d); // initialize pileup
+                bam_plp_set_maxcnt(buf->iter, d->max_cnt);
                 f->pileup_buffer = buf;
                 if (d->fai) {
                     f->ref_len = d->len;
@@ -669,6 +673,7 @@ int main(int argc, char *argv[])
                 d->tid = ref;
             }
             buf = bam_plbuf_init(pileup_func, d); // initialize pileup
+            bam_plp_set_maxcnt(buf->iter, d->max_cnt);
             f->pileup_buffer = buf;
             f->ref_pointer = &(d->ref);
             bam_fetch(d->in->x.bam, idx, ref, d->beg, d->end, f, fetch_func);
