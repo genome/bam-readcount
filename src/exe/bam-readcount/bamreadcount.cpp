@@ -362,8 +362,9 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 //hopefully grab out our calculated per/read values
                 //FIXME these will be unavailable if there is no reference
                 //TODO Make sure the defaults on the above are reasonable if there is nothing available
-                uint8_t *tag_ptr = bam_aux_get(base->b, "Zm") + 1;
+                uint8_t *tag_ptr = bam_aux_get(base->b, "Zm");
                 if(tag_ptr) {
+                    ++tag_ptr;
                     aux_zm_t zm = aux_zm_t::from_string((char const*)tag_ptr);
                     mismatch_sum = zm.sum_of_mismatch_qualities;
                     clipped_length = zm.clipped_length;
