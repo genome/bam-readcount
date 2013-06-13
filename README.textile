@@ -100,4 +100,4 @@ This is a known bug that will be addressed in future versions. In most cases, yo
 
 h2. User Support
 
-p. Please mail genome-dev@genome.wustl.edu with problems or questions.
+p. Please first search "Biostar":http://www.biostars.org and then ask a question there if needed.  We automatically monitor "Biostar":http://www.biostars.org for questions related to our tools.
