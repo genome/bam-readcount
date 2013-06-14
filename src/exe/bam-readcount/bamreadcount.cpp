@@ -536,7 +536,7 @@ int main(int argc, char *argv[])
     }
     if (argc - optind == 0) {
         fprintf(stderr, "\n");
-        fprintf(stderr, "Usage: bam-readcount <bam_file> [region]\n");
+        fprintf(stderr, "Usage: bam-readcount <bam_file> [region]...\n");
         fprintf(stderr, "        -q INT    filtering reads with mapping quality less than INT [%d]\n", d->min_mapq);
         fprintf(stderr, "        -b INT    don't include reads where the base quality is less than INT [%d]\n", d->min_bq);
         fprintf(stderr, "        -d INT    max depth to avoid excessive memory usage [%d]\n", d->max_cnt);
@@ -546,7 +546,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "        -w        maximum number of warnings of each type to emit [unlimited]\n\n");
         fprintf(stderr, "This program reports readcounts for each base at each position requested.\n");
         fprintf(stderr, "\nPositions should be requested via the -l option as chromosome, start, stop\nwhere the coordinates are 1-based and each field is separated by whitespace.\n");
-        fprintf(stderr, "\nA single region may be requested on the command-line similarly to samtools view\n(i.e. bam-readcount -f ref.fa some.bam 1:150-150).\n\n");
+        fprintf(stderr, "\nA list of regions may be requested on the command-line similarly to samtools view\n(i.e. bam-readcount -f ref.fa some.bam 1:150-150 7:123-456).\n\n");
         fprintf(stderr, "It also reports the average base quality of these bases and mapping qualities of\n");
         fprintf(stderr, "the reads containing each base.\n\nThe format is as follows:\nchr\tposition\treference_base\tbase:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualitiest:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end...\n");
 
@@ -657,30 +657,31 @@ int main(int argc, char *argv[])
         } else {
             int ref;
             bam_index_t *idx;
-            bam_plbuf_t *buf;
             idx = bam_index_load(argv[optind]); // load BAM index
             if (idx == 0) {
                 fprintf(stderr, "BAM indexing file is not available.\n");
                 return 1;
             }
-            bam_parse_region(d->in->header, argv[optind + 1], &ref, &(d->beg), &(d->end)); // parse the region
-            if (ref < 0) {
-                fprintf(stderr, "Invalid region %s\n", argv[optind + 1]);
-                return 1;
+            for (unsigned i = optind + 1; i < argc; ++i) {
+                bam_parse_region(d->in->header, argv[i], &ref, &(d->beg), &(d->end)); // parse the region
+                if (ref < 0) {
+                    fprintf(stderr, "Invalid region %s\n", argv[i]);
+                    return 1;
+                }
+                if (d->fai && ref != d->tid) {
+                    free(d->ref);
+                    d->ref = fai_fetch(d->fai, d->in->header->target_name[ref], &d->len);
+                    d->tid = ref;
+                }
+                bam_plbuf_t *buf = bam_plbuf_init(pileup_func, d); // initialize pileup
+                bam_plp_set_maxcnt(buf->iter, d->max_cnt);
+                f->pileup_buffer = buf;
+                f->ref_pointer = &(d->ref);
+                bam_fetch(d->in->x.bam, idx, ref, d->beg, d->end, f, fetch_func);
+                bam_plbuf_push(0, buf); // finalize pileup
+                bam_plbuf_destroy(buf);
             }
-            if (d->fai && ref != d->tid) {
-                free(d->ref);
-                d->ref = fai_fetch(d->fai, d->in->header->target_name[ref], &d->len);
-                d->tid = ref;
-            }
-            buf = bam_plbuf_init(pileup_func, d); // initialize pileup
-            bam_plp_set_maxcnt(buf->iter, d->max_cnt);
-            f->pileup_buffer = buf;
-            f->ref_pointer = &(d->ref);
-            bam_fetch(d->in->x.bam, idx, ref, d->beg, d->end, f, fetch_func);
-            bam_plbuf_push(0, buf); // finalize pileup
             bam_index_destroy(idx);
-            bam_plbuf_destroy(buf);
         }
         if(d->ref) {
             free(d->ref);
