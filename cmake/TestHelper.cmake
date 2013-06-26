@@ -38,7 +38,7 @@ macro(add_unit_tests test_name)
     if($ENV{BC_UNIT_TEST_VG})
         add_test(
             NAME ${test_name}
-            COMMAND valgrind --leak-check=full --error-exitcode=1 $<TARGET_FILE:${test_ame}>
+            COMMAND valgrind --leak-check=full --error-exitcode=1 $<TARGET_FILE:${test_name}>
             )
     else()
         add_test(NAME ${test_name} COMMAND ${test_name})
