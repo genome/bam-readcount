@@ -30,6 +30,23 @@ set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${GTEST_LIBRARY})
 add_library(gtest_main STATIC IMPORTED)
 set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${GTEST_MAIN_LIBRARY})
 
+macro(add_unit_tests test_name)
+    set(src_files ${ARGN})
+    add_executable(${test_name} ${src_files} ${COMMON_SOURCES})
+    target_link_libraries(${test_name} ${TEST_LIBS} gtest gtest_main)
+    add_dependencies(${test_name} gtest160)
+    if($ENV{BC_UNIT_TEST_VG})
+        add_test(
+            NAME ${test_name}
+            COMMAND valgrind --leak-check=full --error-exitcode=1 $<TARGET_FILE:${test_ame}>
+            )
+    else()
+        add_test(NAME ${test_name} COMMAND ${test_name})
+    endif()
+
+    set_tests_properties(${test_name} PROPERTIES LABELS unit)
+endmacro(add_unit_tests test_name src_files)
+
 macro(def_test testName)
     add_executable(Test${testName} Test${testName}.cpp ${COMMON_SOURCES})
     target_link_libraries(Test${testName} ${TEST_LIBS} gtest gtest_main)
