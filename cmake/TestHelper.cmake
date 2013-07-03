@@ -10,7 +10,7 @@ set_directory_properties(PROPERTIES
 set(GTEST_LIB_DIR ${CMAKE_BINARY_DIR}/vendor/gtest160-build)
 ExternalProject_Add(
     gtest160
-    URL ${CMAKE_CURRENT_SOURCE_DIR}/build-common/vendor/gtest-1.6.0.zip
+    URL ${CMAKE_CURRENT_SOURCE_DIR}/build-common/vendor/gtest-1.6.0.tar.gz
     INSTALL_COMMAND ""
     BINARY_DIR ${GTEST_LIB_DIR}
     )
