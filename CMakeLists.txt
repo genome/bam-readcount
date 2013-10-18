@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(bam-readcount)
 
 set(CMAKE_INSTALL_PREFIX "/usr")
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/build-common/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_SOURCE_DIR}/build-common/cmake")
 include(TestHelper)
 include(VersionHelper)
 include(ProjectHelper)
@@ -16,7 +16,8 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "-Wall")
 endif ()
 
-find_package(Samtools 0.1.17 REQUIRED)
+#find_package(Samtools 0.1.17 REQUIRED)
+include(BuildSamtools)
 include_directories(${Samtools_INCLUDE_DIRS})
 
 find_package(Threads)
