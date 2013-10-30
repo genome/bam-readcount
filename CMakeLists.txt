@@ -16,9 +16,12 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "-Wall")
 endif ()
 
-#find_package(Samtools 0.1.17 REQUIRED)
 include(BuildSamtools)
 include_directories(${Samtools_INCLUDE_DIRS})
+
+add_custom_target(deps ALL)
+add_dependencies(deps samtools-lib)
+
 
 find_package(Threads)
 link_libraries(${CMAKE_THREAD_LIBS_INIT})
