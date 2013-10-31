@@ -58,17 +58,21 @@ h2. Build Dependencies
 
 * git
 * cmake 2.8+ ("cmake.org":http://cmake.org)
-* samtools ("sourceforge download page":http://sourceforge.net/projects/samtools/files/samtools/)
-** We have tested as new as version 0.1.17 with no trouble. Older versions may not have been tested, but we anticipate they should work.
+
+h3. Available Packages for Dependencies
+* For APT-based systems (Debian, Ubuntu), install the following packages:
+
+bc. sudo apt-get install build-essential git-core cmake zlib1g-dev libncurses-dev
+
+* For RPM-based systems (Fedora, CentOS, RHEL), install the following packages instead:
+
+bc. sudo yum groupinstall "Development tools" 
+sudo yum install zlib-devel ncurses-devel cmake
+
+Note that for some RPM based systems (like RHEL), you will need to install cmake 2.8 or greater yourself as the packaged version is much older.
+
 
 h2. Build Instructions
-
-h3. Build Samtools
-
-* Download and extract samtools to a directory of your choosing.
-* Enter that directory and run make
-* Set an environment variable called SAMTOOLS_ROOT to point to this directory. 
-** For example (if you are using bash), you can use @export SAMTOOLS_ROOT=`pwd`@ if you are still in the samtools directory or simply @export SAMTOOLS_ROOT=/path/to/samtools@ otherwise.
 
 h3. Clone the bam-readcount repository
 * Recursively clone the git repository
@@ -79,6 +83,7 @@ h3. Compile bam-readcount
 * bam-readcount does not support in source builds. Create a new build directory, enter it, and run:
 
 bc..         cmake /path/to/bam-readcount/repo
+        make deps
         make
 
 p. The binary can then be found in the bin/ subdirectory of your build directory.
