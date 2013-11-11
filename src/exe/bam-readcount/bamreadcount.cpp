@@ -524,48 +524,59 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         printf("%s\t%d\t%c\t%d", tmp->in->header->target_name[tid], pos + 1, (tmp->ref && (int)pos < tmp->len) ? tmp->ref[pos] : 'N', mapq_n );
         //print out the base information
         //Note that if there is 0 depth then that averages are reported as 0
-        unsigned char j;
-        for(j = 0; j < possible_calls; ++j) {
-            unsigned int iter;
-            if(tmp->distribution) {
-                printf("\t%c:%d:", bam_canonical_nt_table[j], base_stat->read_counts[j]);
-                for(iter = 0; iter < base_stat->num_mapping_qualities[j]; iter++) {
-                    if(iter != 0) {
-                        printf(",");
-                    }
-                    printf("%d",base_stat->mapping_qualities[j][iter]);
-                }
-                printf(":");
-                for(iter = 0; iter < base_stat->num_distances_to_3p[j]; iter++) {
-                    if(iter != 0) {
-                        printf(",");
-                    }
-                    printf("%0.02f",base_stat->distances_to_3p[j][iter]);
-                }
 
-            }
-            else {
-                printf("\t%c:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f:%0.02f:%0.02f:%d:%0.02f:%0.02f:%0.02f", bam_canonical_nt_table[j], base_stat->read_counts[j], base_stat->read_counts[j] ? (float)base_stat->sum_map_qualities[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float)base_stat->sum_base_qualities[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float)base_stat->sum_single_ended_map_qualities[j]/base_stat->read_counts[j] : 0, base_stat->num_plus_strand[j], base_stat->num_minus_strand[j], base_stat->read_counts[j] ? base_stat->sum_base_location[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_number_of_mismatches[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_of_mismatch_qualities[j]/base_stat->read_counts[j] : 0, base_stat->num_q2_reads[j], base_stat->read_counts[j] ? (float) base_stat->sum_q2_distance[j]/base_stat->num_q2_reads[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_of_clipped_lengths[j]/base_stat->read_counts[j] : 0,base_stat->read_counts[j] ? (float) base_stat->sum_3p_distance[j]/base_stat->read_counts[j] : 0);
-            }
-        }
-        //here print out indels if they exist
-
-        khiter_t iterator;
-        for(iterator = kh_begin(hash); iterator != kh_end(hash); iterator++) {
-            if(kh_exist(hash,iterator)) {
+        khiter_t lib_iter;
+        for(lib_iter = kh_begin(lib_counts); lib_iter != kh_end(lib_counts); lib_iter++) {
+            if(kh_exist(lib_counts,lib_iter)) {
                 //print it
-                indel_stat_t *stats = &(kh_value(hash,iterator));
-                printf("\t%s:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f:%0.02f:%0.02f:%d:%0.02f:%0.02f:%0.02f", kh_key(hash, iterator), stats->read_count, (float)stats->sum_map_qualities/stats->read_count, 0.0, (float)stats->sum_single_ended_map_qualities/stats->read_count, stats->num_plus_strand, stats->num_minus_strand, stats->sum_indel_location/stats->read_count, (float) stats->sum_number_of_mismatches/stats->read_count, (float) stats->sum_of_mismatch_qualities/stats->read_count, stats->num_q2_reads, (float) stats->sum_q2_distance/stats->num_q2_reads, (float) stats->sum_of_clipped_lengths/stats->read_count,(float) stats->sum_3p_distance/stats->read_count);
-                free((char *) kh_key(hash,iterator));
-                kh_del(indels,hash,iterator);
+                printf("\t%s\t{\t",kh_key(lib_counts, lib_iter));
+                library_counts_t *lib_count = &(kh_value(lib_counts, lib_iter));
+                base_stat = &(lib_count->base_stat);
+
+                unsigned char j;
+                for(j = 0; j < possible_calls; ++j) {
+                    unsigned int iter;
+                    if(tmp->distribution) {
+                        printf("\t%c:%d:", bam_canonical_nt_table[j], base_stat->read_counts[j]);
+                        for(iter = 0; iter < base_stat->num_mapping_qualities[j]; iter++) {
+                            if(iter != 0) {
+                                printf(",");
+                            }
+                            printf("%d",base_stat->mapping_qualities[j][iter]);
+                        }
+                        printf(":");
+                        for(iter = 0; iter < base_stat->num_distances_to_3p[j]; iter++) {
+                            if(iter != 0) {
+                                printf(",");
+                            }
+                            printf("%0.02f",base_stat->distances_to_3p[j][iter]);
+                        }
+
+                    }
+                    else {
+                        printf("\t%c:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f:%0.02f:%0.02f:%d:%0.02f:%0.02f:%0.02f", bam_canonical_nt_table[j], base_stat->read_counts[j], base_stat->read_counts[j] ? (float)base_stat->sum_map_qualities[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float)base_stat->sum_base_qualities[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float)base_stat->sum_single_ended_map_qualities[j]/base_stat->read_counts[j] : 0, base_stat->num_plus_strand[j], base_stat->num_minus_strand[j], base_stat->read_counts[j] ? base_stat->sum_base_location[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_number_of_mismatches[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_of_mismatch_qualities[j]/base_stat->read_counts[j] : 0, base_stat->num_q2_reads[j], base_stat->read_counts[j] ? (float) base_stat->sum_q2_distance[j]/base_stat->num_q2_reads[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_of_clipped_lengths[j]/base_stat->read_counts[j] : 0,base_stat->read_counts[j] ? (float) base_stat->sum_3p_distance[j]/base_stat->read_counts[j] : 0);
+                    }
+                }
+                //here print out indels if they exist=
+                hash = lib_count->hash;
+                khiter_t iterator;
+                for(iterator = kh_begin(hash); iterator != kh_end(hash); iterator++) {
+                    if(kh_exist(hash,iterator)) {
+                        //print it
+                        indel_stat_t *stats = &(kh_value(hash,iterator));
+                        printf("\t%s:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f:%0.02f:%0.02f:%d:%0.02f:%0.02f:%0.02f", kh_key(hash, iterator), stats->read_count, (float)stats->sum_map_qualities/stats->read_count, 0.0, (float)stats->sum_single_ended_map_qualities/stats->read_count, stats->num_plus_strand, stats->num_minus_strand, stats->sum_indel_location/stats->read_count, (float) stats->sum_number_of_mismatches/stats->read_count, (float) stats->sum_of_mismatch_qualities/stats->read_count, stats->num_q2_reads, (float) stats->sum_q2_distance/stats->num_q2_reads, (float) stats->sum_of_clipped_lengths/stats->read_count,(float) stats->sum_3p_distance/stats->read_count);
+                        free((char *) kh_key(hash,iterator));
+                        kh_del(indels,hash,iterator);
+                    }
+                }
+
+                printf("\t}");
+                kh_destroy(indels,hash);
+                destroy_base_stat(base_stat);
             }
         }
-
-
         printf("\n");
-
-        kh_destroy(indels,hash);
-        destroy_base_stat(base_stat);
+        kh_destroy(libraries, lib_counts);
     }
 
     return 0;
