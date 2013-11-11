@@ -70,6 +70,11 @@ typedef struct {
 } indel_stat_t;
 KHASH_MAP_INIT_STR(indels, indel_stat_t)
 
+typedef struct {
+    khash_t(indels) *hash;
+    base_stat_t base_stat;
+} library_counts_t;
+KHASH_MAP_INIT_STR(libraries, library_counts_t);
 
 //Struct to store info to be passed around
 typedef struct {
@@ -309,17 +314,40 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
 
     if ((int)pos >= tmp->beg && (int)pos < tmp->end) {
 
-        base_stat_t base_stat;
-        initialize_base_stat_t(&base_stat, n);
         int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold
 
         //this is a hash to store indels
-        khash_t(indels) *hash = kh_init(indels);
-
+        khash_t(indels) *hash = 0;
+        base_stat_t *base_stat = 0;
+        khash_t(libraries) *lib_counts = kh_init(libraries);
 
         //loop over the bases, recycling i here.
         for(int i = 0; i < n; ++i) {
             const bam_pileup1_t *base = pl + i; //get base index
+            const char* library_name = bam_get_library(tmp->in->header, base->b);
+            
+            library_counts_t *lib_count; 
+            khiter_t lib = kh_get(libraries,lib_counts,library_name);
+            if(lib == kh_end(lib_counts)) {
+                //need to create a new entry
+                library_counts_t new_lib;
+                new_lib.hash = kh_init(indels);
+                initialize_base_stat_t(&new_lib.base_stat, n);
+
+                //new_lib.
+                int put_error;
+                lib = kh_put(libraries, lib_counts,library_name,&put_error);    //TODO should check for error here
+                kh_value(lib_counts,lib) = new_lib;
+            }
+            /*
+            else {
+                //found the site and we can free the allele string
+                free(library_name);
+            }*/
+            lib_count = &(kh_value(lib_counts, lib));
+            hash = lib_count->hash;
+            base_stat = &(lib_count->base_stat);
+
             if(!base->is_del && base->b->core.qual >= tmp->min_mapq && bam1_qual(base->b)[base->qpos] >= tmp->min_bq) {
                 mapq_n++;
 
@@ -390,19 +418,19 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
 
                 //the following are done regardless of whether or not there is an indel
                 int c = (int) bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos)];   //convert to index
-                base_stat.read_counts[c] ++; //calloc should 0 out the mem
-                base_stat.sum_base_qualities[c] += bam1_qual(base->b)[base->qpos];
-                base_stat.sum_map_qualities[c] += base->b->core.qual;
+                base_stat->read_counts[c] ++; //calloc should 0 out the mem
+                base_stat->sum_base_qualities[c] += bam1_qual(base->b)[base->qpos];
+                base_stat->sum_map_qualities[c] += base->b->core.qual;
                 //add in strand info
                 //TODO STORE THIS TO avoid repetitively calculating for indels
                 if(base->b->core.flag & BAM_FREVERSE) {
                     //mapped to the reverse strand
-                    base_stat.num_minus_strand[c]++;
+                    base_stat->num_minus_strand[c]++;
                     indel_stat->num_minus_strand++;
                 }
                 else {
                     //must be mapped to the plus strand
-                    base_stat.num_plus_strand[c]++;
+                    base_stat->num_plus_strand[c]++;
                     indel_stat->num_plus_strand++;
                 }
 
@@ -424,27 +452,27 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     three_prime_index = zm.three_prime_index;
                     q2_val = zm.q2_pos;
 
-                    base_stat.sum_of_mismatch_qualities[c] += mismatch_sum;
+                    base_stat->sum_of_mismatch_qualities[c] += mismatch_sum;
                     indel_stat->sum_of_mismatch_qualities += mismatch_sum;
 
 
                     if(q2_val > -1) {
                         //this is in read coordinates. Ignores clipping as q2 may be clipped
-                        base_stat.sum_q2_distance[c] += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
-                        base_stat.num_q2_reads[c]++;
+                        base_stat->sum_q2_distance[c] += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
+                        base_stat->num_q2_reads[c]++;
                         indel_stat->sum_q2_distance += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
                         indel_stat->num_q2_reads++;
                     }
-                    base_stat.sum_3p_distance[c] += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
-                    base_stat.distances_to_3p[c][base_stat.num_distances_to_3p[c]++] = (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
+                    base_stat->sum_3p_distance[c] += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
+                    base_stat->distances_to_3p[c][base_stat->num_distances_to_3p[c]++] = (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
                     indel_stat->sum_3p_distance += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
 
-                    base_stat.sum_of_clipped_lengths[c] += clipped_length;
+                    base_stat->sum_of_clipped_lengths[c] += clipped_length;
                     indel_stat->sum_of_clipped_lengths += clipped_length;
                     //calculate distance from center of read as an absolute value
                     //float read_center = (float)base->b->core.l_qseq/2.0;
                     float read_center = (float)clipped_length/2.0;
-                    base_stat.sum_base_location[c] += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
+                    base_stat->sum_base_location[c] += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
                     indel_stat->sum_indel_location += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
 
                 }
@@ -460,7 +488,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     uint8_t *sm_tag_ptr = bam_aux_get(base->b, "SM");
                     if(sm_tag_ptr) {
                         int32_t single_ended_map_qual = bam_aux2i(sm_tag_ptr);
-                        base_stat.sum_single_ended_map_qualities[c] += single_ended_map_qual;
+                        base_stat->sum_single_ended_map_qualities[c] += single_ended_map_qual;
                         indel_stat->sum_single_ended_map_qualities += single_ended_map_qual;
                     }
                     else {
@@ -470,7 +498,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 }
                 else {
                     //just add in the mapping quality as the single ended quality
-                    base_stat.sum_single_ended_map_qualities[c] += base->b->core.qual;
+                    base_stat->sum_single_ended_map_qualities[c] += base->b->core.qual;
                     indel_stat->sum_single_ended_map_qualities += base->b->core.qual;
                 }
 
@@ -478,7 +506,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 uint8_t *nm_tag_ptr = bam_aux_get(base->b, "NM");
                 if(nm_tag_ptr) {
                     int32_t number_mismatches = bam_aux2i(nm_tag_ptr);
-                    base_stat.sum_number_of_mismatches[c] += number_mismatches / (float) clipped_length;
+                    base_stat->sum_number_of_mismatches[c] += number_mismatches / (float) clipped_length;
                     indel_stat->sum_number_of_mismatches += number_mismatches / (float) clipped_length;
                 }
                 else {
@@ -487,7 +515,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 }
 
 
-                base_stat.mapping_qualities[c][base_stat.num_mapping_qualities[c]++] = base->b->core.qual;  //using post-increment here to alter stored number of mapping_qualities while using the previous number as the index to store. Tricky, sort of.
+                base_stat->mapping_qualities[c][base_stat->num_mapping_qualities[c]++] = base->b->core.qual;  //using post-increment here to alter stored number of mapping_qualities while using the previous number as the index to store. Tricky, sort of.
 
             }
         }
@@ -500,24 +528,24 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         for(j = 0; j < possible_calls; ++j) {
             unsigned int iter;
             if(tmp->distribution) {
-                printf("\t%c:%d:", bam_canonical_nt_table[j], base_stat.read_counts[j]);
-                for(iter = 0; iter < base_stat.num_mapping_qualities[j]; iter++) {
+                printf("\t%c:%d:", bam_canonical_nt_table[j], base_stat->read_counts[j]);
+                for(iter = 0; iter < base_stat->num_mapping_qualities[j]; iter++) {
                     if(iter != 0) {
                         printf(",");
                     }
-                    printf("%d",base_stat.mapping_qualities[j][iter]);
+                    printf("%d",base_stat->mapping_qualities[j][iter]);
                 }
                 printf(":");
-                for(iter = 0; iter < base_stat.num_distances_to_3p[j]; iter++) {
+                for(iter = 0; iter < base_stat->num_distances_to_3p[j]; iter++) {
                     if(iter != 0) {
                         printf(",");
                     }
-                    printf("%0.02f",base_stat.distances_to_3p[j][iter]);
+                    printf("%0.02f",base_stat->distances_to_3p[j][iter]);
                 }
 
             }
             else {
-                printf("\t%c:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f:%0.02f:%0.02f:%d:%0.02f:%0.02f:%0.02f", bam_canonical_nt_table[j], base_stat.read_counts[j], base_stat.read_counts[j] ? (float)base_stat.sum_map_qualities[j]/base_stat.read_counts[j] : 0, base_stat.read_counts[j] ? (float)base_stat.sum_base_qualities[j]/base_stat.read_counts[j] : 0, base_stat.read_counts[j] ? (float)base_stat.sum_single_ended_map_qualities[j]/base_stat.read_counts[j] : 0, base_stat.num_plus_strand[j], base_stat.num_minus_strand[j], base_stat.read_counts[j] ? base_stat.sum_base_location[j]/base_stat.read_counts[j] : 0, base_stat.read_counts[j] ? (float) base_stat.sum_number_of_mismatches[j]/base_stat.read_counts[j] : 0, base_stat.read_counts[j] ? (float) base_stat.sum_of_mismatch_qualities[j]/base_stat.read_counts[j] : 0, base_stat.num_q2_reads[j], base_stat.read_counts[j] ? (float) base_stat.sum_q2_distance[j]/base_stat.num_q2_reads[j] : 0, base_stat.read_counts[j] ? (float) base_stat.sum_of_clipped_lengths[j]/base_stat.read_counts[j] : 0,base_stat.read_counts[j] ? (float) base_stat.sum_3p_distance[j]/base_stat.read_counts[j] : 0);
+                printf("\t%c:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f:%0.02f:%0.02f:%d:%0.02f:%0.02f:%0.02f", bam_canonical_nt_table[j], base_stat->read_counts[j], base_stat->read_counts[j] ? (float)base_stat->sum_map_qualities[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float)base_stat->sum_base_qualities[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float)base_stat->sum_single_ended_map_qualities[j]/base_stat->read_counts[j] : 0, base_stat->num_plus_strand[j], base_stat->num_minus_strand[j], base_stat->read_counts[j] ? base_stat->sum_base_location[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_number_of_mismatches[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_of_mismatch_qualities[j]/base_stat->read_counts[j] : 0, base_stat->num_q2_reads[j], base_stat->read_counts[j] ? (float) base_stat->sum_q2_distance[j]/base_stat->num_q2_reads[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_of_clipped_lengths[j]/base_stat->read_counts[j] : 0,base_stat->read_counts[j] ? (float) base_stat->sum_3p_distance[j]/base_stat->read_counts[j] : 0);
             }
         }
         //here print out indels if they exist
@@ -537,7 +565,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         printf("\n");
 
         kh_destroy(indels,hash);
-        destroy_base_stat(&base_stat);
+        destroy_base_stat(base_stat);
     }
 
     return 0;
