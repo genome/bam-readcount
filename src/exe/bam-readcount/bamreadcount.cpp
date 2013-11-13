@@ -4,6 +4,7 @@
 
 #include "bamrc/auxfields.hpp"
 #include "bamrc/ReadWarnings.hpp"
+#include <boost/program_options.hpp>
 
 #include <stdio.h>
 #include <memory>
@@ -16,6 +17,10 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <cmath>
+
+using namespace std;
+namespace po = boost::program_options;
 
 /* This will convert all iub codes in the reads to N */
 char const* bam_canonical_nt_table = "=ACGTN";
@@ -585,12 +590,44 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
 int main(int argc, char *argv[])
 {
     int c,distribution = 0;
-    char *fn_fa = 0, *fn_pos = 0;
+    char *fn_fa = 0;
+    string fn_pos;
     int64_t max_warnings = -1;
 
     pileup_data_t *d = (pileup_data_t*)calloc(1, sizeof(pileup_data_t));
     fetch_data_t *f = (fetch_data_t*)calloc(1, sizeof(pileup_data_t));
-    d->tid = -1, d->min_mapq = 0, d->min_bq = 0, d->max_cnt = 10000000;
+    d->tid = -1, d->min_bq = 0, d->max_cnt = 10000000;
+
+    po::options_description desc("Available options");
+    desc.add_options()
+        ("help,h", "produce this message")
+        ("min-mapping-quality,q", po::value<int>(&d->min_mapq)->default_value(0), "minimum mapping quality of reads used for counting.")
+        ("min-base-quality,b", po::value<int>(&d->min_bq)->default_value(0), "minimum base quality at a position to use the read for counting.")
+        ("max-count,d", po::value<int>(&d->max_cnt)->default_value(10000000), "max depth to avoid excessive memory usage.")
+        ("site-list,t", po::value<string>(&fn_pos)->default_value(""), "file containing a list of regions to report readcounts within.") 
+        ;
+
+    po::options_description hidden("Hidden options");
+    hidden.add_options()
+        ("bam-file", po::value< vector<string> >(), "bam file(s)")
+        ;
+
+    po::options_description cmdline_options;
+    cmdline_options.add(desc).add(hidden);
+
+    po::positional_options_description p;
+    p.add("bam-file", -1);
+
+    po::variables_map vm;
+    po::store(po::command_line_parser(argc, argv).
+            options(cmdline_options).positional(p).run(), vm);
+    po::notify(vm);
+    if (vm.count("help") || vm.empty()) {
+        cout << desc << "\n";
+        return 1;
+    }
+    cout << "Minimum mapping quality is set to " << d->min_mapq << endl;
+/*
     while ((c = getopt(argc, argv, "q:f:l:Db:w:d:")) >= 0) {
         switch (c) {
             case 'q': d->min_mapq = atoi(optarg); break;
@@ -622,6 +659,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "\n");
         return 1;
     }
+*/
+return 1;
     WARN.reset(new ReadWarnings(std::cerr, max_warnings));
 
     if (fn_fa) d->fai = fai_load(fn_fa);
@@ -632,10 +671,10 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Fail to open BAM file %s\n", argv[optind]);
         return 1;
     }
-    if(fn_pos) {
-        std::ifstream fp(fn_pos);
+    if(!fn_pos.empty()) {
+        std::ifstream fp(fn_pos.c_str());
         if(!fp.is_open()) {
-            fprintf(stderr, "Failed to open region list file: %s\n", fn_pos);
+            cerr << "Failed to open region list file: " << fn_pos << endl;
             return 1;
         }
         bam_index_t *idx;
@@ -715,7 +754,7 @@ int main(int argc, char *argv[])
         }
         free(d);
         free(f);
-        free(fn_pos);
+        //free(fn_pos);
         free(fn_fa);
         return 0;
     }

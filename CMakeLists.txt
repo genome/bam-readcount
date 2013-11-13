@@ -9,7 +9,7 @@ include(VersionHelper)
 include(ProjectHelper)
 
 #stubbing in old version of Boost from older BD libraries. Switch to shipping boost at a later date
-find_package(Boost 1.35 REQUIRED)
+find_package(Boost 1.40 REQUIRED COMPONENTS program_options)
 include_directories(${Boost_INCLUDE_DIRS})
 
 if (CMAKE_COMPILER_IS_GNUCC)
@@ -26,6 +26,9 @@ include_directories(${Samtools_INCLUDE_DIRS})
 add_custom_target(deps ALL)
 add_dependencies(deps samtools-lib)
 
+#stubbing in old version of Boost from older BD libraries. Switch to shipping boost at a later date
+find_package(Boost 1.40 REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(Threads)
 link_libraries(${CMAKE_THREAD_LIBS_INIT})
