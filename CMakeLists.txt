@@ -8,6 +8,10 @@ include(TestHelper)
 include(VersionHelper)
 include(ProjectHelper)
 
+#stubbing in old version of Boost from older BD libraries. Switch to shipping boost at a later date
+find_package(Boost 1.35 REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
 if (CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_C_FLAGS "-Wall")
 endif ()
