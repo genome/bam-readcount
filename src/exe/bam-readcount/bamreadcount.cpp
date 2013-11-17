@@ -534,7 +534,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         for(lib_iter = kh_begin(lib_counts); lib_iter != kh_end(lib_counts); lib_iter++) {
             if(kh_exist(lib_counts,lib_iter)) {
                 //print it
-                printf("\t%s\t{\t",kh_key(lib_counts, lib_iter));
+                printf("\t%s\t{",kh_key(lib_counts, lib_iter));
                 library_counts_t *lib_count = &(kh_value(lib_counts, lib_iter));
                 base_stat = &(lib_count->base_stat);
 
@@ -630,7 +630,7 @@ int main(int argc, char *argv[])
         cout << desc << "\n";
         return 1;
     }
-    cout << "Minimum mapping quality is set to " << d->min_mapq << endl;
+    cerr << "Minimum mapping quality is set to " << d->min_mapq << endl;
     /*
     if (argc - optind == 0) {
         fprintf(stderr, "\n");
