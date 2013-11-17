@@ -93,6 +93,7 @@ typedef struct {
     int max_cnt;       //maximum depth to set on the pileup buffer 
     samfile_t *in;      //bam file
     int distribution;   //whether or not to display all mapping qualities
+    bool per_lib;
 } pileup_data_t;
 
 //struct to store reference for passing to fetch func
@@ -329,7 +330,10 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         //loop over the bases, recycling i here.
         for(int i = 0; i < n; ++i) {
             const bam_pileup1_t *base = pl + i; //get base index
-            const char* library_name = bam_get_library(tmp->in->header, base->b);
+            const char* library_name = "all";
+            if(tmp->per_lib) {
+                library_name = bam_get_library(tmp->in->header, base->b);
+            }
             
             library_counts_t *lib_count; 
             khiter_t lib = kh_get(libraries,lib_counts,library_name);
@@ -534,7 +538,9 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         for(lib_iter = kh_begin(lib_counts); lib_iter != kh_end(lib_counts); lib_iter++) {
             if(kh_exist(lib_counts,lib_iter)) {
                 //print it
-                printf("\t%s\t{",kh_key(lib_counts, lib_iter));
+                if(tmp->per_lib) {
+                    printf("\t%s\t{",kh_key(lib_counts, lib_iter));
+                }
                 library_counts_t *lib_count = &(kh_value(lib_counts, lib_iter));
                 base_stat = &(lib_count->base_stat);
 
@@ -575,7 +581,9 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     }
                 }
 
-                printf("\t}");
+                if(tmp->per_lib) {
+                    printf("\t}");
+                }
                 kh_destroy(indels,hash);
                 destroy_base_stat(base_stat);
             }
@@ -590,6 +598,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
 int main(int argc, char *argv[])
 {
     bool distribution = false;
+    bool per_lib = false;
     string fn_pos, fn_fa;
     int64_t max_warnings = -1;
 
@@ -605,7 +614,8 @@ int main(int argc, char *argv[])
         ("max-count,d", po::value<int>(&d->max_cnt)->default_value(10000000), "max depth to avoid excessive memory usage.")
         ("site-list,l", po::value<string>(&fn_pos), "file containing a list of regions to report readcounts within.") 
         ("reference-fasta,f", po::value<string>(&fn_fa), "reference sequence in the fasta format.") 
-        ("print-individual-mapq,D", po::value<bool>(&distribution), "report the mapping qualities as a comma separated list")
+        ("print-individual-mapq,D", po::value<bool>(&distribution), "report the mapping qualities as a comma separated list.")
+        ("per-library,p", po::bool_switch(&per_lib), "report results by library.")
         ("max-warnings,w", po::value<int64_t>(&max_warnings), "maximum number of warnings of each type to emit. -1 gives an unlimited number.")
         ;
 
@@ -657,6 +667,7 @@ int main(int argc, char *argv[])
     if (!fn_fa.empty()) d->fai = fai_load(fn_fa.c_str());
     d->beg = 0; d->end = 0x7fffffff;
     d->distribution = distribution;
+    d->per_lib = per_lib;
     d->in = samopen(vm["bam-file"].as<string>().c_str(), "rb", 0);
     if (d->in == 0) {
         fprintf(stderr, "Fail to open BAM file %s\n", argv[optind]);
