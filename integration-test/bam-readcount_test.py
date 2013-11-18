@@ -27,7 +27,8 @@ class TestBamReadcount(IntegrationTest, unittest.TestCase):
         os.chdir(self.orig_path)
 
     def test_bamreadcount_normal(self):
-        expected_file = "expected_all_lib_regression"
+        """test default output is as expected"""
+        expected_file = "expected_all_lib"
         bam_file = "test.bam"
         ref_fasta = "ref.fa"
         site_list = "site_list"
@@ -39,24 +40,9 @@ class TestBamReadcount(IntegrationTest, unittest.TestCase):
         print "Return value:", rv
         self.assertEqual(0, rv)
         self.assertFilesEqual(expected_file, output_file)
-#    def test_bamreadcount_perlib(self):
-#        expected_file = "expected_per_lib"
-#        bam_file = "test.bam"
-#        ref_fasta = "ref.fa"
-#        site_list = "site_list"
-#        output_file = self.tempFile("output")
-#        cmdline = " ".join([self.exe_path, '-f', ref_fasta, '-l', site_list,bam_file, '>', output_file])
-#        print "Executing", cmdline
-#        print "CWD", os.getcwd()
-#        rv = subprocess.call(cmdline, shell=True)
-#        print "Return value:", rv
-#        self.assertEqual(0, rv)
-#        self.assertFilesEqual(expected_file, output_file) 
-    def test_bamreadcount_perlib_regression(self):
-        """for some reason we have a minor difference between running bam-readcount0.4 on 
-        individual libs versus the output for the per lib. This test uses an adjusted 
-        expected file that should pass so that we can refactor."""
-        expected_file = "expected_per_lib_regression"
+    def test_bamreadcount_perlib(self):
+        """test per lib output is as expected"""
+        expected_file = "expected_per_lib"
         bam_file = "test.bam"
         ref_fasta = "ref.fa"
         site_list = "site_list"
