@@ -121,7 +121,7 @@ std::ostream& operator<<(std::ostream& s, const BasicStat& stat) {
             s << 0.0 << ":";
         }
         else {
-            s << stat.sum_base_qualities / stat.read_count << ":";
+            s << (float) stat.sum_base_qualities / stat.read_count << ":";
         }
         s << (float) stat.sum_single_ended_map_qualities / stat.read_count << ":";
         s << stat.num_plus_strand << ":";
