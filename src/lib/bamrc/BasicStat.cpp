@@ -146,7 +146,7 @@ std::ostream& operator<<(std::ostream& s, const BasicStat& stat) {
         s << 0 << ":";
         s << 0.0 << ":";
         s << 0.0 << ":";
-        s << 0.0 << ":";
+        s << 0.0;
     }
     s.flags(current_flags); //save previous format flags
     s.precision(current_precision); // save previous precision setting
