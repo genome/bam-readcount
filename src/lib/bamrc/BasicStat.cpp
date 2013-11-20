@@ -1,9 +1,12 @@
 #include "BasicStat.hpp"
-#include "bamrc/auxfields.hpp"
-#include "bamrc/ReadWarnings.hpp"
+#include "auxfields.hpp"
+#include "ReadWarnings.hpp"
 
 #include <iomanip>
 #include <iostream>
+#include <memory>
+
+static std::auto_ptr<ReadWarnings> WARN(new ReadWarnings(std::cerr, -1));
 
 BasicStat::BasicStat()
     : read_count(0)
@@ -21,7 +24,7 @@ BasicStat::BasicStat()
 {
 }
 
-void BasicStat::process_read(bam_pileup1_t const& base) {
+void BasicStat::process_read(bam_pileup1_t const* base) {
     read_count++;
     sum_map_qualities += base->b->core.qual;
     if(base->b->core.flag & BAM_FREVERSE) {
@@ -62,7 +65,7 @@ void BasicStat::process_read(bam_pileup1_t const& base) {
 
         sum_of_clipped_lengths += clipped_length;
         float read_center = (float)clipped_length/2.0;
-        sum_indel_location += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
+        sum_event_location += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
 
     }
     else {
@@ -105,19 +108,19 @@ std::ostream& operator<<(std::ostream& s, const BasicStat& stat) {
     std::streamsize current_precision = s.precision(); // save previous precision setting
 
     s << std::fixed << std::setprecision(2);
-    s << read_count << ":";
-    s << (float) sum_map_qualities / read_count << ":";
-    s << "." << ":";   //this is for the base qualities. Stupid that this is in the base class...
-    s << (float) sum_single_ended_map_qualities / read_count << ":";
-    s << num_plus_strand << ":";
-    s << num_minus_strand << ":";
-    s << (float) sum_event_location / read_count << ":";
-    s << (float) sum_number_of_mismatches / read_count << ":";
-    s << (float) sum_of_mismatch_qualities / read_count << ":";
-    s << num_q2_reads << ":";
-    s << (float) sum_q2_distance / num_q2_reads << ":";
-    s << (float) sum_of_clipped_lengths / read_count << ":";
-    s << (float) sum_3p_distance / read_count;
+    s << stat.read_count << ":";
+    s << (float) stat.sum_map_qualities / stat.read_count << ":";
+    s << 0.0 << ":";   //this is for the base qualities. Stupid that this is in the base class...
+    s << (float) stat.sum_single_ended_map_qualities / stat.read_count << ":";
+    s << stat.num_plus_strand << ":";
+    s << stat.num_minus_strand << ":";
+    s << (float) stat.sum_event_location / stat.read_count << ":";
+    s << (float) stat.sum_number_of_mismatches / stat.read_count << ":";
+    s << (float) stat.sum_of_mismatch_qualities / stat.read_count << ":";
+    s << stat.num_q2_reads << ":";
+    s << (float) stat.sum_q2_distance / stat.num_q2_reads << ":";
+    s << (float) stat.sum_of_clipped_lengths / stat.read_count << ":";
+    s << (float) stat.sum_3p_distance / stat.read_count;
 
     s.flags(current_flags); //save previous format flags
     s.precision(current_precision); // save previous precision setting

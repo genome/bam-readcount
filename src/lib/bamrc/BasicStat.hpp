@@ -7,14 +7,14 @@
 class BasicStat {
     public:
         BasicStat();
-        void process_read(bam_pileup1_t const& base); //may want other things here like clipping.
-    private:
+        void process_read(bam_pileup1_t const*  base); //may want other things here like clipping.
+
         mutable unsigned int read_count;    //number of reads containing the indel
         mutable unsigned int sum_map_qualities; //sum of the mapping qualities of reads containing the indel
         mutable unsigned int sum_single_ended_map_qualities; //sum of the single ended mapping qualities;
         mutable unsigned int num_plus_strand;
         mutable unsigned int num_minus_strand;
-        mutable float sum_indel_location;
+        mutable float sum_event_location;
         mutable float sum_q2_distance;
         mutable unsigned int num_q2_reads;
         mutable float sum_number_of_mismatches;
