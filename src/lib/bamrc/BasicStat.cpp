@@ -106,6 +106,7 @@ void BasicStat::process_read(bam_pileup1_t const* base) {
 
 }
 
+
 std::ostream& operator<<(std::ostream& s, const BasicStat& stat) {
     //http://www.umich.edu/~eecs381/handouts/formatting.pdf
     //http://stackoverflow.com/questions/1532640/which-iomanip-manipulators-are-sticky
@@ -114,24 +115,39 @@ std::ostream& operator<<(std::ostream& s, const BasicStat& stat) {
 
     s << std::fixed << std::setprecision(2);
     s << stat.read_count << ":";
-    s << (float) stat.sum_map_qualities / stat.read_count << ":";
-    if(stat.is_indel) {
-        s << 0.0 << ":";
+    if(stat.read_count > 0) {
+        s << (float) stat.sum_map_qualities / stat.read_count << ":";
+        if(stat.is_indel) {
+            s << 0.0 << ":";
+        }
+        else {
+            s << stat.sum_base_qualities / stat.read_count << ":";
+        }
+        s << (float) stat.sum_single_ended_map_qualities / stat.read_count << ":";
+        s << stat.num_plus_strand << ":";
+        s << stat.num_minus_strand << ":";
+        s << (float) stat.sum_event_location / stat.read_count << ":";
+        s << (float) stat.sum_number_of_mismatches / stat.read_count << ":";
+        s << (float) stat.sum_of_mismatch_qualities / stat.read_count << ":";
+        s << stat.num_q2_reads << ":";
+        s << (float) stat.sum_q2_distance / stat.num_q2_reads << ":";
+        s << (float) stat.sum_of_clipped_lengths / stat.read_count << ":";
+        s << (float) stat.sum_3p_distance / stat.read_count;
     }
     else {
-        s << stat.sum_base_qualities / stat.read_count << ":";
+        s << 0.0 << ":";
+        s << 0.0 << ":";
+        s << 0.0 << ":";
+        s << 0 << ":";
+        s << 0 << ":";
+        s << 0.0 << ":";
+        s << 0.0 << ":";
+        s << 0.0 << ":";
+        s << 0 << ":";
+        s << 0.0 << ":";
+        s << 0.0 << ":";
+        s << 0.0 << ":";
     }
-    s << (float) stat.sum_single_ended_map_qualities / stat.read_count << ":";
-    s << stat.num_plus_strand << ":";
-    s << stat.num_minus_strand << ":";
-    s << (float) stat.sum_event_location / stat.read_count << ":";
-    s << (float) stat.sum_number_of_mismatches / stat.read_count << ":";
-    s << (float) stat.sum_of_mismatch_qualities / stat.read_count << ":";
-    s << stat.num_q2_reads << ":";
-    s << (float) stat.sum_q2_distance / stat.num_q2_reads << ":";
-    s << (float) stat.sum_of_clipped_lengths / stat.read_count << ":";
-    s << (float) stat.sum_3p_distance / stat.read_count;
-
     s.flags(current_flags); //save previous format flags
     s.precision(current_precision); // save previous precision setting
     return s;
