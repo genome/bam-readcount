@@ -284,7 +284,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         for(lib_iter = lib_counts.begin(); lib_iter != lib_counts.end(); lib_iter++) {
             //print it
             if(tmp->per_lib) {
-                cout << "\t" << lib_iter->first << "\t";
+                cout << "\t" << lib_iter->first << "\t{";
             }
             for(unsigned char j = 0; j < possible_calls; ++j) {
                 if(tmp->distribution) {
