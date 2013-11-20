@@ -5,6 +5,7 @@
 #include "bamrc/auxfields.hpp"
 #include "bamrc/ReadWarnings.hpp"
 #include <boost/program_options.hpp>
+#include "bamrc/BasicStat.hpp"
 
 #include <stdio.h>
 #include <memory>
@@ -18,6 +19,8 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <map>
+
 
 using namespace std;
 namespace po = boost::program_options;
@@ -30,56 +33,15 @@ unsigned char bam_nt16_canonical_table[16] = { 0,1,2,5,
     4,5,5,5,
     5,5,5,5};
 
-typedef struct {
-    //set up data structures to count bases
-    unsigned int *read_counts;
-    unsigned int *sum_base_qualities;
-    unsigned int *sum_map_qualities;
-    unsigned int *sum_single_ended_map_qualities;
-    unsigned int **mapping_qualities;
-    unsigned int *num_mapping_qualities;
-    unsigned int *num_plus_strand;
-    unsigned int *num_minus_strand;
-    float *sum_base_location;
-    float *sum_q2_distance;
-    unsigned int *num_q2_reads;
-    float *sum_number_of_mismatches;
-    unsigned int *sum_of_mismatch_qualities;
-    unsigned int *sum_of_clipped_lengths;
-    float *sum_3p_distance;
-    float **distances_to_3p;
-    unsigned int *num_distances_to_3p;
-} base_stat_t;
-
-typedef char *str_p;
+//below is for sam header
 KHASH_MAP_INIT_STR(s, int)
-KHASH_MAP_INIT_STR(r2l, str_p)
 
-typedef struct {
-    unsigned int read_count;    //number of reads containing the indel
-    unsigned int sum_map_qualities; //sum of the mapping qualities of reads containing the indel
-    unsigned int sum_single_ended_map_qualities; //sum of the single ended mapping qualities;
-    unsigned int *mapping_qualities;
-    unsigned int num_mapping_qualities;
-    unsigned int num_plus_strand;
-    unsigned int num_minus_strand;
-    float sum_indel_location;
-    float sum_q2_distance;
-    unsigned int num_q2_reads;
-    float sum_number_of_mismatches;
-    unsigned int sum_of_mismatch_qualities;
-    unsigned int sum_of_clipped_lengths;
-    float sum_3p_distance;
-    float *distances_to_3p;
-    unsigned int num_distances_to_3p;
-} indel_stat_t;
-KHASH_MAP_INIT_STR(indels, indel_stat_t)
+struct LibraryCounts {
+    std::map<std::string, BasicStat> indel_stats;
+    std::vector<BasicStat> base_stats;
+    LibraryCounts() : indel_stats(), base_stats(possible_calls) {}
+};
 
-typedef struct {
-    khash_t(indels) *hash;
-    base_stat_t base_stat;
-} library_counts_t;
-KHASH_MAP_INIT_STR(libraries, library_counts_t);
 
 //Struct to store info to be passed around
 typedef struct {
@@ -256,76 +218,16 @@ static int fetch_func(const bam1_t *b, void *data) {
     return 0;
 }
 
-void initialize_base_stat_t(base_stat_t *stat, int n) {
-        //set up data structures to count bases
-        stat->read_counts = (unsigned int*)calloc(possible_calls,sizeof(unsigned int));
-        stat->sum_base_qualities = (unsigned int*)calloc(possible_calls,sizeof(unsigned int));
-        stat->sum_map_qualities = (unsigned int*)calloc(possible_calls,sizeof(unsigned int));
-        stat->sum_single_ended_map_qualities = (unsigned int*)calloc(possible_calls,sizeof(unsigned int));
-        stat->mapping_qualities = (unsigned int**)calloc(possible_calls, sizeof(unsigned int*));
-        stat->num_mapping_qualities = (unsigned int*)calloc(possible_calls, sizeof(unsigned int));
-        stat->num_plus_strand = (unsigned int*)calloc(possible_calls, sizeof(unsigned int));
-        stat->num_minus_strand = (unsigned int*)calloc(possible_calls, sizeof(unsigned int));
-        stat->sum_base_location = (float*)calloc(possible_calls, sizeof(float));
-        stat->sum_q2_distance = (float*)calloc(possible_calls, sizeof(float));
-        stat->num_q2_reads = (unsigned int*)calloc(possible_calls, sizeof(unsigned int));
-        stat->sum_number_of_mismatches = (float*)calloc(possible_calls,sizeof(float));
-        stat->sum_of_mismatch_qualities = (unsigned int*)calloc(possible_calls, sizeof(unsigned int));
-        stat->sum_of_clipped_lengths = (unsigned int*)calloc(possible_calls, sizeof(unsigned int));
-        stat->sum_3p_distance = (float*)calloc(possible_calls, sizeof(float));
-        stat->distances_to_3p = (float**)calloc(possible_calls, sizeof(float*));
-        stat->num_distances_to_3p = (unsigned int*)calloc(possible_calls, sizeof(unsigned int));
-        
-        //allocate enough mem to store relevant mapping qualities
-        int i;
-        for(i = 0; i < possible_calls; i++) {
-            stat->mapping_qualities[i] = (unsigned int*)calloc(n, sizeof(unsigned int));
-            stat->distances_to_3p[i] = (float*)calloc(n, sizeof(float));
-        }
-
-}
-
-void destroy_base_stat(base_stat_t *stat) {
-    free(stat->read_counts);
-    free(stat->sum_base_qualities);
-    free(stat->sum_map_qualities);
-    free(stat->sum_single_ended_map_qualities);
-    //recycling i again
-    for(int i = 0; i < possible_calls; i++) {
-        free(stat->mapping_qualities[i]);
-        free(stat->distances_to_3p[i]);
-    }
-    free(stat->distances_to_3p);
-    free(stat->mapping_qualities);
-    free(stat->num_mapping_qualities);
-    free(stat->num_distances_to_3p);
-
-    free(stat->num_plus_strand);
-    free(stat->num_minus_strand);
-    free(stat->sum_base_location);
-    free(stat->sum_number_of_mismatches);
-    free(stat->sum_of_mismatch_qualities);
-    free(stat->sum_q2_distance);
-    free(stat->num_q2_reads);
-    free(stat->sum_of_clipped_lengths);
-    free(stat->sum_3p_distance);
-}
-
-
 // callback for bam_plbuf_init()
 // TODO allow for a simplified version that calculates less
-static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *pl, void *data)
-{
+static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *pl, void *data) {
     pileup_data_t *tmp = (pileup_data_t*)data;
 
     if ((int)pos >= tmp->beg && (int)pos < tmp->end) {
 
         int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold
 
-        //this is a hash to store indels
-        khash_t(indels) *hash = 0;
-        base_stat_t *base_stat = 0;
-        khash_t(libraries) *lib_counts = kh_init(libraries);
+        std::map<std::string, LibraryCounts> lib_counts;
 
         //loop over the bases, recycling i here.
         for(int i = 0; i < n; ++i) {
@@ -334,264 +236,92 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             if(tmp->per_lib) {
                 library_name = bam_get_library(tmp->in->header, base->b);
             }
-            
-            library_counts_t *lib_count; 
-            khiter_t lib = kh_get(libraries,lib_counts,library_name);
-            if(lib == kh_end(lib_counts)) {
-                //need to create a new entry
-                library_counts_t new_lib;
-                new_lib.hash = kh_init(indels);
-                initialize_base_stat_t(&new_lib.base_stat, n);
-
-                //new_lib.
-                int put_error;
-                lib = kh_put(libraries, lib_counts,library_name,&put_error);    //TODO should check for error here
-                kh_value(lib_counts,lib) = new_lib;
-            }
-            /*
-            else {
-                //found the site and we can free the allele string
-                free(library_name);
-            }*/
-            lib_count = &(kh_value(lib_counts, lib));
-            hash = lib_count->hash;
-            base_stat = &(lib_count->base_stat);
+            LibraryCounts &current_lib = lib_counts[library_name];
 
             if(!base->is_del && base->b->core.qual >= tmp->min_mapq && bam1_qual(base->b)[base->qpos] >= tmp->min_bq) {
                 mapq_n++;
 
-                //determine if we have an indel or not
-                indel_stat_t dummy; //rather than do lots of test just do the indel math on this thing
-                indel_stat_t *indel_stat = &dummy;
                 if(base->indel != 0 && tmp->ref) {
                     //indel containing read exists here
                     //will need to
-                    char *allele = (char*)calloc(abs(base->indel)+2,sizeof(char));   //allocate the allele string
+                    std::string allele;
                     if(base->indel > 0) {
-                        allele[0] = '+';
-                        int indel_base;
-                        for(indel_base = 0; indel_base < base->indel; indel_base++) {
+                        allele += "+";
+                        for(int indel_base = 0; indel_base < base->indel; indel_base++) {
                             //scan indel allele off the read
-                            allele[indel_base+1] = bam_canonical_nt_table[bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos + 1 + indel_base)]];
+                            allele += bam_canonical_nt_table[bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos + 1 + indel_base)]];
                         }
-                        allele[indel_base+1] = '\0';  //null terminate the string
-
                     }
                     else {
                         //deletion
-                        allele[0] = '-';
-                        int indel_base;
-                        for(indel_base = 0; indel_base < abs(base->indel); indel_base++) {
+                        allele += "-";
+                        for(int indel_base = 0; indel_base < abs(base->indel); indel_base++) {
                             //scan indel allele off the reference
                             //FIXME this will break with no reference
-                            allele[indel_base+1] = tmp->ref[pos + indel_base + 1];
+                            allele += tmp->ref[pos + indel_base + 1];
                         }
-                        allele[indel_base + 1] = '\0';  //null terminate the string
-
                     }
-                    //fprintf(stderr,"Found read with indel allele %s at %d\n",allele,pos+1);
-                    khiter_t indel = kh_get(indels,hash,allele);
-                    if(indel == kh_end(hash)) {
-                        //need to create a new entry
-                        indel_stat_t new_indel;
-                        new_indel.read_count = 0;
-                        new_indel.sum_map_qualities = 0;
-                        new_indel.sum_single_ended_map_qualities = 0;
-                        new_indel.mapping_qualities = NULL;
-                        new_indel.num_mapping_qualities = 0;
-                        new_indel.num_plus_strand = 0;
-                        new_indel.num_minus_strand = 0;
-                        new_indel.sum_indel_location = 0.0;
-                        new_indel.sum_q2_distance = 0.0;
-                        new_indel.num_q2_reads = 0.0;
-                        new_indel.sum_number_of_mismatches = 0.0;
-                        new_indel.sum_of_mismatch_qualities = 0;
-                        new_indel.sum_of_clipped_lengths = 0.0;
-                        new_indel.sum_3p_distance = 0.0;
-                        new_indel.distances_to_3p = NULL;
-                        new_indel.num_distances_to_3p = 0;
-
-                        //new_indel.
-                        int put_error;
-                        indel = kh_put(indels, hash,allele,&put_error);    //TODO should check for error here
-                        kh_value(hash,indel) = new_indel;
-                    }
-                    else {
-                        //found the site and we can free the allele string
-                        free(allele);
-                    }
-                    indel_stat = &(kh_value(hash, indel));
-                }
-                indel_stat->read_count++;
-                indel_stat->sum_map_qualities += base->b->core.qual;
-
-                //the following are done regardless of whether or not there is an indel
-                int c = (int) bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos)];   //convert to index
-                base_stat->read_counts[c] ++; //calloc should 0 out the mem
-                base_stat->sum_base_qualities[c] += bam1_qual(base->b)[base->qpos];
-                base_stat->sum_map_qualities[c] += base->b->core.qual;
-                //add in strand info
-                //TODO STORE THIS TO avoid repetitively calculating for indels
-                if(base->b->core.flag & BAM_FREVERSE) {
-                    //mapped to the reverse strand
-                    base_stat->num_minus_strand[c]++;
-                    indel_stat->num_minus_strand++;
+                    current_lib.indel_stats[allele].is_indel=true;
+                    current_lib.indel_stats[allele].process_read(base);
                 }
                 else {
-                    //must be mapped to the plus strand
-                    base_stat->num_plus_strand[c]++;
-                    indel_stat->num_plus_strand++;
+                    //the following are done regardless of whether or not there is an indel
+                    unsigned char c = bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos)];   //convert to index
+                    (current_lib.base_stats)[c].process_read(base);
                 }
-
-                int32_t left_clip = 0;
-                int32_t clipped_length = base->b->core.l_qseq;
-                int32_t mismatch_sum = 0;
-                int32_t q2_val = 0;
-                int32_t three_prime_index = 0;
-
-                //hopefully grab out our calculated per/read values
-                //FIXME these will be unavailable if there is no reference
-                //TODO Make sure the defaults on the above are reasonable if there is nothing available
-                uint8_t *tag_ptr = bam_aux_get(base->b, "Zm") + 1;
-                if(tag_ptr) {
-                    aux_zm_t zm = aux_zm_t::from_string((char const*)tag_ptr);
-                    mismatch_sum = zm.sum_of_mismatch_qualities;
-                    clipped_length = zm.clipped_length;
-                    left_clip = zm.left_clip;
-                    three_prime_index = zm.three_prime_index;
-                    q2_val = zm.q2_pos;
-
-                    base_stat->sum_of_mismatch_qualities[c] += mismatch_sum;
-                    indel_stat->sum_of_mismatch_qualities += mismatch_sum;
-
-
-                    if(q2_val > -1) {
-                        //this is in read coordinates. Ignores clipping as q2 may be clipped
-                        base_stat->sum_q2_distance[c] += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
-                        base_stat->num_q2_reads[c]++;
-                        indel_stat->sum_q2_distance += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
-                        indel_stat->num_q2_reads++;
-                    }
-                    base_stat->sum_3p_distance[c] += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
-                    base_stat->distances_to_3p[c][base_stat->num_distances_to_3p[c]++] = (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
-                    indel_stat->sum_3p_distance += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
-
-                    base_stat->sum_of_clipped_lengths[c] += clipped_length;
-                    indel_stat->sum_of_clipped_lengths += clipped_length;
-                    //calculate distance from center of read as an absolute value
-                    //float read_center = (float)base->b->core.l_qseq/2.0;
-                    float read_center = (float)clipped_length/2.0;
-                    base_stat->sum_base_location[c] += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
-                    indel_stat->sum_indel_location += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
-
-                }
-                else {
-                    //fprintf(stderr, "Couldn't grab the generated tag for readname %s.\n",  bam1_qname(base->b));
-                    WARN->warn(ReadWarnings::Zm_TAG_MISSING, bam1_qname(base->b));
-                }
-
-
-
-                //grab the single ended mapping qualities for testing
-                if(base->b->core.flag & BAM_FPROPER_PAIR) {
-                    uint8_t *sm_tag_ptr = bam_aux_get(base->b, "SM");
-                    if(sm_tag_ptr) {
-                        int32_t single_ended_map_qual = bam_aux2i(sm_tag_ptr);
-                        base_stat->sum_single_ended_map_qualities[c] += single_ended_map_qual;
-                        indel_stat->sum_single_ended_map_qualities += single_ended_map_qual;
-                    }
-                    else {
-                        WARN->warn(ReadWarnings::SM_TAG_MISSING, bam1_qname(base->b));
-                        //fprintf(stderr,"Couldn't grab single-end mapping quality for read %s. Check to see if SM tag is in BAM\n",bam1_qname(base->b));
-                    }
-                }
-                else {
-                    //just add in the mapping quality as the single ended quality
-                    base_stat->sum_single_ended_map_qualities[c] += base->b->core.qual;
-                    indel_stat->sum_single_ended_map_qualities += base->b->core.qual;
-                }
-
-                //grab out the number of mismatches
-                uint8_t *nm_tag_ptr = bam_aux_get(base->b, "NM");
-                if(nm_tag_ptr) {
-                    int32_t number_mismatches = bam_aux2i(nm_tag_ptr);
-                    base_stat->sum_number_of_mismatches[c] += number_mismatches / (float) clipped_length;
-                    indel_stat->sum_number_of_mismatches += number_mismatches / (float) clipped_length;
-                }
-                else {
-                    //fprintf(stderr, "Couldn't grab number of mismatches for read %s. Check to see if NM tag is in BAM\n", bam1_qname(base->b));
-                    WARN->warn(ReadWarnings::NM_TAG_MISSING, bam1_qname(base->b));
-                }
-
-
-                base_stat->mapping_qualities[c][base_stat->num_mapping_qualities[c]++] = base->b->core.qual;  //using post-increment here to alter stored number of mapping_qualities while using the previous number as the index to store. Tricky, sort of.
-
             }
         }
 
         //print out information on position and reference base and depth
-        printf("%s\t%d\t%c\t%d", tmp->in->header->target_name[tid], pos + 1, (tmp->ref && (int)pos < tmp->len) ? tmp->ref[pos] : 'N', mapq_n );
+        std::string ref_name(tmp->in->header->target_name[tid]);
+        std::string ref_base;
+        ref_base += (tmp->ref && (int)pos < tmp->len) ? tmp->ref[pos] : 'N';
+        cout << ref_name << "\t" << pos + 1 << "\t" << ref_base << "\t" << mapq_n;
         //print out the base information
         //Note that if there is 0 depth then that averages are reported as 0
 
-        khiter_t lib_iter;
-        for(lib_iter = kh_begin(lib_counts); lib_iter != kh_end(lib_counts); lib_iter++) {
-            if(kh_exist(lib_counts,lib_iter)) {
-                //print it
-                if(tmp->per_lib) {
-                    printf("\t%s\t{",kh_key(lib_counts, lib_iter));
+        std::map<std::string, LibraryCounts>::iterator lib_iter;
+        for(lib_iter = lib_counts.begin(); lib_iter != lib_counts.end(); lib_iter++) {
+            //print it
+            if(tmp->per_lib) {
+                cout << "\t" << lib_iter->first << "\t";
+            }
+            for(unsigned char j = 0; j < possible_calls; ++j) {
+                if(tmp->distribution) {
+                    throw "Not currently supporting distributions\n";
+                    /*
+                       printf("\t%c:%d:", bam_canonical_nt_table[j], base_stat->read_counts[j]);
+                       for(iter = 0; iter < base_stat->num_mapping_qualities[j]; iter++) {
+                       if(iter != 0) {
+                       printf(",");
+                       }
+                       printf("%d",base_stat->mapping_qualities[j][iter]);
+                       }
+                       printf(":");
+                       for(iter = 0; iter < base_stat->num_distances_to_3p[j]; iter++) {
+                       if(iter != 0) {
+                       printf(",");
+                       }
+                       printf("%0.02f",base_stat->distances_to_3p[j][iter]);
+                       }
+                       */
                 }
-                library_counts_t *lib_count = &(kh_value(lib_counts, lib_iter));
-                base_stat = &(lib_count->base_stat);
+                else {
+                    cout << "\t" << bam_canonical_nt_table[j] << ":" << lib_iter->second.base_stats[j];
+                    //printf("\t%c:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f:%0.02f:%0.02f:%d:%0.02f:%0.02f:%0.02f", bam_canonical_nt_table[j], base_stat->read_counts[j], base_stat->read_counts[j] ? (float)base_stat->sum_map_qualities[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float)base_stat->sum_base_qualities[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float)base_stat->sum_single_ended_map_qualities[j]/base_stat->read_counts[j] : 0, base_stat->num_plus_strand[j], base_stat->num_minus_strand[j], base_stat->read_counts[j] ? base_stat->sum_base_location[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_number_of_mismatches[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_of_mismatch_qualities[j]/base_stat->read_counts[j] : 0, base_stat->num_q2_reads[j], base_stat->read_counts[j] ? (float) base_stat->sum_q2_distance[j]/base_stat->num_q2_reads[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_of_clipped_lengths[j]/base_stat->read_counts[j] : 0,base_stat->read_counts[j] ? (float) base_stat->sum_3p_distance[j]/base_stat->read_counts[j] : 0);
+                }
+            }
+            std::map<std::string, BasicStat>::iterator it;
+            for(it = lib_iter->second.indel_stats.begin(); it != lib_iter->second.indel_stats.end(); ++it) {
+                cout << "\t" << it->first << ":" << it->second;
+            }
 
-                unsigned char j;
-                for(j = 0; j < possible_calls; ++j) {
-                    unsigned int iter;
-                    if(tmp->distribution) {
-                        printf("\t%c:%d:", bam_canonical_nt_table[j], base_stat->read_counts[j]);
-                        for(iter = 0; iter < base_stat->num_mapping_qualities[j]; iter++) {
-                            if(iter != 0) {
-                                printf(",");
-                            }
-                            printf("%d",base_stat->mapping_qualities[j][iter]);
-                        }
-                        printf(":");
-                        for(iter = 0; iter < base_stat->num_distances_to_3p[j]; iter++) {
-                            if(iter != 0) {
-                                printf(",");
-                            }
-                            printf("%0.02f",base_stat->distances_to_3p[j][iter]);
-                        }
-
-                    }
-                    else {
-                        printf("\t%c:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f:%0.02f:%0.02f:%d:%0.02f:%0.02f:%0.02f", bam_canonical_nt_table[j], base_stat->read_counts[j], base_stat->read_counts[j] ? (float)base_stat->sum_map_qualities[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float)base_stat->sum_base_qualities[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float)base_stat->sum_single_ended_map_qualities[j]/base_stat->read_counts[j] : 0, base_stat->num_plus_strand[j], base_stat->num_minus_strand[j], base_stat->read_counts[j] ? base_stat->sum_base_location[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_number_of_mismatches[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_of_mismatch_qualities[j]/base_stat->read_counts[j] : 0, base_stat->num_q2_reads[j], base_stat->read_counts[j] ? (float) base_stat->sum_q2_distance[j]/base_stat->num_q2_reads[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_of_clipped_lengths[j]/base_stat->read_counts[j] : 0,base_stat->read_counts[j] ? (float) base_stat->sum_3p_distance[j]/base_stat->read_counts[j] : 0);
-                    }
-                }
-                //here print out indels if they exist=
-                hash = lib_count->hash;
-                khiter_t iterator;
-                for(iterator = kh_begin(hash); iterator != kh_end(hash); iterator++) {
-                    if(kh_exist(hash,iterator)) {
-                        //print it
-                        indel_stat_t *stats = &(kh_value(hash,iterator));
-                        printf("\t%s:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f:%0.02f:%0.02f:%d:%0.02f:%0.02f:%0.02f", kh_key(hash, iterator), stats->read_count, (float)stats->sum_map_qualities/stats->read_count, 0.0, (float)stats->sum_single_ended_map_qualities/stats->read_count, stats->num_plus_strand, stats->num_minus_strand, stats->sum_indel_location/stats->read_count, (float) stats->sum_number_of_mismatches/stats->read_count, (float) stats->sum_of_mismatch_qualities/stats->read_count, stats->num_q2_reads, (float) stats->sum_q2_distance/stats->num_q2_reads, (float) stats->sum_of_clipped_lengths/stats->read_count,(float) stats->sum_3p_distance/stats->read_count);
-                        free((char *) kh_key(hash,iterator));
-                        kh_del(indels,hash,iterator);
-                    }
-                }
-
-                if(tmp->per_lib) {
-                    printf("\t}");
-                }
-                kh_destroy(indels,hash);
-                destroy_base_stat(base_stat);
+            if(tmp->per_lib) {
+                cout << "\t}";
             }
         }
-        printf("\n");
-        kh_destroy(libraries, lib_counts);
+        cout << endl;
     }
-
     return 0;
 }
 
