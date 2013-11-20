@@ -6,7 +6,7 @@
 
 class BasicStat {
     public:
-        BasicStat();
+        BasicStat(bool is_indel = false);
         void process_read(bam_pileup1_t const*  base); //may want other things here like clipping.
 
         mutable unsigned int read_count;    //number of reads containing the indel
@@ -21,8 +21,10 @@ class BasicStat {
         mutable unsigned int sum_of_mismatch_qualities;
         mutable unsigned int sum_of_clipped_lengths;
         mutable float sum_3p_distance;
+        mutable unsigned int sum_base_qualities;
         mutable std::vector<unsigned int> mapping_qualities;
         mutable std::vector<float> distances_to_3p;
+        bool is_indel;
 };
 
 std::ostream& operator<<(std::ostream& s, const BasicStat& stat);

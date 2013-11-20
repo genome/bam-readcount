@@ -8,7 +8,7 @@
 
 static std::auto_ptr<ReadWarnings> WARN(new ReadWarnings(std::cerr, -1));
 
-BasicStat::BasicStat()
+BasicStat::BasicStat(bool is_indel)
     : read_count(0)
     , sum_map_qualities(0)
     , sum_single_ended_map_qualities(0)
@@ -21,6 +21,8 @@ BasicStat::BasicStat()
     , sum_of_mismatch_qualities(0)
     , sum_of_clipped_lengths(0)
     , sum_3p_distance(0.0)
+    , sum_base_qualities(0)
+    , is_indel(is_indel)
 {
 }
 
@@ -98,6 +100,9 @@ void BasicStat::process_read(bam_pileup1_t const* base) {
         WARN->warn(ReadWarnings::NM_TAG_MISSING, bam1_qname(base->b));
     }
     mapping_qualities.push_back(base->b->core.qual);
+    if(!is_indel) {
+        sum_base_qualities += bam1_qual(base->b)[base->qpos];
+    }
 
 }
 
@@ -110,7 +115,12 @@ std::ostream& operator<<(std::ostream& s, const BasicStat& stat) {
     s << std::fixed << std::setprecision(2);
     s << stat.read_count << ":";
     s << (float) stat.sum_map_qualities / stat.read_count << ":";
-    s << 0.0 << ":";   //this is for the base qualities. Stupid that this is in the base class...
+    if(stat.is_indel) {
+        s << 0.0 << ":";
+    }
+    else {
+        s << stat.sum_base_qualities / stat.read_count << ":";
+    }
     s << (float) stat.sum_single_ended_map_qualities / stat.read_count << ":";
     s << stat.num_plus_strand << ":";
     s << stat.num_minus_strand << ":";
