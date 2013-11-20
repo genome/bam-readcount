@@ -5,6 +5,8 @@ project(bamrc)
 set(SOURCES
     ReadWarnings.hpp
     auxfields.hpp
+    BasicStat.hpp
+    BasicStat.cpp
 )
 
 #add_library(common ${SOURCES})
