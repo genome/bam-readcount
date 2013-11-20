@@ -130,7 +130,12 @@ std::ostream& operator<<(std::ostream& s, const BasicStat& stat) {
         s << (float) stat.sum_number_of_mismatches / stat.read_count << ":";
         s << (float) stat.sum_of_mismatch_qualities / stat.read_count << ":";
         s << stat.num_q2_reads << ":";
-        s << (float) stat.sum_q2_distance / stat.num_q2_reads << ":";
+        if(stat.num_q2_reads > 0) {
+            s << (float) stat.sum_q2_distance / stat.num_q2_reads << ":";
+        }
+        else {
+            s << 0.0 << ":";
+        }
         s << (float) stat.sum_of_clipped_lengths / stat.read_count << ":";
         s << (float) stat.sum_3p_distance / stat.read_count;
     }
