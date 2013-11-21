@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <memory>
 
 class ReadWarnings {
 public:
@@ -50,3 +51,6 @@ private:
     std::vector<int64_t> _counts;
     std::vector<std::string> _messages;
 };
+
+
+extern std::auto_ptr<ReadWarnings> WARN;

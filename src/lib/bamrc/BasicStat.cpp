@@ -6,8 +6,6 @@
 #include <iostream>
 #include <memory>
 
-static std::auto_ptr<ReadWarnings> WARN(new ReadWarnings(std::cerr, -1));
-
 BasicStat::BasicStat(bool is_indel)
     : read_count(0)
     , sum_map_qualities(0)

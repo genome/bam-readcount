@@ -13,6 +13,7 @@
 #include "sam.h"
 #include "faidx.h"
 #include "khash.h"
+#include "sam_header.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <fstream>
@@ -20,6 +21,7 @@
 #include <string>
 #include <cmath>
 #include <map>
+#include <set>
 
 
 using namespace std;
@@ -35,6 +37,8 @@ unsigned char bam_nt16_canonical_table[16] = { 0,1,2,5,
 
 //below is for sam header
 KHASH_MAP_INIT_STR(s, int)
+
+KHASH_MAP_INIT_STR(str, const char *)
 
 struct LibraryCounts {
     std::map<std::string, BasicStat> indel_stats;
@@ -66,7 +70,19 @@ typedef struct {
     bam_plbuf_t* pileup_buffer;
 } fetch_data_t;
 
-static std::auto_ptr<ReadWarnings> WARN;
+std::auto_ptr<ReadWarnings> WARN;
+
+std::set<std::string> find_library_names(bam_header_t const* header) {
+    //samtools doesn't do a good job of exposing this so this is a little more implementation
+    //dependent than I'd like and may be fragile.
+    std::set<std::string> lib_names;
+    void *iter = header->dict;
+    const char *key, *val;
+    while( (iter = sam_header2key_val(iter, "RG", "ID", "LB", &key, &val)) ) {
+        lib_names.insert(val);
+    }
+    return lib_names;
+}
 
 // callback for bam_fetch()
 static int fetch_func(const bam1_t *b, void *data) {
@@ -308,7 +324,6 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 }
                 else {
                     cout << "\t" << bam_canonical_nt_table[j] << ":" << lib_iter->second.base_stats[j];
-                    //printf("\t%c:%d:%0.02f:%0.02f:%0.02f:%d:%d:%0.02f:%0.02f:%0.02f:%d:%0.02f:%0.02f:%0.02f", bam_canonical_nt_table[j], base_stat->read_counts[j], base_stat->read_counts[j] ? (float)base_stat->sum_map_qualities[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float)base_stat->sum_base_qualities[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float)base_stat->sum_single_ended_map_qualities[j]/base_stat->read_counts[j] : 0, base_stat->num_plus_strand[j], base_stat->num_minus_strand[j], base_stat->read_counts[j] ? base_stat->sum_base_location[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_number_of_mismatches[j]/base_stat->read_counts[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_of_mismatch_qualities[j]/base_stat->read_counts[j] : 0, base_stat->num_q2_reads[j], base_stat->read_counts[j] ? (float) base_stat->sum_q2_distance[j]/base_stat->num_q2_reads[j] : 0, base_stat->read_counts[j] ? (float) base_stat->sum_of_clipped_lengths[j]/base_stat->read_counts[j] : 0,base_stat->read_counts[j] ? (float) base_stat->sum_3p_distance[j]/base_stat->read_counts[j] : 0);
                 }
             }
             std::map<std::string, BasicStat>::iterator it;
@@ -399,6 +414,12 @@ int main(int argc, char *argv[])
     d->distribution = distribution;
     d->per_lib = per_lib;
     d->in = samopen(vm["bam-file"].as<string>().c_str(), "rb", 0);
+    d->in->header->dict = sam_header_parse2(d->in->header->text);
+    std::set<std::string> lib_names = find_library_names(d->in->header);
+    for(std::set<std::string>::iterator it = lib_names.begin(); it != lib_names.end(); ++it) {
+        cerr << "Expect library: " << *it << " in BAM" << endl;
+    }
+
     if (d->in == 0) {
         fprintf(stderr, "Fail to open BAM file %s\n", argv[optind]);
         return 1;
