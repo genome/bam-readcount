@@ -6,26 +6,25 @@
 #include "bamrc/ReadWarnings.hpp"
 #include "bamrc/BasicStat.hpp"
 
+#include <faidx.h>
+#include <khash.h>
+#include <sam.h>
+#include <sam_header.h>
+
 #include <boost/array.hpp>
 #include <boost/program_options.hpp>
 #include <boost/unordered_map.hpp>
 
-#include <stdexcept>
-#include <stdio.h>
-#include <memory>
-#include <string.h>
-#include "sam.h"
-#include "faidx.h"
-#include "khash.h"
-#include "sam_header.h"
-#include <stdio.h>
-#include <unistd.h>
+#include <cmath>
+#include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <iostream>
-#include <string>
-#include <cmath>
 #include <map>
+#include <memory>
 #include <set>
+#include <stdexcept>
+#include <string>
 
 
 using namespace std;
