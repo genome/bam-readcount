@@ -119,8 +119,8 @@ namespace {
 
         for(i = read_position = 0, reference_position = core->pos; i < core->n_cigar; ++i) {
             int j;
-            int op_length = cigar[i]>>4;
-            int op = cigar[i]&0xf;
+            int op_length = bam_cigar_oplen(cigar[i]);
+            int op = bam_cigar_op(cigar[i]);
 
             if(op == BAM_CMATCH) {
                 for(j = 0; j < op_length; j++) {
