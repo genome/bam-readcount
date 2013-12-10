@@ -62,7 +62,7 @@ struct LibraryCounts {
 
 
 //Struct to store info to be passed around
-typedef struct {
+struct pileup_data_t {
     faidx_t *fai;       //index into fasta file
     int tid;            //reference id
     char *ref;          //reference sequence
@@ -74,15 +74,15 @@ typedef struct {
     samfile_t *in;      //bam file
     int distribution;   //whether or not to display all mapping qualities
     bool per_lib;
-} pileup_data_t;
+};
 
 //struct to store reference for passing to fetch func
-typedef struct {
+struct fetch_data_t {
     const char* seq_name;
     int ref_len;
     char **ref_pointer;
     bam_plbuf_t* pileup_buffer;
-} fetch_data_t;
+};
 
 std::auto_ptr<ReadWarnings> WARN;
 
