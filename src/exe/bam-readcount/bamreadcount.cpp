@@ -10,6 +10,7 @@
 #include <boost/program_options.hpp>
 #include <boost/unordered_map.hpp>
 
+#include <stdexcept>
 #include <stdio.h>
 #include <memory>
 #include <string.h>
@@ -322,7 +323,7 @@ namespace {
                 }
                 for(unsigned char j = 0; j < possible_calls; ++j) {
                     if(tmp->distribution) {
-                        throw "Not currently supporting distributions\n";
+                        throw std::runtime_error("Not currently supporting distributions\n");
                         /*
                            printf("\t%c:%d:", bam_canonical_nt_table[j], base_stat->read_counts[j]);
                            for(iter = 0; iter < base_stat->num_mapping_qualities[j]; iter++) {
