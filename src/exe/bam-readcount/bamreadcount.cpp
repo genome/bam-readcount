@@ -30,6 +30,8 @@
 using namespace std;
 namespace po = boost::program_options;
 
+std::auto_ptr<ReadWarnings> WARN;
+
 namespace {
     /* All iub codes in the reads will be converted to to N */
     boost::array<char, 6> const bam_canonical_nt_table = {{
@@ -44,315 +46,313 @@ namespace {
         4,5,5,5,
         5,5,5,5
         }};
-}
 
-//below is for sam header
-KHASH_MAP_INIT_STR(s, int)
+    //below is for sam header
+    KHASH_MAP_INIT_STR(s, int)
 
-KHASH_MAP_INIT_STR(str, const char *)
+    KHASH_MAP_INIT_STR(str, const char *)
 
-struct LibraryCounts {
-    // typedef boost::unordered_map<std::string, BasicStat> IndelStatsMap;
-    typedef std::map<std::string, BasicStat> IndelStatsMap;
+    struct LibraryCounts {
+        // typedef boost::unordered_map<std::string, BasicStat> IndelStatsMap;
+        typedef std::map<std::string, BasicStat> IndelStatsMap;
 
-    IndelStatsMap indel_stats;
-    std::vector<BasicStat> base_stats;
-    LibraryCounts() : indel_stats(), base_stats(possible_calls) {}
-};
+        IndelStatsMap indel_stats;
+        std::vector<BasicStat> base_stats;
+        LibraryCounts() : indel_stats(), base_stats(possible_calls) {}
+    };
+
+    //Struct to store info to be passed around
+    struct pileup_data_t {
+        faidx_t *fai;       //index into fasta file
+        int tid;            //reference id
+        char *ref;          //reference sequence
+        int min_mapq;       //minimum mapping qualitiy to use
+        int min_bq;       //minimum mapping qualitiy to use
+        int beg,end;        //start and stop of region
+        int len;            //length of currently loaded reference sequence
+        int max_cnt;       //maximum depth to set on the pileup buffer
+        samfile_t *in;      //bam file
+        int distribution;   //whether or not to display all mapping qualities
+        bool per_lib;
+    };
+
+    //struct to store reference for passing to fetch func
+    struct fetch_data_t {
+        const char* seq_name;
+        int ref_len;
+        char **ref_pointer;
+        bam_plbuf_t* pileup_buffer;
+    };
 
 
-//Struct to store info to be passed around
-struct pileup_data_t {
-    faidx_t *fai;       //index into fasta file
-    int tid;            //reference id
-    char *ref;          //reference sequence
-    int min_mapq;       //minimum mapping qualitiy to use
-    int min_bq;       //minimum mapping qualitiy to use
-    int beg,end;        //start and stop of region
-    int len;            //length of currently loaded reference sequence
-    int max_cnt;       //maximum depth to set on the pileup buffer 
-    samfile_t *in;      //bam file
-    int distribution;   //whether or not to display all mapping qualities
-    bool per_lib;
-};
-
-//struct to store reference for passing to fetch func
-struct fetch_data_t {
-    const char* seq_name;
-    int ref_len;
-    char **ref_pointer;
-    bam_plbuf_t* pileup_buffer;
-};
-
-std::auto_ptr<ReadWarnings> WARN;
-
-std::set<std::string> find_library_names(bam_header_t const* header) {
-    //samtools doesn't do a good job of exposing this so this is a little more implementation
-    //dependent than I'd like and may be fragile.
-    std::set<std::string> lib_names;
-    void *iter = header->dict;
-    const char *key, *val;
-    while( (iter = sam_header2key_val(iter, "RG", "ID", "LB", &key, &val)) ) {
-        lib_names.insert(val);
+    std::set<std::string> find_library_names(bam_header_t const* header) {
+        //samtools doesn't do a good job of exposing this so this is a little more implementation
+        //dependent than I'd like and may be fragile.
+        std::set<std::string> lib_names;
+        void *iter = header->dict;
+        const char *key, *val;
+        while( (iter = sam_header2key_val(iter, "RG", "ID", "LB", &key, &val)) ) {
+            lib_names.insert(val);
+        }
+        return lib_names;
     }
-    return lib_names;
-}
 
-// callback for bam_fetch()
-static int fetch_func(const bam1_t *b, void *data) {
-    //retrieve reference
-    fetch_data_t* fetch_data = (fetch_data_t*) data;
-    char *ref = *(fetch_data->ref_pointer);
-    //FIXME Won't want to do this if refseq is not included
+    // callback for bam_fetch()
+    int fetch_func(const bam1_t *b, void *data) {
+        //retrieve reference
+        fetch_data_t* fetch_data = (fetch_data_t*) data;
+        char *ref = *(fetch_data->ref_pointer);
+        //FIXME Won't want to do this if refseq is not included
 
-    //calculate single nucleotide mismatches and sum their qualities
-    uint8_t *seq = bam1_seq(b);
-    uint32_t *cigar = bam1_cigar(b);
-    const bam1_core_t *core = &(b->core);
-    int i, reference_position, read_position;
-    uint32_t sum_of_mismatch_qualities=0;
-    int left_clip = 0;
-    int clipped_length = core->l_qseq;
-    int right_clip = core->l_qseq;
+        //calculate single nucleotide mismatches and sum their qualities
+        uint8_t *seq = bam1_seq(b);
+        uint32_t *cigar = bam1_cigar(b);
+        const bam1_core_t *core = &(b->core);
+        int i, reference_position, read_position;
+        uint32_t sum_of_mismatch_qualities=0;
+        int left_clip = 0;
+        int clipped_length = core->l_qseq;
+        int right_clip = core->l_qseq;
 
-    int last_mismatch_position = -1;
-    int last_mismatch_qual = 0;
+        int last_mismatch_position = -1;
+        int last_mismatch_qual = 0;
 
-    for(i = read_position = 0, reference_position = core->pos; i < core->n_cigar; ++i) {
-        int j;
-        int op_length = cigar[i]>>4;
-        int op = cigar[i]&0xf;
+        for(i = read_position = 0, reference_position = core->pos; i < core->n_cigar; ++i) {
+            int j;
+            int op_length = cigar[i]>>4;
+            int op = cigar[i]&0xf;
 
-        if(op == BAM_CMATCH) {
-            for(j = 0; j < op_length; j++) {
-                int current_base_position = read_position + j;
-                int read_base = bam1_seqi(seq, current_base_position);
-                int refpos = reference_position + j;
-                int ref_base;
-                if(fetch_data->ref_len && refpos > fetch_data->ref_len) {
-                    fprintf(stderr, "WARNING: Request for position %d in sequence %s is > length of %d!\n",
-                        refpos, fetch_data->seq_name, fetch_data->ref_len);
-                    continue;
-                }
-                ref_base = bam_nt16_table[(int)ref[refpos]];
+            if(op == BAM_CMATCH) {
+                for(j = 0; j < op_length; j++) {
+                    int current_base_position = read_position + j;
+                    int read_base = bam1_seqi(seq, current_base_position);
+                    int refpos = reference_position + j;
+                    int ref_base;
+                    if(fetch_data->ref_len && refpos > fetch_data->ref_len) {
+                        fprintf(stderr, "WARNING: Request for position %d in sequence %s is > length of %d!\n",
+                            refpos, fetch_data->seq_name, fetch_data->ref_len);
+                        continue;
+                    }
+                    ref_base = bam_nt16_table[(int)ref[refpos]];
 
-                if(ref[refpos] == 0) break; //out of bounds on reference
-                if(read_base != ref_base && ref_base != 15 && read_base != 0) {
-                    //mismatch, so store the qualities
-                    int qual = bam1_qual(b)[current_base_position];
-                    if(last_mismatch_position != -1) {
-                        if(last_mismatch_position + 1 != current_base_position) {
-                            //not an adjacent mismatch
-                            sum_of_mismatch_qualities += last_mismatch_qual;
-                            last_mismatch_qual = qual;
-                            last_mismatch_position = current_base_position;
+                    if(ref[refpos] == 0) break; //out of bounds on reference
+                    if(read_base != ref_base && ref_base != 15 && read_base != 0) {
+                        //mismatch, so store the qualities
+                        int qual = bam1_qual(b)[current_base_position];
+                        if(last_mismatch_position != -1) {
+                            if(last_mismatch_position + 1 != current_base_position) {
+                                //not an adjacent mismatch
+                                sum_of_mismatch_qualities += last_mismatch_qual;
+                                last_mismatch_qual = qual;
+                                last_mismatch_position = current_base_position;
+                            }
+                            else {
+                                if(last_mismatch_qual < qual) {
+                                    last_mismatch_qual = qual;
+                                }
+                                last_mismatch_position = current_base_position;
+                            }
                         }
                         else {
-                            if(last_mismatch_qual < qual) {
-                                last_mismatch_qual = qual;
-                            }
                             last_mismatch_position = current_base_position;
+                            last_mismatch_qual = qual;
                         }
-                    }
-                    else {
-                        last_mismatch_position = current_base_position;
-                        last_mismatch_qual = qual;
                     }
                 }
+                if(j < op_length) break;
+                reference_position += op_length;
+                read_position += op_length;
+            } else if(op == BAM_CDEL || op == BAM_CREF_SKIP) {  //ignoring indels
+                reference_position += op_length;
+            } else if(op ==BAM_CINS) { //ignoring indels
+                read_position += op_length;
             }
-            if(j < op_length) break;
-            reference_position += op_length;
-            read_position += op_length;
-        } else if(op == BAM_CDEL || op == BAM_CREF_SKIP) {  //ignoring indels
-            reference_position += op_length;
-        } else if(op ==BAM_CINS) { //ignoring indels
-            read_position += op_length;
-        }
-        else if(op == BAM_CSOFT_CLIP) {
-            read_position += op_length;
+            else if(op == BAM_CSOFT_CLIP) {
+                read_position += op_length;
 
-            clipped_length -= op_length;
-            if(i == 0) {
-                left_clip += op_length;
-            }
-            else {
-                right_clip -= op_length;
-            }
-            if(clipped_length < 0) {
-                fprintf(stderr, "After removing the clipping the length is less than 0 for read %s\n",bam1_qname(b));
-            }
-        }
-    }
-    //add in any remaining mismatch sums; should be 0 if no mismatch
-    sum_of_mismatch_qualities += last_mismatch_qual;
-
-    //inefficiently scan again to determine the distance in leftmost read coordinates to the first Q2 base
-    int three_prime_index = -1;
-    int q2_pos = -1;
-    int k;
-    int increment;
-    uint8_t *qual = bam1_qual(b);
-    if(core->flag & BAM_FREVERSE) {
-        k = three_prime_index = 0;
-        increment = 1;
-        if(three_prime_index < left_clip) {
-            three_prime_index = left_clip;
-        }
-    }
-    else {
-        k = three_prime_index = core->l_qseq - 1;
-        increment = -1;
-        if(three_prime_index > right_clip) {
-            three_prime_index = right_clip;
-        }
-
-    }
-    while(q2_pos < 0 && k >= 0 && k < core->l_qseq) {
-        if(qual[k] != 2) {
-            q2_pos = k-1;
-            break;
-        }
-        k += increment;
-    }
-    if(core->flag & BAM_FREVERSE) {
-        if(three_prime_index < q2_pos) {
-            three_prime_index = q2_pos;
-        }
-    }
-    else {
-        if(three_prime_index > q2_pos && q2_pos != -1) {
-            three_prime_index = q2_pos;
-        }
-    }
-    uint8_t temp[5*4+1];
-    temp[5*4]=0;
-    memcpy(temp, &sum_of_mismatch_qualities,4);
-    memcpy(temp+4, &clipped_length,4);
-    memcpy(temp+8, &left_clip,4);
-    memcpy(temp+12, &three_prime_index,4);
-    memcpy(temp+16, &q2_pos,4);
-
-    //store the value on the read, we're assuming it is always absent. This assumption may fail. Future proof if this idea has value
-    aux_zm_t zm;
-    zm.sum_of_mismatch_qualities = sum_of_mismatch_qualities;
-    zm.clipped_length = clipped_length;
-    zm.left_clip = left_clip;
-    zm.three_prime_index = three_prime_index;
-    zm.q2_pos = q2_pos;
-    std::string zm_str = zm.to_string();
-    bam_aux_append((bam1_t *)b, "Zm", 'Z', zm_str.size() + 1, (uint8_t*)&zm_str[0]);
-
-    //This just pushes all reads into the pileup buffer
-    bam_plbuf_t *buf = fetch_data->pileup_buffer;
-    bam_plbuf_push(b, buf);
-    return 0;
-}
-
-// callback for bam_plbuf_init()
-// TODO allow for a simplified version that calculates less
-static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *pl, void *data) {
-    pileup_data_t *tmp = (pileup_data_t*)data;
-
-    if ((int)pos >= tmp->beg && (int)pos < tmp->end) {
-
-        int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold
-
-        std::map<std::string, LibraryCounts> lib_counts;
-
-        //loop over the bases, recycling i here.
-        for(int i = 0; i < n; ++i) {
-            const bam_pileup1_t *base = pl + i; //get base index
-            const char* library_name = "all";
-            if(tmp->per_lib) {
-                library_name = bam_get_library(tmp->in->header, base->b);
-            }
-            LibraryCounts &current_lib = lib_counts[library_name];
-
-            if(!base->is_del && base->b->core.qual >= tmp->min_mapq && bam1_qual(base->b)[base->qpos] >= tmp->min_bq) {
-                mapq_n++;
-
-                if(base->indel != 0 && tmp->ref) {
-                    //indel containing read exists here
-                    //will need to
-                    std::string allele;
-                    if(base->indel > 0) {
-                        allele += "+";
-                        for(int indel_base = 0; indel_base < base->indel; indel_base++) {
-                            //scan indel allele off the read
-                            allele += bam_canonical_nt_table[bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos + 1 + indel_base)]];
-                        }
-                    }
-                    else {
-                        //deletion
-                        allele += "-";
-                        for(int indel_base = 0; indel_base < abs(base->indel); indel_base++) {
-                            //scan indel allele off the reference
-                            //FIXME this will break with no reference
-                            allele += tmp->ref[pos + indel_base + 1];
-                        }
-                    }
-                    current_lib.indel_stats[allele].is_indel=true;
-                    current_lib.indel_stats[allele].process_read(base);
+                clipped_length -= op_length;
+                if(i == 0) {
+                    left_clip += op_length;
                 }
                 else {
-                    //the following are done regardless of whether or not there is an indel
-                    unsigned char c = bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos)];   //convert to index
-                    (current_lib.base_stats)[c].process_read(base);
+                    right_clip -= op_length;
+                }
+                if(clipped_length < 0) {
+                    fprintf(stderr, "After removing the clipping the length is less than 0 for read %s\n",bam1_qname(b));
                 }
             }
         }
+        //add in any remaining mismatch sums; should be 0 if no mismatch
+        sum_of_mismatch_qualities += last_mismatch_qual;
 
-        //print out information on position and reference base and depth
-        std::string ref_name(tmp->in->header->target_name[tid]);
-        std::string ref_base;
-        ref_base += (tmp->ref && (int)pos < tmp->len) ? tmp->ref[pos] : 'N';
-        cout << ref_name << "\t" << pos + 1 << "\t" << ref_base << "\t" << mapq_n;
-        //print out the base information
-        //Note that if there is 0 depth then that averages are reported as 0
-
-        std::map<std::string, LibraryCounts>::iterator lib_iter;
-        for(lib_iter = lib_counts.begin(); lib_iter != lib_counts.end(); lib_iter++) {
-            //print it
-            if(tmp->per_lib) {
-                cout << "\t" << lib_iter->first << "\t{";
-            }
-            for(unsigned char j = 0; j < possible_calls; ++j) {
-                if(tmp->distribution) {
-                    throw "Not currently supporting distributions\n";
-                    /*
-                       printf("\t%c:%d:", bam_canonical_nt_table[j], base_stat->read_counts[j]);
-                       for(iter = 0; iter < base_stat->num_mapping_qualities[j]; iter++) {
-                       if(iter != 0) {
-                       printf(",");
-                       }
-                       printf("%d",base_stat->mapping_qualities[j][iter]);
-                       }
-                       printf(":");
-                       for(iter = 0; iter < base_stat->num_distances_to_3p[j]; iter++) {
-                       if(iter != 0) {
-                       printf(",");
-                       }
-                       printf("%0.02f",base_stat->distances_to_3p[j][iter]);
-                       }
-                       */
-                }
-                else {
-                    cout << "\t" << bam_canonical_nt_table[j] << ":" << lib_iter->second.base_stats[j];
-                }
-            }
-
-            LibraryCounts::IndelStatsMap::const_iterator it;
-            for(it = lib_iter->second.indel_stats.begin(); it != lib_iter->second.indel_stats.end(); ++it) {
-                cout << "\t" << it->first << ":" << it->second;
-            }
-
-            if(tmp->per_lib) {
-                cout << "\t}";
+        //inefficiently scan again to determine the distance in leftmost read coordinates to the first Q2 base
+        int three_prime_index = -1;
+        int q2_pos = -1;
+        int k;
+        int increment;
+        uint8_t *qual = bam1_qual(b);
+        if(core->flag & BAM_FREVERSE) {
+            k = three_prime_index = 0;
+            increment = 1;
+            if(three_prime_index < left_clip) {
+                three_prime_index = left_clip;
             }
         }
-        cout << endl;
+        else {
+            k = three_prime_index = core->l_qseq - 1;
+            increment = -1;
+            if(three_prime_index > right_clip) {
+                three_prime_index = right_clip;
+            }
+
+        }
+        while(q2_pos < 0 && k >= 0 && k < core->l_qseq) {
+            if(qual[k] != 2) {
+                q2_pos = k-1;
+                break;
+            }
+            k += increment;
+        }
+        if(core->flag & BAM_FREVERSE) {
+            if(three_prime_index < q2_pos) {
+                three_prime_index = q2_pos;
+            }
+        }
+        else {
+            if(three_prime_index > q2_pos && q2_pos != -1) {
+                three_prime_index = q2_pos;
+            }
+        }
+        uint8_t temp[5*4+1];
+        temp[5*4]=0;
+        memcpy(temp, &sum_of_mismatch_qualities,4);
+        memcpy(temp+4, &clipped_length,4);
+        memcpy(temp+8, &left_clip,4);
+        memcpy(temp+12, &three_prime_index,4);
+        memcpy(temp+16, &q2_pos,4);
+
+        //store the value on the read, we're assuming it is always absent. This assumption may fail. Future proof if this idea has value
+        aux_zm_t zm;
+        zm.sum_of_mismatch_qualities = sum_of_mismatch_qualities;
+        zm.clipped_length = clipped_length;
+        zm.left_clip = left_clip;
+        zm.three_prime_index = three_prime_index;
+        zm.q2_pos = q2_pos;
+        std::string zm_str = zm.to_string();
+        bam_aux_append((bam1_t *)b, "Zm", 'Z', zm_str.size() + 1, (uint8_t*)&zm_str[0]);
+
+        //This just pushes all reads into the pileup buffer
+        bam_plbuf_t *buf = fetch_data->pileup_buffer;
+        bam_plbuf_push(b, buf);
+        return 0;
     }
-    return 0;
+
+    // callback for bam_plbuf_init()
+    // TODO allow for a simplified version that calculates less
+    int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *pl, void *data) {
+        pileup_data_t *tmp = (pileup_data_t*)data;
+
+        if ((int)pos >= tmp->beg && (int)pos < tmp->end) {
+
+            int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold
+
+            std::map<std::string, LibraryCounts> lib_counts;
+
+            //loop over the bases, recycling i here.
+            for(int i = 0; i < n; ++i) {
+                const bam_pileup1_t *base = pl + i; //get base index
+                const char* library_name = "all";
+                if(tmp->per_lib) {
+                    library_name = bam_get_library(tmp->in->header, base->b);
+                }
+                LibraryCounts &current_lib = lib_counts[library_name];
+
+                if(!base->is_del && base->b->core.qual >= tmp->min_mapq && bam1_qual(base->b)[base->qpos] >= tmp->min_bq) {
+                    mapq_n++;
+
+                    if(base->indel != 0 && tmp->ref) {
+                        //indel containing read exists here
+                        //will need to
+                        std::string allele;
+                        if(base->indel > 0) {
+                            allele += "+";
+                            for(int indel_base = 0; indel_base < base->indel; indel_base++) {
+                                //scan indel allele off the read
+                                allele += bam_canonical_nt_table[bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos + 1 + indel_base)]];
+                            }
+                        }
+                        else {
+                            //deletion
+                            allele += "-";
+                            for(int indel_base = 0; indel_base < abs(base->indel); indel_base++) {
+                                //scan indel allele off the reference
+                                //FIXME this will break with no reference
+                                allele += tmp->ref[pos + indel_base + 1];
+                            }
+                        }
+                        current_lib.indel_stats[allele].is_indel=true;
+                        current_lib.indel_stats[allele].process_read(base);
+                    }
+                    else {
+                        //the following are done regardless of whether or not there is an indel
+                        unsigned char c = bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos)];   //convert to index
+                        (current_lib.base_stats)[c].process_read(base);
+                    }
+                }
+            }
+
+            //print out information on position and reference base and depth
+            std::string ref_name(tmp->in->header->target_name[tid]);
+            std::string ref_base;
+            ref_base += (tmp->ref && (int)pos < tmp->len) ? tmp->ref[pos] : 'N';
+            cout << ref_name << "\t" << pos + 1 << "\t" << ref_base << "\t" << mapq_n;
+            //print out the base information
+            //Note that if there is 0 depth then that averages are reported as 0
+
+            std::map<std::string, LibraryCounts>::iterator lib_iter;
+            for(lib_iter = lib_counts.begin(); lib_iter != lib_counts.end(); lib_iter++) {
+                //print it
+                if(tmp->per_lib) {
+                    cout << "\t" << lib_iter->first << "\t{";
+                }
+                for(unsigned char j = 0; j < possible_calls; ++j) {
+                    if(tmp->distribution) {
+                        throw "Not currently supporting distributions\n";
+                        /*
+                           printf("\t%c:%d:", bam_canonical_nt_table[j], base_stat->read_counts[j]);
+                           for(iter = 0; iter < base_stat->num_mapping_qualities[j]; iter++) {
+                           if(iter != 0) {
+                           printf(",");
+                           }
+                           printf("%d",base_stat->mapping_qualities[j][iter]);
+                           }
+                           printf(":");
+                           for(iter = 0; iter < base_stat->num_distances_to_3p[j]; iter++) {
+                           if(iter != 0) {
+                           printf(",");
+                           }
+                           printf("%0.02f",base_stat->distances_to_3p[j][iter]);
+                           }
+                           */
+                    }
+                    else {
+                        cout << "\t" << bam_canonical_nt_table[j] << ":" << lib_iter->second.base_stats[j];
+                    }
+                }
+
+                LibraryCounts::IndelStatsMap::const_iterator it;
+                for(it = lib_iter->second.indel_stats.begin(); it != lib_iter->second.indel_stats.end(); ++it) {
+                    cout << "\t" << it->first << ":" << it->second;
+                }
+
+                if(tmp->per_lib) {
+                    cout << "\t}";
+                }
+            }
+            cout << endl;
+        }
+        return 0;
+    }
 }
 
 int main(int argc, char *argv[])
