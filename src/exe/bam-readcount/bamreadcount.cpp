@@ -264,7 +264,7 @@ namespace {
 
             PerLibCountsMap lib_counts;
 
-            //loop over the bases, recycling i here.
+            // for each base
             for(int i = 0; i < n; ++i) {
                 const bam_pileup1_t *base = pl + i; //get base index
                 const char* library_name = "all";
