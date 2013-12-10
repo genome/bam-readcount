@@ -226,13 +226,6 @@ namespace {
                 three_prime_index = q2_pos;
             }
         }
-        uint8_t temp[5*4+1];
-        temp[5*4]=0;
-        memcpy(temp, &sum_of_mismatch_qualities,4);
-        memcpy(temp+4, &clipped_length,4);
-        memcpy(temp+8, &left_clip,4);
-        memcpy(temp+12, &three_prime_index,4);
-        memcpy(temp+16, &q2_pos,4);
 
         //store the value on the read, we're assuming it is always absent. This assumption may fail. Future proof if this idea has value
         aux_zm_t zm;
