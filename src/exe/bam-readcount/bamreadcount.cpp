@@ -8,6 +8,7 @@
 
 #include <boost/array.hpp>
 #include <boost/program_options.hpp>
+#include <boost/unordered_map.hpp>
 
 #include <stdio.h>
 #include <memory>
@@ -51,7 +52,10 @@ KHASH_MAP_INIT_STR(s, int)
 KHASH_MAP_INIT_STR(str, const char *)
 
 struct LibraryCounts {
-    std::map<std::string, BasicStat> indel_stats;
+    // typedef boost::unordered_map<std::string, BasicStat> IndelStatsMap;
+    typedef std::map<std::string, BasicStat> IndelStatsMap;
+
+    IndelStatsMap indel_stats;
     std::vector<BasicStat> base_stats;
     LibraryCounts() : indel_stats(), base_stats(possible_calls) {}
 };
@@ -336,7 +340,8 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     cout << "\t" << bam_canonical_nt_table[j] << ":" << lib_iter->second.base_stats[j];
                 }
             }
-            std::map<std::string, BasicStat>::iterator it;
+
+            LibraryCounts::IndelStatsMap::const_iterator it;
             for(it = lib_iter->second.indel_stats.begin(); it != lib_iter->second.indel_stats.end(); ++it) {
                 cout << "\t" << it->first << ":" << it->second;
             }
