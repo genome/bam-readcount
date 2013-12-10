@@ -135,7 +135,9 @@ namespace {
                     }
                     ref_base = bam_nt16_table[(int)ref[refpos]];
 
-                    if(ref[refpos] == 0) break; //out of bounds on reference
+                    if(ref[refpos] == 0)
+                        break; //out of bounds on reference
+
                     if(read_base != ref_base && ref_base != 15 && read_base != 0) {
                         //mismatch, so store the qualities
                         int qual = bam1_qual(b)[current_base_position];
@@ -159,7 +161,8 @@ namespace {
                         }
                     }
                 }
-                if(j < op_length) break;
+                if(j < op_length)
+                    break;
                 reference_position += op_length;
                 read_position += op_length;
             } else if(op == BAM_CDEL || op == BAM_CREF_SKIP) {  //ignoring indels
