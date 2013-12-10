@@ -308,9 +308,8 @@ namespace {
             }
 
             //print out information on position and reference base and depth
-            std::string ref_name(tmp->in->header->target_name[tid]);
-            std::string ref_base;
-            ref_base += (tmp->ref && (int)pos < tmp->len) ? tmp->ref[pos] : 'N';
+            char const* ref_name(tmp->in->header->target_name[tid]);
+            char const ref_base = (tmp->ref && (int)pos < tmp->len) ? tmp->ref[pos] : 'N';
             cout << ref_name << "\t" << pos + 1 << "\t" << ref_base << "\t" << mapq_n;
             //print out the base information
             //Note that if there is 0 depth then that averages are reported as 0
