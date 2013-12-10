@@ -4,8 +4,10 @@
 
 #include "bamrc/auxfields.hpp"
 #include "bamrc/ReadWarnings.hpp"
-#include <boost/program_options.hpp>
 #include "bamrc/BasicStat.hpp"
+
+#include <boost/array.hpp>
+#include <boost/program_options.hpp>
 
 #include <stdio.h>
 #include <memory>
@@ -27,13 +29,21 @@
 using namespace std;
 namespace po = boost::program_options;
 
-/* This will convert all iub codes in the reads to N */
-char const* bam_canonical_nt_table = "=ACGTN";
-unsigned char possible_calls = (unsigned char) strlen(bam_canonical_nt_table);
-unsigned char bam_nt16_canonical_table[16] = { 0,1,2,5,
-    3,5,5,5,
-    4,5,5,5,
-    5,5,5,5};
+namespace {
+    /* All iub codes in the reads will be converted to to N */
+    boost::array<char, 6> const bam_canonical_nt_table = {{
+        '=', 'A', 'C', 'G', 'T', 'N'
+        }};
+
+    int const possible_calls = bam_canonical_nt_table.size();
+
+    boost::array<unsigned char, 16> const bam_nt16_canonical_table = {{
+        0,1,2,5,
+        3,5,5,5,
+        4,5,5,5,
+        5,5,5,5
+        }};
+}
 
 //below is for sam header
 KHASH_MAP_INIT_STR(s, int)
