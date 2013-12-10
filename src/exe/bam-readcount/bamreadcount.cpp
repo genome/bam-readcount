@@ -252,7 +252,17 @@ namespace {
 
             int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold
 
-            std::map<std::string, LibraryCounts> lib_counts;
+            // It is likely (I measured a little bit) that using a hash rather
+            // than a tree will increase performance for this map. That said,
+            // the system tests are currently expecting libraries to be
+            // reported in lexicographical order, so I'm holding off on
+            // changing it. I've set things up so it's just a matter of
+            // switching the typedef:
+
+            //typedef boost::unordered_map<std::string, LibraryCounts> PerLibCountsMap;
+            typedef std::map<std::string, LibraryCounts> PerLibCountsMap;
+
+            PerLibCountsMap lib_counts;
 
             //loop over the bases, recycling i here.
             for(int i = 0; i < n; ++i) {
@@ -305,7 +315,7 @@ namespace {
             //print out the base information
             //Note that if there is 0 depth then that averages are reported as 0
 
-            std::map<std::string, LibraryCounts>::iterator lib_iter;
+            PerLibCountsMap::const_iterator lib_iter;
             for(lib_iter = lib_counts.begin(); lib_iter != lib_counts.end(); lib_iter++) {
                 //print it
                 if(tmp->per_lib) {
