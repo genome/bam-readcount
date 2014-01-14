@@ -22,6 +22,7 @@
 #include <cmath>
 #include <map>
 #include <set>
+#include <queue>
 
 
 using namespace std;
@@ -46,6 +47,16 @@ struct LibraryCounts {
     LibraryCounts() : indel_stats(), base_stats(possible_calls) {}
 };
 
+struct IndelQueueEntry {
+    uint32_t tid;
+    uint32_t pos;
+    BasicStat indel_stats;
+    std::string allele;
+    IndelQueueEntry() : tid(0), pos(0), indel_stats(), allele() {}
+};
+
+typedef std::queue<IndelQueueEntry> indel_queue_t;
+typedef std::map<std::string, indel_queue_t> indel_queue_map_t;
 
 //Struct to store info to be passed around
 typedef struct {
@@ -60,6 +71,8 @@ typedef struct {
     samfile_t *in;      //bam file
     int distribution;   //whether or not to display all mapping qualities
     bool per_lib;
+    std::set<std::string> lib_names;
+    indel_queue_map_t indel_queue_map;
 } pileup_data_t;
 
 //struct to store reference for passing to fetch func
@@ -257,9 +270,15 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             if(!base->is_del && base->b->core.qual >= tmp->min_mapq && bam1_qual(base->b)[base->qpos] >= tmp->min_bq) {
                 mapq_n++;
 
+
                 if(base->indel != 0 && tmp->ref) {
                     //indel containing read exists here
-                    //will need to
+                    //need to: 1) add an indel counting mode so insertions aren't double counted or add separate "non-indel" tracking.
+                    //2) create a queue of indel counts and the positions where they /should/ be reported. These positions need to determine reporting as well. ie. if reporting on a deletion and the roi doesn't include the deletion, but we find it. then we still need to do the pileup for that position BUT, there are no guarantees that we know that until we see the data. 
+                    //3) So deletions should get put into a queue and their emission position stored.
+                    //4) At each new position, check if we need to emit the indel.
+                    //5) if that position is a) in our target roi and already passed or b) the current position then we need to emit and this needs to be done in a loop until no more indels are candidates. Maybe two loops.
+                    //
                     std::string allele;
                     if(base->indel > 0) {
                         allele += "+";
@@ -281,7 +300,6 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     current_lib.indel_stats[allele].process_read(base);
                 }
                 else {
-                    //the following are done regardless of whether or not there is an indel
                     unsigned char c = bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos)];   //convert to index
                     (current_lib.base_stats)[c].process_read(base);
                 }
@@ -328,7 +346,19 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             }
             std::map<std::string, BasicStat>::iterator it;
             for(it = lib_iter->second.indel_stats.begin(); it != lib_iter->second.indel_stats.end(); ++it) {
-                cout << "\t" << it->first << ":" << it->second;
+                if(it->first[0] == '-') {
+                    //it's a deletion
+                    IndelQueueEntry new_entry;
+                    new_entry.tid = tid;
+                    new_entry.pos = pos + 1;
+                    new_entry.indel_stats = it->second;
+                    new_entry.allele = it->first;
+                    indel_queue_t &test = tmp->indel_queue_map[lib_iter->first];
+                    test.push(new_entry);
+                }
+                else {
+                    cout << "\t" << it->first << ":" << it->second;
+                }
             }
 
             if(tmp->per_lib) {
@@ -419,6 +449,8 @@ int main(int argc, char *argv[])
     for(std::set<std::string>::iterator it = lib_names.begin(); it != lib_names.end(); ++it) {
         cerr << "Expect library: " << *it << " in BAM" << endl;
     }
+    d->lib_names = lib_names;
+    d->indel_queue_map = indel_queue_map_t();
 
     if (d->in == 0) {
         fprintf(stderr, "Fail to open BAM file %s\n", argv[optind]);
