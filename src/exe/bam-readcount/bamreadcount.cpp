@@ -355,6 +355,9 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     new_entry.allele = it->first;
                     indel_queue_t &test = tmp->indel_queue_map[lib_iter->first];
                     test.push(new_entry);
+                    IndelQueueEntry &retrieved_entry = test.front();
+                    cout << "\t" << retrieved_entry.allele << ":" << retrieved_entry.indel_stats;
+                    test.pop();
                 }
                 else {
                     cout << "\t" << it->first << ":" << it->second;
