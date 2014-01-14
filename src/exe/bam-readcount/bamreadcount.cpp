@@ -355,15 +355,23 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     new_entry.allele = it->first;
                     indel_queue_t &test = tmp->indel_queue_map[lib_iter->first];
                     test.push(new_entry);
-                    IndelQueueEntry &retrieved_entry = test.front();
-                    cout << "\t" << retrieved_entry.allele << ":" << retrieved_entry.indel_stats;
-                    test.pop();
                 }
                 else {
+                    //it's an insertion and it should be output at this position
                     cout << "\t" << it->first << ":" << it->second;
                 }
             }
 
+            std::map<std::string, indel_queue_t>::iterator queued_it;
+            queued_it = tmp->indel_queue_map.find(lib_iter->first);
+            if(queued_it != tmp->indel_queue_map.end()) {
+                //we have an indel queue for this library
+                indel_queue_t &current_lib_queue = queued_it->second;
+                while(!current_lib_queue.empty() && current_lib_queue.front().tid == tid && current_lib_queue.front().pos == pos) {
+                    cout << "\t" << current_lib_queue.front().allele << ":" << current_lib_queue.front().indel_stats;
+                    current_lib_queue.pop();
+                }
+            }
             if(tmp->per_lib) {
                 cout << "\t}";
             }
