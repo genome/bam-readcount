@@ -71,6 +71,7 @@ typedef struct {
     samfile_t *in;      //bam file
     int distribution;   //whether or not to display all mapping qualities
     bool per_lib;
+    bool insertion_centric;
     std::set<std::string> lib_names;
     indel_queue_map_t indel_queue_map;
 } pileup_data_t;
@@ -299,7 +300,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                     current_lib.indel_stats[allele].is_indel=true;
                     current_lib.indel_stats[allele].process_read(base);
                 }
-                else {
+                if(base->indel < 1 || !tmp->insertion_centric) {
                     unsigned char c = bam_nt16_canonical_table[bam1_seqi(bam1_seq(base->b), base->qpos)];   //convert to index
                     (current_lib.base_stats)[c].process_read(base);
                 }
@@ -385,6 +386,7 @@ int main(int argc, char *argv[])
 {
     bool distribution = false;
     bool per_lib = false;
+    bool insertion_centric = false;
     string fn_pos, fn_fa;
     int64_t max_warnings = -1;
 
@@ -403,6 +405,7 @@ int main(int argc, char *argv[])
         ("print-individual-mapq,D", po::value<bool>(&distribution), "report the mapping qualities as a comma separated list.")
         ("per-library,p", po::bool_switch(&per_lib), "report results by library.")
         ("max-warnings,w", po::value<int64_t>(&max_warnings), "maximum number of warnings of each type to emit. -1 gives an unlimited number.")
+        ("insertion-centric,i", po::bool_switch(&insertion_centric), "generate indel centric readcounts. Reads containing insertions will not be included in per-base counts")
         ;
 
     po::options_description hidden("Hidden options");
@@ -454,6 +457,7 @@ int main(int argc, char *argv[])
     d->beg = 0; d->end = 0x7fffffff;
     d->distribution = distribution;
     d->per_lib = per_lib;
+    d->insertion_centric = insertion_centric;
     d->in = samopen(vm["bam-file"].as<string>().c_str(), "rb", 0);
     d->in->header->dict = sam_header_parse2(d->in->header->text);
     std::set<std::string> lib_names = find_library_names(d->in->header);
