@@ -311,7 +311,8 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         std::string ref_name(tmp->in->header->target_name[tid]);
         std::string ref_base;
         ref_base += (tmp->ref && (int)pos < tmp->len) ? tmp->ref[pos] : 'N';
-        cout << ref_name << "\t" << pos + 1 << "\t" << ref_base << "\t" << mapq_n;
+        stringstream record;
+        int extra_depth = 0;
         //print out the base information
         //Note that if there is 0 depth then that averages are reported as 0
 
@@ -319,7 +320,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         for(lib_iter = lib_counts.begin(); lib_iter != lib_counts.end(); lib_iter++) {
             //print it
             if(tmp->per_lib) {
-                cout << "\t" << lib_iter->first << "\t{";
+                record << "\t" << lib_iter->first << "\t{";
             }
             for(unsigned char j = 0; j < possible_calls; ++j) {
                 if(tmp->distribution) {
@@ -342,7 +343,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                        */
                 }
                 else {
-                    cout << "\t" << bam_canonical_nt_table[j] << ":" << lib_iter->second.base_stats[j];
+                    record << "\t" << bam_canonical_nt_table[j] << ":" << lib_iter->second.base_stats[j];
                 }
             }
             std::map<std::string, BasicStat>::iterator it;
@@ -359,7 +360,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 }
                 else {
                     //it's an insertion and it should be output at this position
-                    cout << "\t" << it->first << ":" << it->second;
+                    record << "\t" << it->first << ":" << it->second;
                 }
             }
 
@@ -369,15 +370,16 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 //we have an indel queue for this library
                 indel_queue_t &current_lib_queue = queued_it->second;
                 while(!current_lib_queue.empty() && current_lib_queue.front().tid == tid && current_lib_queue.front().pos == pos) {
-                    cout << "\t" << current_lib_queue.front().allele << ":" << current_lib_queue.front().indel_stats;
+                    record << "\t" << current_lib_queue.front().allele << ":" << current_lib_queue.front().indel_stats;
+                    extra_depth += current_lib_queue.front().indel_stats.read_count;
                     current_lib_queue.pop();
                 }
             }
             if(tmp->per_lib) {
-                cout << "\t}";
+                record << "\t}";
             }
         }
-        cout << endl;
+        cout << ref_name << "\t" << pos + 1 << "\t" << ref_base << "\t" << mapq_n + extra_depth << record.str() << endl;
     }
     return 0;
 }
