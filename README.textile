@@ -34,6 +34,7 @@ The list of regions should be formatted as chromosome start and end. Each field 
 The optional region specification on the command line should follow the same format as that used for samtools (chr:start-stop)
 
 h3. Normal Output
+
 The output format is as follows:
 chr	position	reference_base	depth	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end   ...
 
@@ -68,6 +69,7 @@ avg_clipped_length -> average clipped read length of reads
 avg_distance_to_effective_3p_end -> average distance to the 3' prime end of the read (as fraction of unclipped read length)
 
 h3. Per Library Output
+
 Beginning with version 0.5.0, bam-readcount can now output counts per each library. Libraries are reported with the same metrics as in
 normal counting, but each library is listed by name and its metrics denoted by curly braces as follows:
 chr	position	reference_base	depth	libname	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}   ...
