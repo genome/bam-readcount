@@ -55,5 +55,35 @@ class TestBamReadcount(IntegrationTest, unittest.TestCase):
         self.assertEqual(0, rv)
         self.assertFilesEqual(expected_file, output_file) 
 
+    def test_bamreadcount_indel_centric_normal(self):
+        """test all lib output, but with insertion centric counting"""
+        expected_file = "expected_insertion_centric_all_lib"
+        bam_file = "test.bam"
+        ref_fasta = "ref.fa"
+        site_list = "site_list"
+        output_file = self.tempFile("output")
+        cmdline = " ".join([self.exe_path, '-i', '-f', ref_fasta, '-l', site_list, bam_file, '>', output_file])
+        print "Executing", cmdline
+        print "CWD", os.getcwd()
+        rv = subprocess.call(cmdline, shell=True)
+        print "Return value:", rv
+        self.assertEqual(0, rv)
+        self.assertFilesEqual(expected_file, output_file) 
+        
+    def test_bamreadcount_indel_centric_per_lib(self):
+        """test all lib output, but with insertion centric counting"""
+        expected_file = "expected_insertion_centric_per_lib"
+        bam_file = "test.bam"
+        ref_fasta = "ref.fa"
+        site_list = "site_list"
+        output_file = self.tempFile("output")
+        cmdline = " ".join([self.exe_path, '-i', '-p', '-f', ref_fasta, '-l', site_list, bam_file, '>', output_file])
+        print "Executing", cmdline
+        print "CWD", os.getcwd()
+        rv = subprocess.call(cmdline, shell=True)
+        print "Return value:", rv
+        self.assertEqual(0, rv)
+        self.assertFilesEqual(expected_file, output_file) 
+
 if __name__ == "__main__":
     main()
