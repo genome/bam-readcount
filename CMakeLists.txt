@@ -8,9 +8,15 @@ include(TestHelper)
 include(VersionHelper)
 include(ProjectHelper)
 
-#stubbing in old version of Boost from older BD libraries. Switch to shipping boost at a later date
-find_package(Boost 1.40 REQUIRED COMPONENTS program_options)
+set(REQUIRED_BOOST_LIBS program_options regex)
+include(BuildBoost)
 include_directories(${Boost_INCLUDE_DIRS})
+
+include(BuildSamtools)
+include_directories(${Samtools_INCLUDE_DIRS})
+
+add_custom_target(deps ALL)
+add_dependencies(deps samtools-lib boost-1.55)
 
 if (CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_C_FLAGS "-Wall")
@@ -19,16 +25,6 @@ endif ()
 if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "-Wall")
 endif ()
-
-include(BuildSamtools)
-include_directories(${Samtools_INCLUDE_DIRS})
-
-add_custom_target(deps ALL)
-add_dependencies(deps samtools-lib)
-
-#stubbing in old version of Boost from older BD libraries. Switch to shipping boost at a later date
-find_package(Boost 1.40 REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(Threads)
 link_libraries(${CMAKE_THREAD_LIBS_INIT})
