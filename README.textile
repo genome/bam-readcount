@@ -99,7 +99,7 @@ h2. Build Instructions
 h3. Clone the bam-readcount repository
 * Recursively clone the git repository
 
-bc..         git clone --recursive git://github.com/genome/bam-readcount.git
+bc..         git clone --recursive https://github.com/genome/bam-readcount.git
 
 h3. Compile bam-readcount
 * bam-readcount does not support in source builds. Create a new build directory, enter it, and run:
