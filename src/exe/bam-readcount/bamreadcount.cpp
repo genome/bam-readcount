@@ -413,7 +413,7 @@ int main(int argc, char *argv[])
     po::options_description hidden("Hidden options");
     hidden.add_options()
         ("bam-file", po::value<string>(), "bam file")
-        ("region", po::value<string>(), "region specification e.g. 2:1-50")
+        ("region", po::value< vector<string> >(), "region(s) specification e.g. 2:1-50")
         ;
 
     po::options_description cmdline_options;
@@ -421,7 +421,7 @@ int main(int argc, char *argv[])
 
     po::positional_options_description p;
     p.add("bam-file", 1);
-    p.add("region", 1);
+    p.add("region", -1);
 
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).
@@ -567,30 +567,33 @@ int main(int argc, char *argv[])
         } else {
             int ref;
             bam_index_t *idx;
-            bam_plbuf_t *buf;
             idx = bam_index_load(vm["bam-file"].as<string>().c_str()); // load BAM index
             if (idx == 0) {
                 fprintf(stderr, "BAM indexing file is not available.\n");
                 return 1;
             }
-            bam_parse_region(d->in->header, vm["region"].as<string>().c_str(), &ref, &(d->beg), &(d->end)); // parse the region
-            if (ref < 0) {
-                fprintf(stderr, "Invalid region %s\n", vm["region"].as<string>().c_str());
-                return 1;
+            vector<string> regions = vm["region"].as< vector<string> >();
+            typedef vector<string>::iterator region_iter;
+            for(region_iter it = regions.begin(); it != regions.end(); ++it) {
+                bam_parse_region(d->in->header, it->c_str(), &ref, &(d->beg), &(d->end)); // parse the region
+                if (ref < 0) {
+                    fprintf(stderr, "Invalid region %s\n", it->c_str());
+                    return 1;
+                }
+                if (d->fai && ref != d->tid) {
+                    free(d->ref);
+                    d->ref = fai_fetch(d->fai, d->in->header->target_name[ref], &d->len);
+                    d->tid = ref;
+                }
+                bam_plbuf_t *buf = bam_plbuf_init(pileup_func, d); // initialize pileup
+                bam_plp_set_maxcnt(buf->iter, d->max_cnt);
+                f->pileup_buffer = buf;
+                f->ref_pointer = &(d->ref);
+                bam_fetch(d->in->x.bam, idx, ref, d->beg, d->end, f, fetch_func);
+                bam_plbuf_push(0, buf); // finalize pileup
+                bam_plbuf_destroy(buf);
             }
-            if (d->fai && ref != d->tid) {
-                free(d->ref);
-                d->ref = fai_fetch(d->fai, d->in->header->target_name[ref], &d->len);
-                d->tid = ref;
-            }
-            buf = bam_plbuf_init(pileup_func, d); // initialize pileup
-            bam_plp_set_maxcnt(buf->iter, d->max_cnt);
-            f->pileup_buffer = buf;
-            f->ref_pointer = &(d->ref);
-            bam_fetch(d->in->x.bam, idx, ref, d->beg, d->end, f, fetch_func);
-            bam_plbuf_push(0, buf); // finalize pileup
             bam_index_destroy(idx);
-            bam_plbuf_destroy(buf);
         }
         if(d->ref) {
             free(d->ref);
