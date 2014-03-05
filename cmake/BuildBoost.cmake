@@ -31,8 +31,7 @@ ExternalProject_Add(
     BINARY_DIR ${BOOST_SRC}
     CONFIGURE_COMMAND "./bootstrap.sh"
     BUILD_COMMAND
-        echo "Building boost, build log is ${BOOST_LOG}"
-        COMMAND
+        echo "Building boost, build log is ${BOOST_LOG}" &&
         ./b2 --prefix=${BOOST_ROOT} --layout=system link=static
                 threading=multi install ${BOOST_BUILD_LIBS} > ${BOOST_LOG} 2>&1
     INSTALL_COMMAND ""
