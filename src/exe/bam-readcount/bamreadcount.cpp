@@ -1,32 +1,5 @@
-#ifndef _GNU_SOURCE
-# define _GNU_SOURCE
-#endif
+#include "bamreadcount.h"
 
-#include "bamrc/auxfields.hpp"
-#include "bamrc/ReadWarnings.hpp"
-#include <boost/program_options.hpp>
-#include "bamrc/BasicStat.hpp"
-
-#include <stdio.h>
-#include <memory>
-#include <string.h>
-#include "sam.h"
-#include "faidx.h"
-#include "khash.h"
-#include "sam_header.h"
-#include <stdio.h>
-#include <unistd.h>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <cmath>
-#include <map>
-#include <set>
-#include <queue>
-
-
-using namespace std;
-namespace po = boost::program_options;
 
 /* This will convert all iub codes in the reads to N */
 char const* bam_canonical_nt_table = "=ACGTN";
@@ -384,7 +357,14 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
     return 0;
 }
 
-int main(int argc, char *argv[])
+
+
+// Constructor
+//counter::counter(){
+//	
+//}
+
+int counter::count(int argc, char *argv[])
 {
     bool distribution = false;
     bool per_lib = false;
