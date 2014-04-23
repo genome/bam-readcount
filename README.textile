@@ -99,7 +99,7 @@ h2. Build Instructions
 h3. Clone the bam-readcount repository
 * Recursively clone the git repository
 
-bc..         git clone --recursive https://github.com/genome/bam-readcount.git
+bc.         git clone https://github.com/genome/bam-readcount.git
 
 h3. Compile bam-readcount
 * bam-readcount does not support in source builds. Create a new build directory, enter it, and run:
@@ -114,7 +114,7 @@ h2. FAQ
 
 h3. I get errors from cmake about missing modules. How do I fix this?
 
-bam-readcount contains a git submodule called build-common. It contains helper modules for cmake. If you downloaded the source as a tarball from github or forgot to do a recursive clone using git, then you will not have this submodule and will see cmake errors. If you are using git, we recommend you go back and use the --recursive option when cloning the repository. If you cannot use git, follow the instructions below to remedy the situation.
+These errors should no longer occur as of commit e48b05cbb9a9222d7585958f9704b147f0a4cbea. For earlier commits, bam-readcount contains a git submodule called build-common. It contains helper modules for cmake. If you downloaded the source as a tarball from github or forgot to do a recursive clone using git, then you will not have this submodule and will see cmake errors. If you are using git, we recommend you go back and use the --recursive option when cloning the repository. If you cannot use git, follow the instructions below to remedy the situation.
 
 # Download the build-common module separately "here":https://github.com/genome/build-common/tarball/master
 # Extract that tarball, and rename the directory it creates to 'build-common'.
