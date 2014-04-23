@@ -86,6 +86,15 @@ typedef struct {
 
 std::auto_ptr<ReadWarnings> WARN;
 
+static inline void load_reference(pileup_data_t* data, int ref) {
+    if (data->fai && ref != data->tid) {
+        free(data->ref);
+        //would this be faster to just grab small chunks? Probably at some level, but not at others. How would chunking affect the indel allele calculations? Those assume that the indel allele is present in the ref and potentially occupy more than just the region of interest
+        data->ref = fai_fetch(data->fai, data->in->header->target_name[ref], &data->len);
+        data->tid = ref;
+    }
+}
+
 std::set<std::string> find_library_names(bam_header_t const* header) {
     //samtools doesn't do a good job of exposing this so this is a little more implementation
     //dependent than I'd like and may be fragile.
@@ -523,12 +532,7 @@ int main(int argc, char *argv[])
                 //fprintf(stderr, "%i %i %i scanned in\n",ref,beg,end);
                 d->beg = beg-1;
                 d->end = end;
-                if (d->fai && ref != d->tid) {
-                    free(d->ref);
-                    //would this be faster to just grab small chunks? Probably at some level, but not at others. How would chunking affect the indel allele calculations? Those assume that the indel allele is present in the ref and potentially occupy more than just the region of interest
-                    d->ref = fai_fetch(d->fai, d->in->header->target_name[ref], &d->len);
-                    d->tid = ref;
-                }
+                load_reference(d, ref);
                 bam_plbuf_t *buf = bam_plbuf_init(pileup_func, d); // initialize pileup
                 bam_plp_set_maxcnt(buf->iter, d->max_cnt);
                 f->pileup_buffer = buf;
@@ -580,11 +584,7 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "Invalid region %s\n", it->c_str());
                     return 1;
                 }
-                if (d->fai && ref != d->tid) {
-                    free(d->ref);
-                    d->ref = fai_fetch(d->fai, d->in->header->target_name[ref], &d->len);
-                    d->tid = ref;
-                }
+                load_reference(d, ref);
                 bam_plbuf_t *buf = bam_plbuf_init(pileup_func, d); // initialize pileup
                 bam_plp_set_maxcnt(buf->iter, d->max_cnt);
                 f->pileup_buffer = buf;
@@ -606,3 +606,5 @@ int main(int argc, char *argv[])
     samclose(d->in);
     return 0;
 }
+
+
