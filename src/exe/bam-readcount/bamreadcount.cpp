@@ -261,6 +261,7 @@ static int fetch_func(const bam1_t *b, void *data) {
 // TODO allow for a simplified version that calculates less
 static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *pl, void *data) {
     pileup_data_t *tmp = (pileup_data_t*)data;
+    load_reference(tmp, tid);
 
     if ((int)pos >= tmp->beg && (int)pos < tmp->end) {
 
