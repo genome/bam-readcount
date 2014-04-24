@@ -84,12 +84,12 @@ h2. Build Dependencies
 h3. Available Packages for Dependencies
 * For APT-based systems (Debian, Ubuntu), install the following packages:
 
-bc. sudo apt-get install build-essential git-core cmake zlib1g-dev libncurses-dev
+bc. sudo apt-get install build-essential git-core cmake zlib1g-dev libncurses-dev patch
 
 * For RPM-based systems (Fedora, CentOS, RHEL), install the following packages instead:
 
 bc. sudo yum groupinstall "Development tools" 
-sudo yum install zlib-devel ncurses-devel cmake
+sudo yum install zlib-devel ncurses-devel cmake patch
 
 Note that for some RPM based systems (like RHEL), you will need to install cmake 2.8 or greater yourself as the packaged version is much older.
 
@@ -104,7 +104,7 @@ bc.         git clone https://github.com/genome/bam-readcount.git
 h3. Compile bam-readcount
 * bam-readcount does not support in source builds. Create a new build directory, enter it, and run:
 
-bc..         cmake /path/to/bam-readcount/repo
+bc.         cmake /path/to/bam-readcount/repo
         make deps
         make
 

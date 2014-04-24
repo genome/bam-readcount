@@ -31,6 +31,7 @@ ExternalProject_Add(
     URL ${CMAKE_SOURCE_DIR}/vendor/samtools-0.1.19.tar.gz
     SOURCE_DIR ${SAMTOOLS_ROOT}
     BINARY_DIR ${SAMTOOLS_ROOT}
+    PATCH_COMMAND patch -p2 -t -N < ${CMAKE_SOURCE_DIR}/vendor/samtools0.1.19.patch
     CONFIGURE_COMMAND echo "Building samtools, build log at ${SAMTOOLS_LOG}"
     BUILD_COMMAND make INCLUDES=-I${ZLIB_INCLUDE_DIRS} libbam.a > ${SAMTOOLS_LOG} 2>&1
     INSTALL_COMMAND ""
