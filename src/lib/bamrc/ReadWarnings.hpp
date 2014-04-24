@@ -13,6 +13,7 @@ public:
         SM_TAG_MISSING = 0,
         NM_TAG_MISSING,
         Zm_TAG_MISSING,
+        LIBRARY_UNAVAILABLE,
         N_WARNING_TYPES
     };
 
@@ -30,6 +31,9 @@ public:
             "Check to see if the NM tag is in BAM.";
 
         _messages[Zm_TAG_MISSING] = "Couldn't find the generated tag.";
+
+        _messages[LIBRARY_UNAVAILABLE] = "Library unavailable. "
+            "Check to make sure the LB tag is present in the @RG entries of the header.";
     }
 
     void warn(WarningType type, char const* read_name) {

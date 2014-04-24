@@ -275,6 +275,10 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             const char* library_name = "all";
             if(tmp->per_lib) {
                 library_name = bam_get_library(tmp->in->header, base->b);
+                if(library_name == 0) {
+                    WARN->warn(ReadWarnings::LIBRARY_UNAVAILABLE, bam1_qname(base->b));
+                    return 0;
+                }
             }
             LibraryCounts &current_lib = lib_counts[library_name];
 
