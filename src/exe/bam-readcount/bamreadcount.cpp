@@ -263,7 +263,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
     pileup_data_t *tmp = (pileup_data_t*)data;
     load_reference(tmp, tid);
 
-    if ((int)pos >= tmp->beg && (int)pos < tmp->end) {
+    if ((int)pos >= tmp->beg - 1 && (int)pos < tmp->end) {
 
         int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold
 
@@ -393,7 +393,9 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 record << "\t}";
             }
         }
-        cout << ref_name << "\t" << pos + 1 << "\t" << ref_base << "\t" << mapq_n + extra_depth << record.str() << endl;
+        if ((int)pos >= tmp->beg && (int)pos < tmp->end) {
+            cout << ref_name << "\t" << pos + 1 << "\t" << ref_base << "\t" << mapq_n + extra_depth << record.str() << endl;
+        }
     }
     return 0;
 }
@@ -535,7 +537,7 @@ int main(int argc, char *argv[])
                 //fprintf(stderr, "%s %i %i scanned in\n",ref_name,beg,end);
                 ref = kh_value(h,iter);
                 //fprintf(stderr, "%i %i %i scanned in\n",ref,beg,end);
-                d->beg = beg-1;
+                d->beg = beg - 1; // make this 0-based
                 d->end = end;
                 load_reference(d, ref);
                 bam_plbuf_t *buf = bam_plbuf_init(pileup_func, d); // initialize pileup
@@ -549,7 +551,7 @@ int main(int argc, char *argv[])
                     f->seq_name = 0;
                 }
                 f->ref_pointer = &(d->ref);
-                bam_fetch(d->in->x.bam, idx, ref, d->beg, d->end, f, fetch_func);
+                bam_fetch(d->in->x.bam, idx, ref, d->beg-1, d->end, f, fetch_func);
                 bam_plbuf_push(0, buf); // finalize pileup
                 bam_plbuf_destroy(buf);
 
@@ -594,7 +596,7 @@ int main(int argc, char *argv[])
                 bam_plp_set_maxcnt(buf->iter, d->max_cnt);
                 f->pileup_buffer = buf;
                 f->ref_pointer = &(d->ref);
-                bam_fetch(d->in->x.bam, idx, ref, d->beg, d->end, f, fetch_func);
+                bam_fetch(d->in->x.bam, idx, ref, d->beg-1, d->end, f, fetch_func);
                 bam_plbuf_push(0, buf); // finalize pileup
                 bam_plbuf_destroy(buf);
             }
