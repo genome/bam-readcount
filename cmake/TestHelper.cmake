@@ -12,6 +12,7 @@ ExternalProject_Add(
     gtest160
     URL ${CMAKE_CURRENT_SOURCE_DIR}/build-common/vendor/gtest-1.6.0.tar.gz
     INSTALL_COMMAND ""
+    CMAKE_ARGS -DCMAKE_CXX_FLAGS=-DGTEST_USE_OWN_TR1_TUPLE=1
     BINARY_DIR ${GTEST_LIB_DIR}
     )
 ExternalProject_Get_Property(gtest160 source_dir)
