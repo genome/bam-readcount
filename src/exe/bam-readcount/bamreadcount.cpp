@@ -383,6 +383,10 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             if(queued_it != tmp->indel_queue_map.end()) {
                 //we have an indel queue for this library
                 indel_queue_t &current_lib_queue = queued_it->second;
+                while(!current_lib_queue.empty() && current_lib_queue.front().tid == tid && current_lib_queue.front().pos < pos) {
+                    current_lib_queue.pop();
+                }
+
                 while(!current_lib_queue.empty() && current_lib_queue.front().tid == tid && current_lib_queue.front().pos == pos) {
                     record << "\t" << current_lib_queue.front().allele << ":" << current_lib_queue.front().indel_stats;
                     extra_depth += current_lib_queue.front().indel_stats.read_count;
