@@ -1,7 +1,4 @@
-#ifndef _GNU_SOURCE
-# define _GNU_SOURCE
-#endif
-
+#include "bamrc/Options.hpp"
 #include "bamrc/auxfields.hpp"
 #include "bamrc/ReadWarnings.hpp"
 #include "bamrc/BasicStat.hpp"
@@ -11,6 +8,7 @@
 #include <khash.h>
 #include <sam_header.h>
 
+#include <boost/format.hpp>
 #include <boost/program_options.hpp>
 
 #include <unistd.h>
@@ -28,6 +26,7 @@
 
 
 using namespace std;
+using boost::format;
 namespace po = boost::program_options;
 
 /* This will convert all iub codes in the reads to N */
@@ -340,7 +339,9 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             }
             for(unsigned char j = 0; j < possible_calls; ++j) {
                 if(tmp->distribution) {
-                    throw "Not currently supporting distributions\n";
+                    throw std::runtime_error(
+                        "Not currently supporting distributions"
+                        );
                     /*
                        printf("\t%c:%d:", bam_canonical_nt_table[j], base_stat->read_counts[j]);
                        for(iter = 0; iter < base_stat->num_mapping_qualities[j]; iter++) {
@@ -406,14 +407,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
     return 0;
 }
 
-int main(int argc, char *argv[])
-{
-    bool distribution = false;
-    bool per_lib = false;
-    bool insertion_centric = false;
-    string fn_pos, fn_fa;
-    int64_t max_warnings = -1;
-
+static int bam_readcount(Options const& opts) {
     pileup_data_t d;
     fetch_data_t f;
     memset(&d, 0, sizeof(d));
@@ -421,50 +415,29 @@ int main(int argc, char *argv[])
 
     d.tid = -1, d.min_bq = 0, d.max_cnt = 10000000;
 
-    po::options_description desc("Available options");
-    desc.add_options()
-        ("help,h", "produce this message")
-        ("min-mapping-quality,q", po::value<int>(&d.min_mapq)->default_value(0), "minimum mapping quality of reads used for counting.")
-        ("min-base-quality,b", po::value<int>(&d.min_bq)->default_value(0), "minimum base quality at a position to use the read for counting.")
-        ("max-count,d", po::value<int>(&d.max_cnt)->default_value(10000000), "max depth to avoid excessive memory usage.")
-        ("site-list,l", po::value<string>(&fn_pos), "file containing a list of regions to report readcounts within.") 
-        ("reference-fasta,f", po::value<string>(&fn_fa), "reference sequence in the fasta format.") 
-        ("print-individual-mapq,D", po::value<bool>(&distribution), "report the mapping qualities as a comma separated list.")
-        ("per-library,p", po::bool_switch(&per_lib), "report results by library.")
-        ("max-warnings,w", po::value<int64_t>(&max_warnings), "maximum number of warnings of each type to emit. -1 gives an unlimited number.")
-        ("insertion-centric,i", po::bool_switch(&insertion_centric), "generate indel centric readcounts. Reads containing insertions will not be included in per-base counts")
-        ;
+    // FIXME: put options in "d" instead of copying here.
+    d.min_mapq = opts.min_mapq;
+    d.min_bq = opts.min_baseq;
+    d.max_cnt = opts.max_depth;
+    d.distribution = opts.distribution;
+    d.per_lib = opts.per_lib;
+    d.insertion_centric = opts.insertion_centric;
 
-    po::options_description hidden("Hidden options");
-    hidden.add_options()
-        ("bam-file", po::value<string>(), "bam file")
-        ("region", po::value< vector<string> >(), "region(s) specification e.g. 2:1-50")
-        ;
 
-    po::options_description cmdline_options;
-    cmdline_options.add(desc).add(hidden);
-
-    po::positional_options_description p;
-    p.add("bam-file", 1);
-    p.add("region", -1);
-
-    po::variables_map vm;
-    po::store(po::command_line_parser(argc, argv).
-            options(cmdline_options).positional(p).run(), vm);
-    po::notify(vm);
-    if (vm.count("help") || vm.count("bam-file") == 0) {
-        cout << desc << "\n";
-        return 1;
-    }
     cerr << "Minimum mapping quality is set to " << d.min_mapq << endl;
-    WARN.reset(new ReadWarnings(std::cerr, max_warnings));
+    WARN.reset(new ReadWarnings(std::cerr, opts.max_warnings));
 
-    if (!fn_fa.empty()) d.fai = fai_load(fn_fa.c_str());
+    if (!opts.fasta_file.empty()) {
+        d.fai = fai_load(opts.fasta_file.c_str());
+        if (d.fai == 0) {
+            throw std::runtime_error(str(format(
+                "Failed to load fasta file %1%"
+                ) % opts.fasta_file));
+        }
+    }
+
     d.beg = 0; d.end = 0x7fffffff;
-    d.distribution = distribution;
-    d.per_lib = per_lib;
-    d.insertion_centric = insertion_centric;
-    d.in = samopen(vm["bam-file"].as<string>().c_str(), "rb", 0);
+    d.in = samopen(opts.input_file.c_str(), "rb", 0);
     d.in->header->dict = sam_header_parse2(d.in->header->text);
     std::set<std::string> lib_names = find_library_names(d.in->header);
     for(std::set<std::string>::iterator it = lib_names.begin(); it != lib_names.end(); ++it) {
@@ -474,17 +447,18 @@ int main(int argc, char *argv[])
     d.indel_queue_map = indel_queue_map_t();
 
     if (d.in == 0) {
-        fprintf(stderr, "Fail to open BAM file %s\n", argv[optind]);
+        std::cerr << "Fail to open BAM file " << opts.input_file << "\n";
         return 1;
     }
-    if(!fn_pos.empty()) {
-        std::ifstream fp(fn_pos.c_str());
+
+    if(!opts.pos_file.empty()) {
+        std::ifstream fp(opts.pos_file.c_str());
         if(!fp.is_open()) {
-            cerr << "Failed to open region list file: " << fn_pos << endl;
+            cerr << "Failed to open region list file: " << opts.pos_file << endl;
             return 1;
         }
         bam_index_t *idx;
-        idx = bam_index_load(vm["bam-file"].as<string>().c_str()); // load BAM index
+        idx = bam_index_load(opts.input_file.c_str()); // load BAM index
         if (idx == 0) {
             fprintf(stderr, "BAM indexing file is not available.\n");
             return 1;
@@ -553,25 +527,22 @@ int main(int argc, char *argv[])
         if(d.ref) {
             free(d.ref);
         }
-        //free(fn_pos);
-        //free(fn_fa);
         return 0;
     }
     else {
-        if (!vm.count("region")) { // if a region is not specified
+        if (opts.regions.empty()) { // if a region is not specified
             //FIXME this currently crashes and burns because it doesn't hit the pre-processing in fetch_func
             sampileup(d.in, -1, pileup_func, &d);
         } else {
             int ref;
             bam_index_t *idx;
-            idx = bam_index_load(vm["bam-file"].as<string>().c_str()); // load BAM index
+            idx = bam_index_load(opts.input_file.c_str()); // load BAM index
             if (idx == 0) {
                 fprintf(stderr, "BAM indexing file is not available.\n");
                 return 1;
             }
-            vector<string> regions = vm["region"].as< vector<string> >();
-            typedef vector<string>::iterator region_iter;
-            for(region_iter it = regions.begin(); it != regions.end(); ++it) {
+            vector<string> const& regions = opts.regions;
+            for(auto it = regions.begin(); it != regions.end(); ++it) {
                 bam_parse_region(d.in->header, it->c_str(), &ref, &(d.beg), &(d.end)); // parse the region
                 if (ref < 0) {
                     fprintf(stderr, "Invalid region %s\n", it->c_str());
@@ -597,4 +568,19 @@ int main(int argc, char *argv[])
     }
     samclose(d.in);
     return 0;
+}
+
+int main(int argc, char *argv[]) {
+    try {
+        Options opts(argc, argv);
+        opts.validate();
+        return bam_readcount(opts);
+    }
+    catch (CmdlineHelpException const& e) {
+        std::cout << e.what() << "\n";
+    }
+    catch (std::exception const& e) {
+        std::cerr << e.what() << "\n";
+        return 1;
+    }
 }
