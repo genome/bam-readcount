@@ -492,33 +492,33 @@ static int bam_readcount(Options const& opts) {
 
             iter = kh_get(s, h, ref_name.c_str());
             if(iter == kh_end(h)) {
-                fprintf(stderr, "%s not found in bam file. Region %s %i %i skipped.\n",ref_name.c_str(),ref_name.c_str(),beg,end);
+                std::cerr << str(format("Sequence '%1%' not found in bam file. "
+                    "Region %2% %3% %4% skipped.\n")
+                    % ref_name % ref_name % beg % end);
+                continue;
             }
-            else {
-                // ref id exists
-                //fprintf(stderr, "%s %i %i scanned in\n",ref_name,beg,end);
-                ref = kh_value(h,iter);
-                //fprintf(stderr, "%i %i %i scanned in\n",ref,beg,end);
-                d.beg = beg - 1; // make this 0-based
-                d.end = end;
-                load_reference(&d, ref);
-                bam_plbuf_t *buf = bam_plbuf_init(pileup_func, &d); // initialize pileup
-                bam_plp_set_maxcnt(buf->iter, d.max_cnt);
-                f.pileup_buffer = buf;
-                if (d.fai) {
-                    f.ref_len = d.len;
-                    f.seq_name = d.in->header->target_name[d.tid];
-                } else {
-                    f.ref_len = 0;
-                    f.seq_name = 0;
-                }
-                f.ref_pointer = &(d.ref);
-                bam_fetch(d.in->x.bam, idx, ref, d.beg-1, d.end, &f, fetch_func);
-                bam_plbuf_push(0, buf); // finalize pileup
-                bam_plbuf_destroy(buf);
 
+            // ref id exists
+            ref = kh_value(h,iter);
+            d.beg = beg - 1; // make this 0-based
+            d.end = end;
+            load_reference(&d, ref);
+            bam_plbuf_t *buf = bam_plbuf_init(pileup_func, &d); // initialize pileup
+            bam_plp_set_maxcnt(buf->iter, d.max_cnt);
+            f.pileup_buffer = buf;
+            if (d.fai) {
+                f.ref_len = d.len;
+                f.seq_name = d.in->header->target_name[d.tid];
+            } else {
+                f.ref_len = 0;
+                f.seq_name = 0;
             }
+            f.ref_pointer = &(d.ref);
+            bam_fetch(d.in->x.bam, idx, ref, d.beg-1, d.end, &f, fetch_func);
+            bam_plbuf_push(0, buf); // finalize pileup
+            bam_plbuf_destroy(buf);
         }
+
         bam_index_destroy(idx);
         samclose(d.in);
         if(d.fai) {
@@ -538,7 +538,8 @@ static int bam_readcount(Options const& opts) {
             bam_index_t *idx;
             idx = bam_index_load(opts.input_file.c_str()); // load BAM index
             if (idx == 0) {
-                fprintf(stderr, "BAM indexing file is not available.\n");
+                std::cerr << "BAM index not found for file "
+                    << opts.input_file << ", abort.\n";
                 return 1;
             }
             vector<string> const& regions = opts.regions;
