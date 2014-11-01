@@ -19,3 +19,4 @@ debian/files
 debian/joinx*/
 debian/*.log
 debian/*.substvars
+.*.swp
