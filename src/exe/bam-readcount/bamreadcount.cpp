@@ -4,25 +4,27 @@
 
 #include "bamrc/auxfields.hpp"
 #include "bamrc/ReadWarnings.hpp"
-#include <boost/program_options.hpp>
 #include "bamrc/BasicStat.hpp"
 
-#include <stdio.h>
-#include <memory>
-#include <string.h>
-#include "sam.h"
-#include "faidx.h"
-#include "khash.h"
-#include "sam_header.h"
-#include <stdio.h>
+#include <sam.h>
+#include <faidx.h>
+#include <khash.h>
+#include <sam_header.h>
+
+#include <boost/program_options.hpp>
+
 #include <unistd.h>
+
+#include <cmath>
+#include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <iostream>
-#include <string>
-#include <cmath>
 #include <map>
-#include <set>
+#include <memory>
 #include <queue>
+#include <set>
+#include <string>
 
 
 using namespace std;
@@ -412,16 +414,19 @@ int main(int argc, char *argv[])
     string fn_pos, fn_fa;
     int64_t max_warnings = -1;
 
-    pileup_data_t *d = (pileup_data_t*)calloc(1, sizeof(pileup_data_t));
-    fetch_data_t *f = (fetch_data_t*)calloc(1, sizeof(pileup_data_t));
-    d->tid = -1, d->min_bq = 0, d->max_cnt = 10000000;
+    pileup_data_t d;
+    fetch_data_t f;
+    memset(&d, 0, sizeof(d));
+    memset(&f, 0, sizeof(f));
+
+    d.tid = -1, d.min_bq = 0, d.max_cnt = 10000000;
 
     po::options_description desc("Available options");
     desc.add_options()
         ("help,h", "produce this message")
-        ("min-mapping-quality,q", po::value<int>(&d->min_mapq)->default_value(0), "minimum mapping quality of reads used for counting.")
-        ("min-base-quality,b", po::value<int>(&d->min_bq)->default_value(0), "minimum base quality at a position to use the read for counting.")
-        ("max-count,d", po::value<int>(&d->max_cnt)->default_value(10000000), "max depth to avoid excessive memory usage.")
+        ("min-mapping-quality,q", po::value<int>(&d.min_mapq)->default_value(0), "minimum mapping quality of reads used for counting.")
+        ("min-base-quality,b", po::value<int>(&d.min_bq)->default_value(0), "minimum base quality at a position to use the read for counting.")
+        ("max-count,d", po::value<int>(&d.max_cnt)->default_value(10000000), "max depth to avoid excessive memory usage.")
         ("site-list,l", po::value<string>(&fn_pos), "file containing a list of regions to report readcounts within.") 
         ("reference-fasta,f", po::value<string>(&fn_fa), "reference sequence in the fasta format.") 
         ("print-individual-mapq,D", po::value<bool>(&distribution), "report the mapping qualities as a comma separated list.")
@@ -451,45 +456,24 @@ int main(int argc, char *argv[])
         cout << desc << "\n";
         return 1;
     }
-    cerr << "Minimum mapping quality is set to " << d->min_mapq << endl;
-    /*
-    if (argc - optind == 0) {
-        fprintf(stderr, "\n");
-        fprintf(stderr, "Usage: bam-readcount <bam_file> [region]\n");
-        fprintf(stderr, "        -q INT    filtering reads with mapping quality less than INT [%d]\n", d->min_mapq);
-        fprintf(stderr, "        -b INT    don't include reads where the base quality is less than INT [%d]\n", d->min_bq);
-        fprintf(stderr, "        -d INT    max depth to avoid excessive memory usage [%d]\n", d->max_cnt);
-        fprintf(stderr, "        -f FILE   reference sequence in the FASTA format\n");
-        fprintf(stderr, "        -l FILE   list of regions to report readcounts within.\n");
-        fprintf(stderr, "        -D        report the mapping qualities as a comma separated list\n");
-        fprintf(stderr, "        -w        maximum number of warnings of each type to emit [unlimited]\n\n");
-        fprintf(stderr, "This program reports readcounts for each base at each position requested.\n");
-        fprintf(stderr, "\nPositions should be requested via the -l option as chromosome, start, stop\nwhere the coordinates are 1-based and each field is separated by whitespace.\n");
-        fprintf(stderr, "\nA single region may be requested on the command-line similarly to samtools view\n(i.e. bam-readcount -f ref.fa some.bam 1:150-150).\n\n");
-        fprintf(stderr, "It also reports the average base quality of these bases and mapping qualities of\n");
-        fprintf(stderr, "the reads containing each base.\n\nThe format is as follows:\nchr\tposition\treference_base\tbase:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualitiest:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end...\n");
-
-        fprintf(stderr, "\n");
-        return 1;
-    }
-*/
+    cerr << "Minimum mapping quality is set to " << d.min_mapq << endl;
     WARN.reset(new ReadWarnings(std::cerr, max_warnings));
 
-    if (!fn_fa.empty()) d->fai = fai_load(fn_fa.c_str());
-    d->beg = 0; d->end = 0x7fffffff;
-    d->distribution = distribution;
-    d->per_lib = per_lib;
-    d->insertion_centric = insertion_centric;
-    d->in = samopen(vm["bam-file"].as<string>().c_str(), "rb", 0);
-    d->in->header->dict = sam_header_parse2(d->in->header->text);
-    std::set<std::string> lib_names = find_library_names(d->in->header);
+    if (!fn_fa.empty()) d.fai = fai_load(fn_fa.c_str());
+    d.beg = 0; d.end = 0x7fffffff;
+    d.distribution = distribution;
+    d.per_lib = per_lib;
+    d.insertion_centric = insertion_centric;
+    d.in = samopen(vm["bam-file"].as<string>().c_str(), "rb", 0);
+    d.in->header->dict = sam_header_parse2(d.in->header->text);
+    std::set<std::string> lib_names = find_library_names(d.in->header);
     for(std::set<std::string>::iterator it = lib_names.begin(); it != lib_names.end(); ++it) {
         cerr << "Expect library: " << *it << " in BAM" << endl;
     }
-    d->lib_names = lib_names;
-    d->indel_queue_map = indel_queue_map_t();
+    d.lib_names = lib_names;
+    d.indel_queue_map = indel_queue_map_t();
 
-    if (d->in == 0) {
+    if (d.in == 0) {
         fprintf(stderr, "Fail to open BAM file %s\n", argv[optind]);
         return 1;
     }
@@ -515,17 +499,17 @@ int main(int argc, char *argv[])
         //initialize the header hash
         khiter_t iter;
         khash_t(s) *h;
-        if (d->in->header->hash == 0) {
+        if (d.in->header->hash == 0) {
             int ret, i;
             khiter_t iter;
             khash_t(s) *h;
-            d->in->header->hash = h = kh_init(s);
-            for (i = 0; i < d->in->header->n_targets; ++i) {
-                iter = kh_put(s, h, d->in->header->target_name[i], &ret);
+            d.in->header->hash = h = kh_init(s);
+            for (i = 0; i < d.in->header->n_targets; ++i) {
+                iter = kh_put(s, h, d.in->header->target_name[i], &ret);
                 kh_value(h, iter) = i;
             }
         }
-        h = (khash_t(s)*)d->in->header->hash;
+        h = reinterpret_cast<khash_t(s)*>(d.in->header->hash);
         std::string lineBuf;
         while(getline(fp, lineBuf)) {
             std::stringstream ss(lineBuf);
@@ -541,36 +525,34 @@ int main(int argc, char *argv[])
                 //fprintf(stderr, "%s %i %i scanned in\n",ref_name,beg,end);
                 ref = kh_value(h,iter);
                 //fprintf(stderr, "%i %i %i scanned in\n",ref,beg,end);
-                d->beg = beg - 1; // make this 0-based
-                d->end = end;
-                load_reference(d, ref);
-                bam_plbuf_t *buf = bam_plbuf_init(pileup_func, d); // initialize pileup
-                bam_plp_set_maxcnt(buf->iter, d->max_cnt);
-                f->pileup_buffer = buf;
-                if (d->fai) {
-                    f->ref_len = d->len;
-                    f->seq_name = d->in->header->target_name[d->tid];
+                d.beg = beg - 1; // make this 0-based
+                d.end = end;
+                load_reference(&d, ref);
+                bam_plbuf_t *buf = bam_plbuf_init(pileup_func, &d); // initialize pileup
+                bam_plp_set_maxcnt(buf->iter, d.max_cnt);
+                f.pileup_buffer = buf;
+                if (d.fai) {
+                    f.ref_len = d.len;
+                    f.seq_name = d.in->header->target_name[d.tid];
                 } else {
-                    f->ref_len = 0;
-                    f->seq_name = 0;
+                    f.ref_len = 0;
+                    f.seq_name = 0;
                 }
-                f->ref_pointer = &(d->ref);
-                bam_fetch(d->in->x.bam, idx, ref, d->beg-1, d->end, f, fetch_func);
+                f.ref_pointer = &(d.ref);
+                bam_fetch(d.in->x.bam, idx, ref, d.beg-1, d.end, &f, fetch_func);
                 bam_plbuf_push(0, buf); // finalize pileup
                 bam_plbuf_destroy(buf);
 
             }
         }
         bam_index_destroy(idx);
-        samclose(d->in);
-        if(d->fai) {
-            fai_destroy(d->fai);
+        samclose(d.in);
+        if(d.fai) {
+            fai_destroy(d.fai);
         }
-        if(d->ref) {
-            free(d->ref);
+        if(d.ref) {
+            free(d.ref);
         }
-        free(d);
-        free(f);
         //free(fn_pos);
         //free(fn_fa);
         return 0;
@@ -578,7 +560,7 @@ int main(int argc, char *argv[])
     else {
         if (!vm.count("region")) { // if a region is not specified
             //FIXME this currently crashes and burns because it doesn't hit the pre-processing in fetch_func
-            sampileup(d->in, -1, pileup_func, d);
+            sampileup(d.in, -1, pileup_func, &d);
         } else {
             int ref;
             bam_index_t *idx;
@@ -590,32 +572,29 @@ int main(int argc, char *argv[])
             vector<string> regions = vm["region"].as< vector<string> >();
             typedef vector<string>::iterator region_iter;
             for(region_iter it = regions.begin(); it != regions.end(); ++it) {
-                bam_parse_region(d->in->header, it->c_str(), &ref, &(d->beg), &(d->end)); // parse the region
+                bam_parse_region(d.in->header, it->c_str(), &ref, &(d.beg), &(d.end)); // parse the region
                 if (ref < 0) {
                     fprintf(stderr, "Invalid region %s\n", it->c_str());
                     return 1;
                 }
-                load_reference(d, ref);
-                bam_plbuf_t *buf = bam_plbuf_init(pileup_func, d); // initialize pileup
-                bam_plp_set_maxcnt(buf->iter, d->max_cnt);
-                f->pileup_buffer = buf;
-                f->ref_pointer = &(d->ref);
-                bam_fetch(d->in->x.bam, idx, ref, d->beg-1, d->end, f, fetch_func);
+                load_reference(&d, ref);
+                bam_plbuf_t *buf = bam_plbuf_init(pileup_func, &d); // initialize pileup
+                bam_plp_set_maxcnt(buf->iter, d.max_cnt);
+                f.pileup_buffer = buf;
+                f.ref_pointer = &(d.ref);
+                bam_fetch(d.in->x.bam, idx, ref, d.beg-1, d.end, &f, fetch_func);
                 bam_plbuf_push(0, buf); // finalize pileup
                 bam_plbuf_destroy(buf);
             }
             bam_index_destroy(idx);
         }
-        if(d->ref) {
-            free(d->ref);
+        if(d.ref) {
+            free(d.ref);
         }
-        if(d->fai) {
-            fai_destroy(d->fai);
+        if(d.fai) {
+            fai_destroy(d.fai);
         }
-        free(f);
     }
-    samclose(d->in);
+    samclose(d.in);
     return 0;
 }
-
-
