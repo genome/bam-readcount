@@ -15,6 +15,8 @@ set(SOURCES
     IRegionSequence.hpp
     Options.cpp
     Options.hpp
+    ReadProcessor.cpp
+    ReadProcessor.hpp
     ReadWarnings.hpp
     StaticRegionSequence.cpp
     StaticRegionSequence.hpp
