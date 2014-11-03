@@ -99,7 +99,7 @@ Options::Options(int argc, char** argv)
 
     po::options_description gen_opts("General Options");
     gen_opts.add_options()
-        ("input-file,i"
+        ("input-file"
             , po::value<std::string>(&input_file)->required()
             , "sorted, indexed bam file to count reads in (1st positional arg)")
 
