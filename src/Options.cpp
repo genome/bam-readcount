@@ -87,6 +87,7 @@ Options::Options(int argc, char** argv)
     : program_name(argv[0])
 {
     pos_opts.add("input-file", 1);
+    pos_opts.add("region", -1);
 
 
     po::options_description help_opts("Help Options");

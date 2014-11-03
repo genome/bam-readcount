@@ -1,11 +1,15 @@
-#include "bamrc/Options.hpp"
-#include "bamrc/auxfields.hpp"
-#include "bamrc/ReadWarnings.hpp"
-#include "bamrc/BasicStat.hpp"
+#include "BamEntry.hpp"
+#include "BamFilter.hpp"
+#include "BamReader.hpp"
+#include "BasicStat.hpp"
+#include "FileRegionSequence.hpp"
+#include "Options.hpp"
+#include "ReadWarnings.hpp"
+#include "StaticRegionSequence.hpp"
+#include "auxfields.hpp"
 
 #include <sam.h>
 #include <faidx.h>
-#include <khash.h>
 #include <sam_header.h>
 
 #include <boost/format.hpp>
@@ -13,6 +17,7 @@
 
 #include <unistd.h>
 
+#include <unordered_set>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -37,11 +42,6 @@ unsigned char bam_nt16_canonical_table[16] = { 0,1,2,5,
     4,5,5,5,
     5,5,5,5};
 
-//below is for sam header
-KHASH_MAP_INIT_STR(s, int)
-
-KHASH_MAP_INIT_STR(str, const char *)
-
 struct LibraryCounts {
     std::map<std::string, BasicStat> indel_stats;
     std::vector<BasicStat> base_stats;
@@ -64,15 +64,14 @@ typedef struct {
     faidx_t *fai;       //index into fasta file
     int tid;            //reference id
     char *ref;          //reference sequence
-    int min_mapq;       //minimum mapping qualitiy to use
     int min_bq;       //minimum mapping qualitiy to use
     int beg,end;        //start and stop of region
     int len;            //length of currently loaded reference sequence
-    int max_cnt;       //maximum depth to set on the pileup buffer 
-    samfile_t *in;      //bam file
+    int max_cnt;       //maximum depth to set on the pileup buffer
     int distribution;   //whether or not to display all mapping qualities
     bool per_lib;
     bool insertion_centric;
+    bam_header_t* header;
     std::set<std::string> lib_names;
     indel_queue_map_t indel_queue_map;
 } pileup_data_t;
@@ -91,7 +90,7 @@ static inline void load_reference(pileup_data_t* data, int ref) {
     if (data->fai && ref != data->tid) {
         free(data->ref);
         //would this be faster to just grab small chunks? Probably at some level, but not at others. How would chunking affect the indel allele calculations? Those assume that the indel allele is present in the ref and potentially occupy more than just the region of interest
-        data->ref = fai_fetch(data->fai, data->in->header->target_name[ref], &data->len);
+        data->ref = fai_fetch(data->fai, data->header->target_name[ref], &data->len);
         data->tid = ref;
     }
 }
@@ -275,7 +274,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             const bam_pileup1_t *base = pl + i; //get base index
             const char* library_name = "all";
             if(tmp->per_lib) {
-                library_name = bam_get_library(tmp->in->header, base->b);
+                library_name = bam_get_library(tmp->header, base->b);
                 if(library_name == 0) {
                     WARN->warn(ReadWarnings::LIBRARY_UNAVAILABLE, bam1_qname(base->b));
                     return 0;
@@ -283,14 +282,14 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             }
             LibraryCounts &current_lib = lib_counts[library_name];
 
-            if(!base->is_del && base->b->core.qual >= tmp->min_mapq && bam1_qual(base->b)[base->qpos] >= tmp->min_bq) {
+            if(!base->is_del && bam1_qual(base->b)[base->qpos] >= tmp->min_bq) {
                 mapq_n++;
 
 
                 if(base->indel != 0 && tmp->ref) {
                     //indel containing read exists here
                     //need to: 1) add an indel counting mode so insertions aren't double counted or add separate "non-indel" tracking.
-                    //2) create a queue of indel counts and the positions where they /should/ be reported. These positions need to determine reporting as well. ie. if reporting on a deletion and the roi doesn't include the deletion, but we find it. then we still need to do the pileup for that position BUT, there are no guarantees that we know that until we see the data. 
+                    //2) create a queue of indel counts and the positions where they /should/ be reported. These positions need to determine reporting as well. ie. if reporting on a deletion and the roi doesn't include the deletion, but we find it. then we still need to do the pileup for that position BUT, there are no guarantees that we know that until we see the data.
                     //3) So deletions should get put into a queue and their emission position stored.
                     //4) At each new position, check if we need to emit the indel.
                     //5) if that position is a) in our target roi and already passed or b) the current position then we need to emit and this needs to be done in a loop until no more indels are candidates. Maybe two loops.
@@ -323,7 +322,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
         }
 
         //print out information on position and reference base and depth
-        std::string ref_name(tmp->in->header->target_name[tid]);
+        std::string ref_name(tmp->header->target_name[tid]);
         std::string ref_base;
         ref_base += (tmp->ref && (int)pos < tmp->len) ? tmp->ref[pos] : 'N';
         stringstream record;
@@ -408,6 +407,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
 }
 
 static int bam_readcount(Options const& opts) {
+    BamEntry entry;
     pileup_data_t d;
     fetch_data_t f;
     memset(&d, 0, sizeof(d));
@@ -416,7 +416,6 @@ static int bam_readcount(Options const& opts) {
     d.tid = -1, d.min_bq = 0, d.max_cnt = 10000000;
 
     // FIXME: put options in "d" instead of copying here.
-    d.min_mapq = opts.min_mapq;
     d.min_bq = opts.min_baseq;
     d.max_cnt = opts.max_depth;
     d.distribution = opts.distribution;
@@ -424,7 +423,7 @@ static int bam_readcount(Options const& opts) {
     d.insertion_centric = opts.insertion_centric;
 
 
-    cerr << "Minimum mapping quality is set to " << d.min_mapq << endl;
+    cerr << "Minimum mapping quality is set to " << opts.min_mapq << endl;
     WARN.reset(new ReadWarnings(std::cerr, opts.max_warnings));
 
     if (!opts.fasta_file.empty()) {
@@ -436,138 +435,65 @@ static int bam_readcount(Options const& opts) {
         }
     }
 
+    BamFilter filter(opts.min_mapq, opts.required_flags, opts.forbidden_flags);
+    BamReader reader(opts.input_file);
+    reader.set_filter(&filter);
+    d.header = reader.header();
+
     d.beg = 0; d.end = 0x7fffffff;
-    d.in = samopen(opts.input_file.c_str(), "rb", 0);
-    d.in->header->dict = sam_header_parse2(d.in->header->text);
-    std::set<std::string> lib_names = find_library_names(d.in->header);
+
+    std::set<std::string> lib_names = find_library_names(reader.header());
     for(std::set<std::string>::iterator it = lib_names.begin(); it != lib_names.end(); ++it) {
         cerr << "Expect library: " << *it << " in BAM" << endl;
     }
     d.lib_names = lib_names;
     d.indel_queue_map = indel_queue_map_t();
 
-    if (d.in == 0) {
-        std::cerr << "Fail to open BAM file " << opts.input_file << "\n";
-        return 1;
-    }
+    auto const& seq_names = reader.sequence_names();
 
-    if(!opts.pos_file.empty()) {
-        std::ifstream fp(opts.pos_file.c_str());
-        if(!fp.is_open()) {
-            cerr << "Failed to open region list file: " << opts.pos_file << endl;
-            return 1;
-        }
-        bam_index_t *idx;
-        idx = bam_index_load(opts.input_file.c_str()); // load BAM index
-        if (idx == 0) {
-            fprintf(stderr, "BAM indexing file is not available.\n");
-            return 1;
-        }
-        //Now iterate through and do calculations for each one
-        std::string ref_name;
-        int beg;
-        int end;
-        int ref;
-
-
-        //initialize the header hash
-        khiter_t iter;
-        khash_t(s) *h;
-        if (d.in->header->hash == 0) {
-            int ret, i;
-            khiter_t iter;
-            khash_t(s) *h;
-            d.in->header->hash = h = kh_init(s);
-            for (i = 0; i < d.in->header->n_targets; ++i) {
-                iter = kh_put(s, h, d.in->header->target_name[i], &ret);
-                kh_value(h, iter) = i;
-            }
-        }
-        h = reinterpret_cast<khash_t(s)*>(d.in->header->hash);
-        std::string lineBuf;
-        while(getline(fp, lineBuf)) {
-            std::stringstream ss(lineBuf);
-            if (!(ss >> ref_name >> beg >> end))
-                continue;
-
-            iter = kh_get(s, h, ref_name.c_str());
-            if(iter == kh_end(h)) {
-                std::cerr << str(format("Sequence '%1%' not found in bam file. "
-                    "Region %2% %3% %4% skipped.\n")
-                    % ref_name % ref_name % beg % end);
-                continue;
-            }
-
-            // ref id exists
-            ref = kh_value(h,iter);
-            d.beg = beg - 1; // make this 0-based
-            d.end = end;
-            load_reference(&d, ref);
-            bam_plbuf_t *buf = bam_plbuf_init(pileup_func, &d); // initialize pileup
-            bam_plp_set_maxcnt(buf->iter, d.max_cnt);
-            f.pileup_buffer = buf;
-            if (d.fai) {
-                f.ref_len = d.len;
-                f.seq_name = d.in->header->target_name[d.tid];
-            } else {
-                f.ref_len = 0;
-                f.seq_name = 0;
-            }
-            f.ref_pointer = &(d.ref);
-            bam_fetch(d.in->x.bam, idx, ref, d.beg-1, d.end, &f, fetch_func);
-            bam_plbuf_push(0, buf); // finalize pileup
-            bam_plbuf_destroy(buf);
-        }
-
-        bam_index_destroy(idx);
-        samclose(d.in);
-        if(d.fai) {
-            fai_destroy(d.fai);
-        }
-        if(d.ref) {
-            free(d.ref);
-        }
-        return 0;
+    std::unique_ptr<IRegionSequence> regions;
+    if (!opts.pos_file.empty()) {
+        regions.reset(new FileRegionSequence(opts.pos_file));
     }
     else {
-        if (opts.regions.empty()) { // if a region is not specified
-            //FIXME this currently crashes and burns because it doesn't hit the pre-processing in fetch_func
-            sampileup(d.in, -1, pileup_func, &d);
-        } else {
-            int ref;
-            bam_index_t *idx;
-            idx = bam_index_load(opts.input_file.c_str()); // load BAM index
-            if (idx == 0) {
-                std::cerr << "BAM index not found for file "
-                    << opts.input_file << ", abort.\n";
-                return 1;
-            }
-            vector<string> const& regions = opts.regions;
-            for(auto it = regions.begin(); it != regions.end(); ++it) {
-                bam_parse_region(d.in->header, it->c_str(), &ref, &(d.beg), &(d.end)); // parse the region
-                if (ref < 0) {
-                    fprintf(stderr, "Invalid region %s\n", it->c_str());
-                    return 1;
-                }
-                load_reference(&d, ref);
-                bam_plbuf_t *buf = bam_plbuf_init(pileup_func, &d); // initialize pileup
-                bam_plp_set_maxcnt(buf->iter, d.max_cnt);
-                f.pileup_buffer = buf;
-                f.ref_pointer = &(d.ref);
-                bam_fetch(d.in->x.bam, idx, ref, d.beg-1, d.end, &f, fetch_func);
-                bam_plbuf_push(0, buf); // finalize pileup
-                bam_plbuf_destroy(buf);
-            }
-            bam_index_destroy(idx);
-        }
-        if(d.ref) {
-            free(d.ref);
-        }
-        if(d.fai) {
-            fai_destroy(d.fai);
-        }
+        auto const& regs = opts.regions.empty() ? seq_names : opts.regions;
+        regions.reset(new StaticRegionSequence(regs));
     }
-    samclose(d.in);
+
+    int ref;
+    std::string reg;
+    while (regions->next(reg)) {
+        if (bam_parse_region(reader.header(), reg.c_str(), &ref, &d.beg, &d.end) != 0) {
+            std::cerr << str(format("Failed to parse region '%1%', skipping."
+                ) % reg);
+            continue;
+        }
+
+        reader.set_region(ref, d.beg, d.end);
+        load_reference(&d, ref);
+        bam_plbuf_t *buf = bam_plbuf_init(pileup_func, &d); // initialize pileup
+        bam_plp_set_maxcnt(buf->iter, d.max_cnt);
+        f.pileup_buffer = buf;
+
+        if (d.fai) {
+            f.ref_len = d.len;
+            f.seq_name = seq_names[d.tid].c_str();
+        }
+
+        f.ref_pointer = &(d.ref);
+        while (reader.next(entry)) {
+            fetch_func(entry, &f);
+        }
+
+        bam_plbuf_push(0, buf); // finalize pileup
+        bam_plbuf_destroy(buf);
+    }
+
+    if(d.fai)
+        fai_destroy(d.fai);
+    if(d.ref)
+        free(d.ref);
+
     return 0;
 }
 

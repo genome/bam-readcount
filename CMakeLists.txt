@@ -51,8 +51,7 @@ endif()
 # main project
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-add_projects(src/lib)
-add_projects(src/exe)
+add_subdirectory(src)
 
 include(PackageInfo.cmake)
 
