@@ -1,6 +1,8 @@
 #include "BamReader.hpp"
 #include "BamFilter.hpp"
 
+#include <sam_header.h>
+
 #include <boost/format.hpp>
 
 #include <cassert>
@@ -24,6 +26,9 @@ BamReader::BamReader(std::string path)
 
     if (!index_)
         throw std::runtime_error(str(format("Failed to load bam index for %1%") % path_));
+
+    if (!in_->header->dict)
+        in_->header->dict = sam_header_parse2(in_->header->text);
 
     set_region(0, 0, -1);
 }
