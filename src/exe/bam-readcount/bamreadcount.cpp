@@ -4,6 +4,7 @@
 
 #include "bamrc/auxfields.hpp"
 #include "bamrc/ReadWarnings.hpp"
+#include "version.h"
 #include <boost/program_options.hpp>
 #include "bamrc/BasicStat.hpp"
 
@@ -450,7 +451,7 @@ int main(int argc, char *argv[])
     po::notify(vm);
     
     if (vm.count("version")) {
-        cout << "bam-readcount version 0.7\n";
+        cout << "bam-readcount version: " << __g_prog_version << " (commit " << __g_commit_hash << ")\n";
         return 1;
     }
 
