@@ -1,0 +1,12 @@
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+const static char* __g_prog_version = "@FULL_VERSION@";
+const static char* __g_commit_hash = "@COMMIT_HASH@";
+
+#ifdef __cplusplus
+}
+#endif

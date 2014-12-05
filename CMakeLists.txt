@@ -8,6 +8,11 @@ include(TestHelper)
 include(VersionHelper)
 include(ProjectHelper)
 
+set(EXE_VERSION_SUFFIX ${FULL_VERSION})
+
+configure_file(version/version.h.in version/version.h @ONLY)
+include_directories(${PROJECT_BINARY_DIR}/version)
+
 set(REQUIRED_BOOST_LIBS program_options regex)
 include(BuildBoost)
 include_directories(${Boost_INCLUDE_DIRS})
@@ -61,3 +66,7 @@ enable_testing(true)
 
 # integration testing
 add_subdirectory(integration-test)
+
+###########################################################################
+## Packaging
+include(PackageInfo.cmake)
