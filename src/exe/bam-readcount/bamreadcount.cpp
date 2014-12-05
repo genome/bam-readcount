@@ -419,6 +419,7 @@ int main(int argc, char *argv[])
     po::options_description desc("Available options");
     desc.add_options()
         ("help,h", "produce this message")
+        ("version,v", "output the version number")
         ("min-mapping-quality,q", po::value<int>(&d->min_mapq)->default_value(0), "minimum mapping quality of reads used for counting.")
         ("min-base-quality,b", po::value<int>(&d->min_bq)->default_value(0), "minimum base quality at a position to use the read for counting.")
         ("max-count,d", po::value<int>(&d->max_cnt)->default_value(10000000), "max depth to avoid excessive memory usage.")
@@ -447,10 +448,17 @@ int main(int argc, char *argv[])
     po::store(po::command_line_parser(argc, argv).
             options(cmdline_options).positional(p).run(), vm);
     po::notify(vm);
+    
+    if (vm.count("version")) {
+        cout << "bam-readcount version 0.7\n";
+        return 1;
+    }
+
     if (vm.count("help") || vm.count("bam-file") == 0) {
         cout << desc << "\n";
         return 1;
     }
+
     cerr << "Minimum mapping quality is set to " << d->min_mapq << endl;
     /*
     if (argc - optind == 0) {
