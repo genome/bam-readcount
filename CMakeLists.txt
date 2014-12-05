@@ -55,8 +55,6 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 add_projects(src/lib)
 add_projects(src/exe)
 
-include(PackageInfo.cmake)
-
 ###########################################################################
 ## Testing
 set(TEST_DATA_DIRECTORY ${CMAKE_SOURCE_DIR}/test-data)
