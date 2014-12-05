@@ -8,6 +8,7 @@ any arguments.
 bc. Usage: bam-readcount <bam_file> [region]
 Available options:
   -h [ --help ]                         produce this message
+  -v [ --version ]                      output the version
   -q [ --min-mapping-quality ] arg (=0) minimum mapping quality of reads used
                                         for counting.
   -b [ --min-base-quality ] arg (=0)    minimum base quality at a position to
