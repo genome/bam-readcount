@@ -33,7 +33,6 @@ ExternalProject_Add(
     BUILD_COMMAND
         echo "Building boost, build log is ${BOOST_LOG}" &&
         ./b2 --prefix=${BOOST_ROOT} --layout=system link=static
-                cxxflags=${CMAKE_CXX_FLAGS} ${BOOST_BUILD_OPTS}
                 threading=multi install ${BOOST_BUILD_LIBS} > ${BOOST_LOG} 2>&1
     INSTALL_COMMAND ""
 )
