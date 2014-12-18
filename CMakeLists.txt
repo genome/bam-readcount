@@ -23,12 +23,8 @@ include_directories(${Samtools_INCLUDE_DIRS})
 add_custom_target(deps ALL)
 add_dependencies(deps samtools-lib boost-1.55)
 
-if (CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_C_FLAGS "-Wall")
-endif ()
-
-if (CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "-Wall")
+if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU|Clang")
+    set(CMAKE_CXX_FLAGS "-Wall -std=c++0x")
 endif ()
 
 find_package(Threads)
