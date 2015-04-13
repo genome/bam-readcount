@@ -10,6 +10,7 @@ set(HTSLIB_SEARCH_DIRS
     $ENV{HTLSIB_ROOT}
     /gsc/pkg/bio/htslib
     /usr
+    /usr/local
 )
 
 set(_htslib_ver_path "htslib-${htslib_FIND_VERSION}")
