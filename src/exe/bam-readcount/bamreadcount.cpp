@@ -567,6 +567,7 @@ int main(int argc, char *argv[])
                 bam_fetch(d.in->x.bam, idx, ref, d.beg-1, d.end, f, fetch_func);
                 bam_plbuf_push(0, buf); // finalize pileup
                 bam_plbuf_destroy(buf);
+                d.indel_queue_map.clear();
 
             }
         }
