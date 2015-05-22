@@ -98,7 +98,7 @@ void BasicStat::process_read(bam_pileup1_t const* base) {
     else {
         WARN->warn(ReadWarnings::NM_TAG_MISSING, bam1_qname(base->b));
     }
-    mapping_qualities.push_back(base->b->core.qual);
+    mapping_qualities.push_back(static_cast<unsigned int>(base->b->core.qual));
     if(!is_indel) {
         sum_base_qualities += bam1_qual(base->b)[base->qpos];
     }
