@@ -417,7 +417,7 @@ int main(int argc, char *argv[])
     fetch_data_t *f = (fetch_data_t*)calloc(1, sizeof(pileup_data_t));
     d.tid = -1, d.min_bq = 0, d.max_cnt = 10000000;
 
-    po::options_description desc("Available options");
+    po::options_description desc("Usage: bam-readcount [OPTIONS] <bam_file> [region]\nGenerate metrics for bam_file at single nucleotide positions.\nExample: bam-readcount -f ref.fa some.bam\n\nAvailable options");
     desc.add_options()
         ("help,h", "produce this message")
         ("version,v", "output the version number")

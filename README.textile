@@ -5,7 +5,9 @@ There are number of metrics generated which can be useful for filtering out fals
 Help is currently available on the commandline if you do not supply the program
 any arguments.
 
-bc. Usage: bam-readcount <bam_file> [region]
+bc. Usage: bam-readcount [OPTIONS] <bam_file> [region]
+Generate metrics for bam_file at single nucleotide positions.
+Example: bam-readcount -f ref.fa some.bam
 Available options:
   -h [ --help ]                         produce this message
   -v [ --version ]                      output the version
@@ -36,9 +38,11 @@ The optional region specification on the command line should follow the same for
 
 h3. Normal Output
 
-The output format is as follows:
+The output format prints to standard out as follows:
 
 bc. chr	position	reference_base	depth	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end   ...
+
+
 
 Each tab separated field contains the following information, each one is tab-separated:
 
