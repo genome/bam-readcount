@@ -2,8 +2,15 @@ cmake_minimum_required(VERSION 2.8)
 
 project(bam-readcount)
 
-set(CMAKE_INSTALL_PREFIX "/usr")
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_SOURCE_DIR}/build-common/cmake")
+if(NOT CMAKE_INSTALL_PREFIX)
+    set(CMAKE_INSTALL_PREFIX "/usr")
+endif()
+
+set(CMAKE_MODULE_PATH 
+    ${CMAKE_SOURCE_DIR}/cmake
+    ${CMAKE_SOURCE_DIR}/build-common/cmake
+)
+
 include(TestHelper)
 include(VersionHelper)
 include(ProjectHelper)
