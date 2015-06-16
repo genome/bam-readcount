@@ -84,7 +84,7 @@ bc. chr	position	reference_base	depth	libname	{	base:count:avg_mapping_quality:a
 h2. Build Dependencies
 
 * git
-* cmake 2.8+ ("cmake.org":http://cmake.org)
+* cmake 2.8.3+ ("cmake.org":http://cmake.org)
 
 h3. Available Packages for Dependencies
 * For APT-based systems (Debian, Ubuntu), install the following packages:
@@ -96,7 +96,7 @@ bc. sudo apt-get install build-essential git-core cmake zlib1g-dev libncurses-de
 bc. sudo yum groupinstall "Development tools" 
 sudo yum install zlib-devel ncurses-devel cmake patch
 
-Note that for some RPM based systems (like RHEL), you will need to install cmake 2.8 or greater yourself as the packaged version is much older.
+Note that for some RPM based systems (like RHEL) and older versions of Ubuntu, you will need to install cmake 2.8.3 or greater yourself as the packaged version is older.
 
 
 h2. Build Instructions
