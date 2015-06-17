@@ -14,6 +14,8 @@ set(CMAKE_MODULE_PATH
 include(TestHelper)
 include(VersionHelper)
 include(ProjectHelper)
+include(PreDepends)
+PreDependsInit()
 
 #set(EXE_VERSION_SUFFIX ${FULL_VERSION})
 
@@ -27,9 +29,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 include(BuildSamtools)
 include_directories(${Samtools_INCLUDE_DIRS})
 
-add_custom_target(deps ALL)
-add_dependencies(deps samtools-lib boost-1.55)
-
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU|Clang")
     set(CMAKE_CXX_FLAGS "-Wall -std=c++0x")
 endif ()
@@ -39,18 +38,6 @@ link_libraries(${CMAKE_THREAD_LIBS_INIT})
 
 # make sure to pick up headers from library dirs
 include_directories("src/lib")
-
-# unit tests
-find_package(GTest)
-if(GTEST_FOUND)
-    message("Google Test framework found, building unit tests")
-    enable_testing(true)
-    add_projects(test/lib)
-else()
-    message("Google Test framework not found, no tests will be built")
-    message("GTest is available at http://code.google.com/p/googletest/")
-    message("Ubuntu users can likely sudo apt-get install gtest")
-endif()
 
 # main project
 

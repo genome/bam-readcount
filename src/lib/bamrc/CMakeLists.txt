@@ -9,5 +9,5 @@ set(SOURCES
     BasicStat.cpp
 )
 
-add_library(bamrc ${SOURCES})
+xadd_library(bamrc ${SOURCES})
 target_link_libraries(bamrc ${Boost_LIBRARIES} ${Samtools_LIBRARIES} ${ZLIB_LIBRARIES})

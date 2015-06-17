@@ -110,7 +110,6 @@ h3. Compile bam-readcount
 * bam-readcount does not support in source builds. Create a new build directory, enter it, and run:
 
 bc.         cmake /path/to/bam-readcount/repo
-        make deps
         make
 
 p. The binary can then be found in the bin/ subdirectory of your build directory.
