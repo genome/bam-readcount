@@ -8,6 +8,7 @@
 #include <boost/program_options.hpp>
 #include "bamrc/BasicStat.hpp"
 #include "bamrc/IndelQueueEntry.hpp"
+#include "bamrc/IndelQueue.hpp"
 
 #include <stdio.h>
 #include <memory>
@@ -24,8 +25,6 @@
 #include <cmath>
 #include <map>
 #include <set>
-#include <queue>
-
 
 using namespace std;
 namespace po = boost::program_options;
@@ -49,8 +48,7 @@ struct LibraryCounts {
     LibraryCounts() : indel_stats(), base_stats(possible_calls) {}
 };
 
-typedef std::queue<IndelQueueEntry> indel_queue_t;
-typedef std::map<std::string, indel_queue_t> indel_queue_map_t;
+typedef std::map<std::string, IndelQueue> indel_queue_map_t;
 
 //Struct to store info to be passed around
 typedef struct {
@@ -359,7 +357,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 if(it->first[0] == '-') {
                     //it's a deletion
                     IndelQueueEntry new_entry(tid, pos + 1, it->second, it->first);
-                    indel_queue_t &test = tmp->indel_queue_map[lib_iter->first];
+                    IndelQueue &test = tmp->indel_queue_map[lib_iter->first];
                     test.push(new_entry);
                 }
                 else {
@@ -368,20 +366,12 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 }
             }
 
-            std::map<std::string, indel_queue_t>::iterator queued_it;
+            std::map<std::string, IndelQueue>::iterator queued_it;
             queued_it = tmp->indel_queue_map.find(lib_iter->first);
             if(queued_it != tmp->indel_queue_map.end()) {
                 //we have an indel queue for this library
-                indel_queue_t &current_lib_queue = queued_it->second;
-                while(!current_lib_queue.empty() && ( (current_lib_queue.front().tid == tid && current_lib_queue.front().pos < pos) || (current_lib_queue.front().tid != tid))) {
-                    current_lib_queue.pop();
-                }
-
-                while(!current_lib_queue.empty() && current_lib_queue.front().tid == tid && current_lib_queue.front().pos == pos) {
-                    record << "\t" << current_lib_queue.front().allele << ":" << current_lib_queue.front().indel_stats;
-                    extra_depth += current_lib_queue.front().indel_stats.read_count;
-                    current_lib_queue.pop();
-                }
+                IndelQueue &current_lib_queue = queued_it->second;
+                extra_depth += current_lib_queue.process(tid, pos, record);
             }
             if(tmp->per_lib) {
                 record << "\t}";
