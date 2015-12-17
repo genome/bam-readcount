@@ -49,14 +49,6 @@ struct LibraryCounts {
     LibraryCounts() : indel_stats(), base_stats(possible_calls) {}
 };
 
-/* struct IndelQueueEntry {
-    uint32_t tid;
-    uint32_t pos;
-    BasicStat indel_stats;
-    std::string allele;
-    IndelQueueEntry() : tid(0), pos(0), indel_stats(), allele() {}
-}; */
-
 typedef std::queue<IndelQueueEntry> indel_queue_t;
 typedef std::map<std::string, indel_queue_t> indel_queue_map_t;
 
@@ -366,11 +358,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             for(it = lib_iter->second.indel_stats.begin(); it != lib_iter->second.indel_stats.end(); ++it) {
                 if(it->first[0] == '-') {
                     //it's a deletion
-                    IndelQueueEntry new_entry;
-                    new_entry.tid = tid;
-                    new_entry.pos = pos + 1;
-                    new_entry.indel_stats = it->second;
-                    new_entry.allele = it->first;
+                    IndelQueueEntry new_entry(tid, pos + 1, it->second, it->first);
                     indel_queue_t &test = tmp->indel_queue_map[lib_iter->first];
                     test.push(new_entry);
                 }
