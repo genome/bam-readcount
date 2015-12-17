@@ -8,6 +8,9 @@ set(SOURCES
     BasicStat.hpp
     BasicStat.cpp
     IndelQueueEntry.hpp
+    IndelQueueEntry.cpp
+    IndelQueue.hpp
+    IndelQueue.cpp
 )
 
 xadd_library(bamrc ${SOURCES})
