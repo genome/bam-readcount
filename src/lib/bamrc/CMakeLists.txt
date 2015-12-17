@@ -7,6 +7,7 @@ set(SOURCES
     auxfields.hpp
     BasicStat.hpp
     BasicStat.cpp
+    IndelQueueEntry.hpp
 )
 
 xadd_library(bamrc ${SOURCES})

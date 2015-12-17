@@ -7,6 +7,7 @@
 #include "version.h"
 #include <boost/program_options.hpp>
 #include "bamrc/BasicStat.hpp"
+#include "bamrc/IndelQueueEntry.hpp"
 
 #include <stdio.h>
 #include <memory>
@@ -48,13 +49,13 @@ struct LibraryCounts {
     LibraryCounts() : indel_stats(), base_stats(possible_calls) {}
 };
 
-struct IndelQueueEntry {
+/* struct IndelQueueEntry {
     uint32_t tid;
     uint32_t pos;
     BasicStat indel_stats;
     std::string allele;
     IndelQueueEntry() : tid(0), pos(0), indel_stats(), allele() {}
-};
+}; */
 
 typedef std::queue<IndelQueueEntry> indel_queue_t;
 typedef std::map<std::string, indel_queue_t> indel_queue_map_t;
