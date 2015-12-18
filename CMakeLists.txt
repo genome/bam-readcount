@@ -51,6 +51,7 @@ set(TEST_DATA_DIRECTORY ${CMAKE_SOURCE_DIR}/test-data)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/test-bin)
 enable_testing(true)
+add_projects(test/lib)
 
 # integration testing
 add_subdirectory(integration-test)
