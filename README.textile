@@ -1,4 +1,6 @@
 h1. bam-readcount 
+!https://travis-ci.org/genome/bam-readcount.svg?branch=master!:https://travis-ci.org/genome/bam-readcount
+!https://coveralls.io/repos/genome/bam-readcount/badge.svg?branch=master&service=github(Coverage Status)!:https://coveralls.io/github/genome/bam-readcount?branch=master
 
 p. The purpose of this program is to generate metrics at single nucleotide positions.
 There are number of metrics generated which can be useful for filtering out false positive calls.
