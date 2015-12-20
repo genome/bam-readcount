@@ -7,8 +7,6 @@
 #include <sstream>
 #include <memory>
 
-std::auto_ptr<ReadWarnings> WARN;
-
 using namespace std;
 
 TEST(IndelQueue, push) {
