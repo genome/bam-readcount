@@ -62,7 +62,7 @@ num_plus_strand -> number of reads on the plus/forward strand
 
 num_minus_strand -> number of reads on the minus/reverse strand
 
-avg_pos_as_fraction -> average position on the read as a fraction (calculated with respect to the length after clipping)
+avg_pos_as_fraction -> average position on the read as a fraction (calculated with respect to the length after clipping). This value is normalized to the center of the read (bases occurring strictly at the center of the read have a value of 1, those occurring strictly at the ends should approach a value of 0)
 
 avg_num_mismatches_as_fraction -> average number of mismatches on these reads per base
 
