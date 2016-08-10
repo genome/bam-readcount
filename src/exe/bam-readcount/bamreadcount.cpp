@@ -469,6 +469,10 @@ int main(int argc, char *argv[])
     d.per_lib = per_lib;
     d.insertion_centric = insertion_centric;
     d.in = samopen(vm["bam-file"].as<string>().c_str(), "rb", 0);
+    if (d.in == 0) {
+        fprintf(stderr, "Fail to open BAM file %s\n", argv[optind]);
+        return 1;
+    }
     d.in->header->dict = sam_header_parse2(d.in->header->text);
     std::set<std::string> lib_names = find_library_names(d.in->header);
     for(std::set<std::string>::iterator it = lib_names.begin(); it != lib_names.end(); ++it) {
@@ -477,10 +481,6 @@ int main(int argc, char *argv[])
     d.lib_names = lib_names;
     d.indel_queue_map = indel_queue_map_t();
 
-    if (d.in == 0) {
-        fprintf(stderr, "Fail to open BAM file %s\n", argv[optind]);
-        return 1;
-    }
     if(!fn_pos.empty()) {
         std::ifstream fp(fn_pos.c_str());
         if(!fp.is_open()) {
