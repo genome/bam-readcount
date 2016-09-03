@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <cmath>
 
 BasicStat::BasicStat(bool is_indel)
     : read_count(0)
@@ -58,15 +59,15 @@ void BasicStat::process_read(bam_pileup1_t const* base) {
 
         if(q2_val > -1) {
             //this is in read coordinates. Ignores clipping as q2 may be clipped
-            sum_q2_distance += (float) abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
+            sum_q2_distance += (float) std::abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
             num_q2_reads++;
         }
-        distances_to_3p.push_back( (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq);
-        sum_3p_distance += (float) abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
+        distances_to_3p.push_back( (float) std::abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq);
+        sum_3p_distance += (float) std::abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
 
         sum_of_clipped_lengths += clipped_length;
         float read_center = (float)clipped_length/2.0;
-        sum_event_location += 1.0 - abs((float)(base->qpos - left_clip) - read_center)/read_center;
+        sum_event_location += 1.0 - std::abs((float)(base->qpos - left_clip) - read_center)/read_center;
 
     }
     else {
