@@ -83,7 +83,7 @@ normal counting, but each library is listed by name and its metrics denoted by c
 
 bc. chr	position	reference_base	depth	library_1_name	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}   ...   library_N_name	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}
 
-In the output, after the chromosome, position, reference base, and depth fields the per library output is formated as lib_name[TAB]{bam readcount metrics}[TAB]lib_name{bam readcount metrics}. The libraries are repeated in this format from library 1 to library N.
+In the output, after the chromosome, position, reference base, and depth fields the of per library output is formated as lib_name[TAB]{bam readcount metrics}[TAB]lib_name{bam readcount metrics}. The libraries are repeated in this format from library 1 to library N.
 
 h2. Build Dependencies
 
