@@ -390,7 +390,7 @@ int main(int argc, char *argv[])
     bool per_lib = false;
     bool insertion_centric = false;
     string fn_pos, fn_fa;
-    int64_t max_warnings = -1;
+    int64_t max_warnings = 10;
 
     pileup_data_t d {};
     fetch_data_t *f = (fetch_data_t*)calloc(1, sizeof(pileup_data_t));
@@ -450,7 +450,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "        -f FILE   reference sequence in the FASTA format\n");
         fprintf(stderr, "        -l FILE   list of regions to report readcounts within.\n");
         fprintf(stderr, "        -D        report the mapping qualities as a comma separated list\n");
-        fprintf(stderr, "        -w        maximum number of warnings of each type to emit [unlimited]\n\n");
+        fprintf(stderr, "        -w        maximum number of warnings of each type to emit [10]\n\n");
         fprintf(stderr, "This program reports readcounts for each base at each position requested.\n");
         fprintf(stderr, "\nPositions should be requested via the -l option as chromosome, start, stop\nwhere the coordinates are 1-based and each field is separated by whitespace.\n");
         fprintf(stderr, "\nA single region may be requested on the command-line similarly to samtools view\n(i.e. bam-readcount -f ref.fa some.bam 1:150-150).\n\n");
