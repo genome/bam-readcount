@@ -446,7 +446,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Usage: bam-readcount <bam_file> [region]\n");
         fprintf(stderr, "        -q INT    filtering reads with mapping quality less than INT [%d]\n", d.min_mapq);
         fprintf(stderr, "        -b INT    don't include reads where the base quality is less than INT [%d]\n", d.min_bq);
-        fprintf(stderr, "        -d INT    max depth to avoid excessive memory usage [%d]\n", d.max_cnt);
+        fprintf(stderr, "        -d INT    max depth to avoid excessive memory usage, requires [region] or region list [%d]\n", d.max_cnt);
         fprintf(stderr, "        -f FILE   reference sequence in the FASTA format\n");
         fprintf(stderr, "        -l FILE   list of regions to report readcounts within.\n");
         fprintf(stderr, "        -D        report the mapping qualities as a comma separated list\n");
