@@ -14,9 +14,9 @@
 #include <memory>
 #include <string.h>
 #include "sam.h"
-#include "faidx.h"
-#include "khash.h"
-#include "sam_header.h"
+#include "htslib/faidx.h"
+#include "htslib/khash.h"
+//#include "sam_header.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <fstream>
@@ -66,6 +66,7 @@ typedef struct {
     bool insertion_centric;
     std::set<std::string> lib_names;
     indel_queue_map_t indel_queue_map;
+    void * hash;
 } pileup_data_t;
 
 //struct to store reference for passing to fetch func
@@ -91,11 +92,13 @@ std::set<std::string> find_library_names(bam_header_t const* header) {
     //samtools doesn't do a good job of exposing this so this is a little more implementation
     //dependent than I'd like and may be fragile.
     std::set<std::string> lib_names;
-    void *iter = header->dict;
+    /*
+    void *iter = header->sdict;
     const char *key, *val;
     while( (iter = sam_header2key_val(iter, "RG", "ID", "LB", &key, &val)) ) {
         lib_names.insert(val);
     }
+    */
     return lib_names;
 }
 
@@ -473,7 +476,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Fail to open BAM file %s\n", argv[optind]);
         return 1;
     }
-    d.in->header->dict = sam_header_parse2(d.in->header->text);
+    //d.in->header->dict = sam_header_parse2(d.in->header->text);
     std::set<std::string> lib_names = find_library_names(d.in->header);
     for(std::set<std::string>::iterator it = lib_names.begin(); it != lib_names.end(); ++it) {
         cerr << "Expect library: " << *it << " in BAM" << endl;
@@ -503,17 +506,17 @@ int main(int argc, char *argv[])
         //initialize the header hash
         khiter_t iter;
         khash_t(s) *h;
-        if (d.in->header->hash == 0) {
+        if (d.hash == 0) {
             int ret, i;
             khiter_t iter;
             khash_t(s) *h;
-            d.in->header->hash = h = kh_init(s);
+            d.hash = h = kh_init(s);
             for (i = 0; i < d.in->header->n_targets; ++i) {
                 iter = kh_put(s, h, d.in->header->target_name[i], &ret);
                 kh_value(h, iter) = i;
             }
         }
-        h = (khash_t(s)*)d.in->header->hash;
+        h = (khash_t(s)*)d.hash;
         std::string lineBuf;
         while(getline(fp, lineBuf)) {
             std::stringstream ss(lineBuf);

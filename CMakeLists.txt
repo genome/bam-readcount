@@ -11,6 +11,7 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/build-common/cmake
 )
 
+include(CMakePrintHelpers)
 include(TestHelper)
 include(VersionHelper)
 include(ProjectHelper)
@@ -27,7 +28,7 @@ include(BuildBoost)
 include_directories(${Boost_INCLUDE_DIRS})
 
 include(BuildSamtools)
-include_directories(${Samtools_INCLUDE_DIRS})
+include_directories(${Samtools_INCLUDE_DIRS} ${Htslib_INCLUDE_DIRS})
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU|Clang")
     set(CMAKE_CXX_FLAGS "-Wall -std=c++0x")

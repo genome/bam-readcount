@@ -1,45 +1,108 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 
-set(SAMTOOLS_ROOT ${CMAKE_BINARY_DIR}/vendor/samtools)
-set(SAMTOOLS_LOG ${SAMTOOLS_ROOT}/build.log)
+set(SAMTOOLS_VERSION 1.10)
+
+set(SAMTOOLS_ROOT ${CMAKE_BINARY_DIR}/vendor/samtools-${SAMTOOLS_VERSION})
+set(SAMTOOLS_LOG ${CMAKE_BINARY_DIR}/cmake_samtools_build.log)
+set(HTSLIB_LOG ${CMAKE_BINARY_DIR}/cmake_htslib_build.log)
 set(SAMTOOLS_LIB ${SAMTOOLS_ROOT}/${CMAKE_FIND_LIBRARY_PREFIXES}bam${CMAKE_STATIC_LIBRARY_SUFFIX})
-set(SAMTOOLS_BIN ${SAMTOOLS_ROOT}/samtools)
+#set(SAMTOOLS_BIN ${SAMTOOLS_ROOT}/samtools)
 
-find_package(ZLIB)
-if (NOT ZLIB_FOUND)
-    set(ZLIB_ROOT ${CMAKE_BINARY_DIR}/vendor/zlib)
-    set(ZLIB_SRC ${CMAKE_BINARY_DIR}/vendor/zlib-src)
-    set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT}/include)
-    set(ZLIB_LIBRARIES ${ZLIB_ROOT}/lib/${CMAKE_FIND_LIBRARY_PREFIXES}z${CMAKE_STATIC_LIBRARY_SUFFIX})
-    ExternalDependency_Add(
-        zlib
-        BUILD_BYPRODUCTS ${ZLIB_LIBRARIES}
-        ARGS
-            URL ${CMAKE_SOURCE_DIR}/vendor/zlib-1.2.8.tar.gz
-            SOURCE_DIR ${ZLIB_SRC}
-            BINARY_DIR ${ZLIB_SRC}
-            CONFIGURE_COMMAND ./configure --prefix=${ZLIB_ROOT}
-            BUILD_COMMAND make
-            INSTALL_COMMAND make install
-    )
-endif (NOT ZLIB_FOUND)
+set(HTSLIB_ROOT ${SAMTOOLS_ROOT}/htslib-${SAMTOOLS_VERSION})
+set(HTSLIB_LIB ${HTSLIB_ROOT}/${CMAKE_FIND_LIBRARY_PREFIXES}hts${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-ExternalDependency_Add(
-    samtools-lib
-    BUILD_BYPRODUCTS ${SAMTOOLS_LIB} ${SAMTOOLS_BIN}
-    ARGS
-        URL ${CMAKE_SOURCE_DIR}/vendor/samtools-0.1.19.tar.gz
-        SOURCE_DIR ${SAMTOOLS_ROOT}
-        BINARY_DIR ${SAMTOOLS_ROOT}
-        PATCH_COMMAND patch -p2 -t -N < ${CMAKE_SOURCE_DIR}/vendor/samtools0.1.19.patch
-        CONFIGURE_COMMAND echo "Building samtools, build log at ${SAMTOOLS_LOG}"
-        BUILD_COMMAND make INCLUDES=-I${ZLIB_INCLUDE_DIRS} libbam.a > ${SAMTOOLS_LOG} 2>&1
-        INSTALL_COMMAND "true"
+cmake_print_variables(SAMTOOLS_ROOT)
+cmake_print_variables(SAMTOOLS_LIB)
+cmake_print_variables(HTSLIB_LIB)
+
+set(ZLIB_ROOT ${CMAKE_BINARY_DIR}/vendor/zlib)
+set(ZLIB_SRC ${CMAKE_BINARY_DIR}/vendor/zlib-src)
+set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT}/include)
+set(ZLIB_LIBRARIES ${ZLIB_ROOT}/lib/${CMAKE_FIND_LIBRARY_PREFIXES}z${CMAKE_STATIC_LIBRARY_SUFFIX})
+ExternalProject_Add(
+  zlib
+  BUILD_BYPRODUCTS ${ZLIB_LIBRARIES}
+  ARGS
+    URL ${CMAKE_SOURCE_DIR}/vendor/zlib-1.2.11.tar.gz
+    SOURCE_DIR ${ZLIB_SRC}
+    BINARY_DIR ${ZLIB_SRC}
+    CONFIGURE_COMMAND ./configure --prefix=${ZLIB_ROOT}
+    BUILD_COMMAND make
+    INSTALL_COMMAND make install
 )
 
-set(Samtools_INCLUDE_DIRS ${ZLIB_INCLUDE_DIRS};${SAMTOOLS_ROOT})
-set(Samtools_LIBRARIES ${SAMTOOLS_LIB} m ${ZLIB_LIBRARIES})
+set(XZ_ROOT ${CMAKE_BINARY_DIR}/vendor/xz)
+set(XZ_SRC ${CMAKE_BINARY_DIR}/vendor/xz-src)
+set(XZ_INCLUDE_DIRS ${XZ_ROOT}/include)
+set(XZ_LIBRARIES ${XZ_ROOT}/lib/${CMAKE_FIND_LIBRARY_PREFIXES}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
+ExternalProject_Add(
+  xz
+  BUILD_BYPRODUCTS ${XZ_LIBRARIES}
+  ARGS
+    URL ${CMAKE_SOURCE_DIR}/vendor/xz-5.2.4.tar.gz
+    SOURCE_DIR ${XZ_SRC}
+    BINARY_DIR ${XZ_SRC}
+    CONFIGURE_COMMAND ./configure --prefix=${XZ_ROOT}
+    BUILD_COMMAND make
+    INSTALL_COMMAND make install
+)
 
-if (NOT ZLIB_FOUND)
-    add_dependencies(samtools-lib zlib)
-endif (NOT ZLIB_FOUND)
+set(BZIP2_ROOT ${CMAKE_BINARY_DIR}/vendor/bzip2)
+set(BZIP2_INCLUDE_DIRS ${BZIP2_ROOT})
+set(BZIP2_LIBRARIES ${BZIP2_ROOT}/${CMAKE_FIND_LIBRARY_PREFIXES}bz2${CMAKE_STATIC_LIBRARY_SUFFIX})
+ExternalProject_Add(
+  bzip2
+  BUILD_BYPRODUCTS ${BZIP2_LIBRARIES}
+  ARGS
+    URL ${CMAKE_SOURCE_DIR}/vendor/bzip2-1.0.8.tar.gz
+    SOURCE_DIR ${BZIP2_ROOT}
+    BINARY_DIR ${BZIP2_ROOT}
+    CONFIGURE_COMMAND echo "Building bzip2 library"
+    BUILD_COMMAND make
+    INSTALL_COMMAND true
+)
+
+#set(CURL_ROOT ${CMAKE_BINARY_DIR}/vendor/curl)
+#set(CURL_SRC ${CMAKE_BINARY_DIR}/vendor/curl-src)
+#set(CURL_INCLUDE_DIRS ${CURL_ROOT}/include)
+#set(CURL_LIBRARIES ${CURL_ROOT}/lib/${CMAKE_FIND_LIBRARY_PREFIXES}curl${CMAKE_STATIC_LIBRARY_SUFFIX})
+#ExternalProject_Add(
+#  curl
+#  BUILD_BYPRODUCTS ${CURL_LIBRARIES}
+#  ARGS
+#    URL ${CMAKE_SOURCE_DIR}/vendor/curl-7.67.0.tar.gz
+#    SOURCE_DIR ${CURL_SRC}
+#    BINARY_DIR ${CURL_SRC}
+#    CONFIGURE_COMMAND ./configure --prefix=${CURL_ROOT}
+#    BUILD_COMMAND make
+#    INSTALL_COMMAND make install
+#)
+
+ExternalProject_Add(
+  samtools-lib
+  BUILD_BYPRODUCTS ${SAMTOOLS_LIB} ${HTSLIB_LIB}
+  ARGS
+    URL ${CMAKE_SOURCE_DIR}/vendor/samtools-1.10.tar.bz2
+    SOURCE_DIR ${SAMTOOLS_ROOT}
+    BINARY_DIR ${SAMTOOLS_ROOT}
+    #CONFIGURE_COMMAND C_INCLUDE_PATH=${ZLIB_INCLUDE_DIRS}:${BZIP2_INCLUDE_DIRS} ./configure --without-curses
+    #CONFIGURE_COMMAND ./configure --without-curses
+    PATCH_COMMAND patch -p2 -t -N < ${CMAKE_SOURCE_DIR}/vendor/Makefile.disable_curl.patch
+    CONFIGURE_COMMAND echo "Building samtools, build log at ${SAMTOOLS_LOG}"
+    BUILD_COMMAND make libbam.a > ${SAMTOOLS_LOG} 2>&1 &&
+                  cd htslib-${SAMTOOLS_VERSION} &&
+                  C_INCLUDE_PATH=${ZLIB_INCLUDE_DIRS}:${BZIP2_INCLUDE_DIRS}:${XZ_INCLUDE_DIRS}:${CURL_INCLUDE_DIRS} make libhts.a > ${HTSLIB_LOG} 2>&1
+    INSTALL_COMMAND true
+    #DEPENDS zlib bzip2 xz curl
+    DEPENDS zlib bzip2 xz
+)
+
+
+set(Samtools_INCLUDE_DIRS ${SAMTOOLS_ROOT})
+set(Samtools_LIBRARIES ${SAMTOOLS_LIB})
+
+set(Htslib_INCLUDE_DIRS ${HTSLIB_ROOT})
+set(Htslib_LIBRARIES ${HTSLIB_LIB})
+
+set(Support_INCLUDE_DIRS ${ZLIB_INCLUDE_DIRS} ${BZIP2_INCLUDE_DIRS} ${XZ_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
+set(Support_LIBRARIES pthread ${ZLIB_LIBRARIES} ${BZIP2_LIBRARIES} ${XZ_LIBRARIES} ${CURL_LIBRARIES})
