@@ -5,7 +5,6 @@ CMakeFiles/
 CPackConfig.cmake
 CPackSourceConfig.cmake
 CTestTestfile.cmake
-Makefile
 Testing/
 _CPack_Packages/
 bin/
