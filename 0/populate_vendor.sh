@@ -1,6 +1,5 @@
 #!/bin/bash
 
-rm -f vendor/*.gz
 (cd vendor && \
     wget https://github.com/samtools/samtools/releases/download/1.10/samtools-1.10.tar.bz2 && \
     wget https://www.zlib.net/zlib-1.2.11.tar.gz && \
