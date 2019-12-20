@@ -75,7 +75,7 @@ CRAM test did throw a warning; I will rerun it and add that here.
 
 `find_library_names()` line 91 in 
 
-  src/exe/bam-readcount/bamreadcount.cpp
+    src/exe/bam-readcount/bamreadcount.cpp
 
 has been modified to return an empty list, so anything library-related will
 probably break. Disabled because `sam_header2key_val` has been removed (along
