@@ -83,6 +83,17 @@ The final binary will be
     bin/bam-readcount
 
 
+### Test data
+
+There is a small CRAM file under
+
+  test-data/twolib.sorted.cram  
+
+with associated reference
+
+  test-data/rand1k.fa
+
+
 Todo
 ----
 
