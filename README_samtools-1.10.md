@@ -8,18 +8,29 @@ Caveats
 On my OS X machine (High Sierra), builds fail due to Boost. This is also
 true of the current `genome/bam-readcount` `master`.
 
-Builds were also failing under OS X because with libcurl errors, but I
-made a patch for the htslib Makefile that is applied by CMake that
-disables libcurl.
+Builds were also failing under OS X with libcurl errors. The current
+CMake configuration includes a patch for the htslib Makefile that is
+applied by CMake that disables libcurl. There is currently a protocol 
+warning when running `bam-readcount` that may be due to the absence of
+libcurl
 
 
 Build
 -----
 
+
+### Download vendored libraries
+
 Clone `samtools-1.10` branch of forked `genome/bam-readcount`
 
     git clone -b samtools-1.10 https://github.com/seqfu/bam-readcount
     cd bam-readcount
+
+Already under `vendor/` are
+  
+    vendor/
+      boost-1.55-bamrc.tar.gz
+      Makefile.disable_curl.patch
 
 Except for Boost the vendored libraries are not included in the
 repository. To fetch them, run 
@@ -35,7 +46,10 @@ This should download
       xz-5.2.4.tar.gz
       zlib-1.2.11.tar.gz
 
-To build using the included docker image
+
+### Run Docker container
+
+If you have Docker running, build using the included docker image
 
     cd docker/minimal_cmake
     make interact
@@ -47,16 +61,19 @@ This will start a minimal docker container with `build-essential` and
 
 and starting in that directory. 
 
+
+### Build `bam-readcount` and vendored libraries
+
 Make a build directory
 
     mkdir build
 
-Run cmake from inside it
+Run CMake from inside it
 
     cd build
     cmake ..
 
-And then run Make
+Run Make
 
     make 
 
@@ -77,10 +94,10 @@ CRAM test did throw a warning; I will rerun it and add that here.
 
     src/exe/bam-readcount/bamreadcount.cpp
 
-has been modified to return an empty list, so anything library-related will
-probably break. Disabled because `sam_header2key_val` has been removed (along
-with all of `sam_header.h`) and there is a new (`hrecs`?) API to access header
-data that we will need to use.
+has been modified to return an empty list because `sam_header2key_val`
+has been removed (along with all of `sam_header.h`) and there is a new
+(`hrecs`?) API to access header data that we will need to use. Enabling
+`-p` still appears to work.
 
 CRAM files can only use the reference encoded in their header. We will 
 probably want to propagate the command-line-specified reference (and maybe 
