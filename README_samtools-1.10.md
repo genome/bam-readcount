@@ -12,7 +12,7 @@ Builds were also failing under OS X with libcurl errors. The current
 CMake configuration includes a patch for the htslib Makefile that is
 applied by CMake that disables libcurl. There is currently a protocol 
 warning when running `bam-readcount` that may be due to the absence of
-libcurl
+libcurl.
 
 
 Build
@@ -116,8 +116,7 @@ make it optional).
 
 We might want to reenable `libcurl` support since OS X builds are
 breaking anyway. It is in the CMakeFiles but is commented out and should
-be easy to restore. Earlier development built find under the Docker
-image `libcurl`
-
+be easy to restore. It is a little slow to compile but builds fine under
+the Docker image.
 
 
