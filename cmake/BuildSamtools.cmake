@@ -62,21 +62,21 @@ ExternalProject_Add(
     INSTALL_COMMAND true
 )
 
-#set(CURL_ROOT ${CMAKE_BINARY_DIR}/vendor/curl)
-#set(CURL_SRC ${CMAKE_BINARY_DIR}/vendor/curl-src)
-#set(CURL_INCLUDE_DIRS ${CURL_ROOT}/include)
-#set(CURL_LIBRARIES ${CURL_ROOT}/lib/${CMAKE_FIND_LIBRARY_PREFIXES}curl${CMAKE_STATIC_LIBRARY_SUFFIX})
-#ExternalProject_Add(
-#  curl
-#  BUILD_BYPRODUCTS ${CURL_LIBRARIES}
-#  ARGS
-#    URL ${CMAKE_SOURCE_DIR}/vendor/curl-7.67.0.tar.gz
-#    SOURCE_DIR ${CURL_SRC}
-#    BINARY_DIR ${CURL_SRC}
-#    CONFIGURE_COMMAND ./configure --prefix=${CURL_ROOT}
-#    BUILD_COMMAND make
-#    INSTALL_COMMAND make install
-#)
+set(CURL_ROOT ${CMAKE_BINARY_DIR}/vendor/curl)
+set(CURL_SRC ${CMAKE_BINARY_DIR}/vendor/curl-src)
+set(CURL_INCLUDE_DIRS ${CURL_ROOT}/include)
+set(CURL_LIBRARIES ${CURL_ROOT}/lib/${CMAKE_FIND_LIBRARY_PREFIXES}curl${CMAKE_STATIC_LIBRARY_SUFFIX})
+ExternalProject_Add(
+  curl
+  BUILD_BYPRODUCTS ${CURL_LIBRARIES}
+  ARGS
+    URL ${CMAKE_SOURCE_DIR}/vendor/curl-7.67.0.tar.gz
+    SOURCE_DIR ${CURL_SRC}
+    BINARY_DIR ${CURL_SRC}
+    CONFIGURE_COMMAND ./configure --prefix=${CURL_ROOT}
+    BUILD_COMMAND make
+    INSTALL_COMMAND make install
+)
 
 ExternalProject_Add(
   samtools-lib
@@ -87,14 +87,13 @@ ExternalProject_Add(
     BINARY_DIR ${SAMTOOLS_ROOT}
     #CONFIGURE_COMMAND C_INCLUDE_PATH=${ZLIB_INCLUDE_DIRS}:${BZIP2_INCLUDE_DIRS} ./configure --without-curses
     #CONFIGURE_COMMAND ./configure --without-curses
-    PATCH_COMMAND patch -p2 -t -N < ${CMAKE_SOURCE_DIR}/vendor/Makefile.disable_curl.patch
+    #PATCH_COMMAND patch -p2 -t -N < ${CMAKE_SOURCE_DIR}/vendor/Makefile.disable_curl.patch
     CONFIGURE_COMMAND echo "Building samtools, build log at ${SAMTOOLS_LOG}"
     BUILD_COMMAND make libbam.a > ${SAMTOOLS_LOG} 2>&1 &&
                   cd htslib-${SAMTOOLS_VERSION} &&
                   C_INCLUDE_PATH=${ZLIB_INCLUDE_DIRS}:${BZIP2_INCLUDE_DIRS}:${XZ_INCLUDE_DIRS}:${CURL_INCLUDE_DIRS} make libhts.a > ${HTSLIB_LOG} 2>&1
     INSTALL_COMMAND true
-    #DEPENDS zlib bzip2 xz curl
-    DEPENDS zlib bzip2 xz
+    DEPENDS zlib bzip2 xz curl
 )
 
 

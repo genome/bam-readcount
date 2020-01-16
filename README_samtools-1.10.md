@@ -5,14 +5,21 @@ samtools-1.10 refactor
 Caveats
 -------
 
-On my OS X machine (High Sierra), builds fail due to Boost. This is also
-true of the current `genome/bam-readcount` `master`.
+OS X builds fail for two reasons, at least on my High Sierra machine.
 
-Builds were also failing under OS X with libcurl errors. The current
-CMake configuration includes a patch for the htslib Makefile that is
-applied by CMake that disables libcurl. There is currently a protocol 
-warning when running `bam-readcount` that may be due to the absence of
-libcurl (see `Todo` below).
+Boost: 
+
+This is also true of the current `genome/bam-readcount` `master`.
+
+cURL: 
+
+I disabled `libcurl` for a while using the Makefile patch under
+
+    vendor/Makefile.disable_curl.patch
+
+but this results in warnings when the reference lookup is done
+
+    [W::find_file_url] Failed to open reference "https://www.ebi.ac.uk/ena/cram/md5/11e5d1f36a8e123feb3dd934cc05569a": Protocol not supported
 
 
 Build
@@ -85,7 +92,7 @@ The final binary will be
 
 ### Test data
 
-There is a small CRAM file under
+There is a small two-library test CRAM file
 
     test-data/twolib.sorted.cram  
 
@@ -93,13 +100,19 @@ with associated reference
 
     test-data/rand1k.fa
 
+The reference is encoded in the CRAM as 
+
+    @SQ	SN:rand1k	LN:1000	M5:11e5d1f36a8e123feb3dd934cc05569a	UR:rand1k.fa
+
+so `bam-readcount` should be run inside the `test-data` directory to
+find the reference.
+
 
 Todo
 ----
 
 Tested against `genome/bam-readcount` `master` with a simple BAM file 
-converted to CRAM with identical output, but needs more testing. The
-CRAM test did throw a warning; I will rerun it and add that here.
+converted to CRAM with identical output, but needs more testing.
 
 `find_library_names()` line 91 in 
 
@@ -113,14 +126,15 @@ expected library names to `STDERR`.
 
 CRAM files will use the reference encoded in their header. We may want
 to propagate the command-line-specified reference (and maybe make it
-optional) as the reference.
+optional and use the CRAM-header reference as a default) as the
+reference.
 
-We might want to reenable `libcurl` support since OS X builds are
-breaking anyway. It is in the CMakeFiles but is commented out and should
-be easy to restore. It is a little slow to compile but builds fine under
-the Docker image. This might be why we get the warning
+`libcurl` support is enabled but we are still getting a warning
 
-  [W::find_file_url] Failed to open reference "https://www.ebi.ac.uk/ena/cram/md5/11e5d1f36a8e123feb3dd934cc05569a": Protocol not supported
+    [W::find_file_url] Failed to open reference "https://www.ebi.ac.uk/ena/cram/md5/11e5d1f36a8e123feb3dd934cc05569a": Protocol not supported
+
+May need additional libraries, possibly `libssl` to support `https`. Until
+this is fixed we won't be able to fetch references by MD5.
 
 Add `URL_HASH` for vendored libraries for CMake verification.
 

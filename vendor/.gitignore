@@ -3,3 +3,4 @@ htslib-1.10_disable_curl.patch
 samtools-1.10.tar.bz2
 xz-5.2.4.tar.gz
 zlib-1.2.11.tar.gz
+curl-7.67.0.tar.gz
