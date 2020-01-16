@@ -1,30 +1,15 @@
 samtools-1.10 refactor
 ======================
 
-
-Caveats
--------
-
-OS X builds fail for two reasons, at least on my High Sierra machine.
-
-Boost: 
-
-This is also true of the current `genome/bam-readcount` `master`.
-
-cURL: 
-
-I disabled `libcurl` for a while using the Makefile patch under
-
-    vendor/Makefile.disable_curl.patch
-
-but this results in warnings when the reference lookup is done
-
-    [W::find_file_url] Failed to open reference "https://www.ebi.ac.uk/ena/cram/md5/11e5d1f36a8e123feb3dd934cc05569a": Protocol not supported
+This branch is a refactor of `bam-readcount` to the `samtools-1.10` 
+(and `htslib-1.10`) API, which adds CRAM support. Should build in a 
+minimal environment with C and C++ compilers, Make, and CMake.
 
 
 Build
 -----
 
+Builds are failing under OS X, see `OS X` below.
 
 ### Download vendored libraries
 
@@ -49,9 +34,16 @@ This should download
 
     vendor/
       bzip2-1.0.8.tar.gz
+      mbedtls-2.16.4-apache.tgz
       samtools-1.10.tar.bz2
       xz-5.2.4.tar.gz
       zlib-1.2.11.tar.gz
+
+I chose `mbedtls-2.16.4-apache.tgz` for `libcurl` SSL support as it has
+no additional dependencies. This is used (via `https`) to query the ENA
+CRAM registry for reference hashes. Another option might be wolfSSL's
+tiny-cURL distribution, which builds a lighter cURL with HTTPS support,
+but the download process involves a form.
 
 
 ### Run Docker container
@@ -124,18 +116,52 @@ has been removed (along with all of `sam_header.h`) and there is a new
 `-p` still appears to work. It looks like the list is only used to print
 expected library names to `STDERR`.
 
-CRAM files will use the reference encoded in their header. We may want
+CRAM files will use the reference encoded in their header (or found by
+query to ENA CRAM registry, though I haven't tested that). We may want
 to propagate the command-line-specified reference (and maybe make it
 optional and use the CRAM-header reference as a default) as the
-reference.
-
-`libcurl` support is enabled but we are still getting a warning
-
-    [W::find_file_url] Failed to open reference "https://www.ebi.ac.uk/ena/cram/md5/11e5d1f36a8e123feb3dd934cc05569a": Protocol not supported
-
-May need additional libraries, possibly `libssl` to support `https`. Until
-this is fixed we won't be able to fetch references by MD5.
+reference. 
 
 Add `URL_HASH` for vendored libraries for CMake verification.
+
+Lower CMake minimum version requirement in `BuildSamtools.cmake`, 
+and be consistent throughout.
+
+
+OS X
+----
+
+OS X builds fail for (at least) two reasons on my High Sierra machine.
+This may be due to my setup with MacPorts etc; I haven't looked into
+this much and the observations below might not be relevant.
+
+Boost: 
+
+When linking, I get pages of errors.
+
+This is also true of the current `genome/bam-readcount` `master`.
+
+cURL: 
+
+Not sure what goes wrong here, Make just exits with
+
+    make: *** [all] Error 2
+
+I disabled `libcurl` for a while using the Makefile patch under
+
+    vendor/Makefile.disable_curl.patch
+
+Also getting errors 
+
+    bam-readcount/src/lib/bamrc/BasicStat.hpp:5:10: fatal error:
+          'sam.h' file not found
+    #include "sam.h"
+             ^~~~~~~
+    1 error generated.
+
+Not sure why, since it seems to be a build configuration problem but
+doesn't happen in the minimal Docker build container.
+
+
 
 
