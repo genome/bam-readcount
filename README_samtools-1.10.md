@@ -12,7 +12,7 @@ Builds were also failing under OS X with libcurl errors. The current
 CMake configuration includes a patch for the htslib Makefile that is
 applied by CMake that disables libcurl. There is currently a protocol 
 warning when running `bam-readcount` that may be due to the absence of
-libcurl.
+libcurl (see `Todo` below).
 
 
 Build
@@ -49,7 +49,7 @@ This should download
 
 ### Run Docker container
 
-If you have Docker running, build using the included docker image
+If you have Docker running, build using the included Docker image
 
     cd docker/minimal_cmake
     make interact
@@ -108,15 +108,20 @@ CRAM test did throw a warning; I will rerun it and add that here.
 has been modified to return an empty list because `sam_header2key_val`
 has been removed (along with all of `sam_header.h`) and there is a new
 (`hrecs`?) API to access header data that we will need to use. Enabling
-`-p` still appears to work.
+`-p` still appears to work. It looks like the list is only used to print
+expected library names to `STDERR`.
 
-CRAM files can only use the reference encoded in their header. We will 
-probably want to propagate the command-line-specified reference (and maybe 
-make it optional).
+CRAM files will use the reference encoded in their header. We may want
+to propagate the command-line-specified reference (and maybe make it
+optional) as the reference.
 
 We might want to reenable `libcurl` support since OS X builds are
 breaking anyway. It is in the CMakeFiles but is commented out and should
 be easy to restore. It is a little slow to compile but builds fine under
-the Docker image.
+the Docker image. This might be why we get the warning
+
+  [W::find_file_url] Failed to open reference "https://www.ebi.ac.uk/ena/cram/md5/11e5d1f36a8e123feb3dd934cc05569a": Protocol not supported
+
+Add `URL_HASH` for vendored libraries for CMake verification.
 
 
