@@ -109,19 +109,19 @@ Docker container
 
 To run the latest build from DockerHub on the test data
 
-  cd test-data
+    cd test-data
 
-  # Will mount current directory as /work and start in that directory
-  # in order to find the input files
-  docker run -v $(pwd):/work -w /work seqfu/bam-readcount /bin/bam-readcount -f rand1k.fa twolib.sorted.cram
+    # Will mount current directory as /work and start in that directory
+    # in order to find the input files
+    docker run -v $(pwd):/work -w /work seqfu/bam-readcount /bin/bam-readcount -f rand1k.fa twolib.sorted.cram
 
 This is a two-stage build, copying the `bam-readcount` binary from the
 first stage (with build tools) into a minimal image as
 `/bin/bam-readcount`. To run the build yourself
 
-  cd docker/bam-readcount
-  # Change the NAME at the top of the Makefile first
-  make build
+    cd docker/bam-readcount
+    # Change the NAME at the top of the Makefile first
+    make build
 
 
 Todo
