@@ -1,4 +1,4 @@
-NAME   := seqfu/minimal_cmake
+NAME   := seqfu/minimal-cmake
 TAG    := $$(git log -1 --pretty=%h)
 IMG    := ${NAME}:${TAG}
 LATEST := ${NAME}:latest

@@ -5,18 +5,18 @@ This branch is a refactor of `bam-readcount` to the `samtools-1.10`
 (and `htslib-1.10`) API, which adds CRAM support. Should build in a 
 minimal environment with C and C++ compilers, Make, and CMake.
 
-
-Build
------
-
-Builds are failing under OS X, see `OS X` below.
-
-### Download vendored libraries
-
-Clone `samtools-1.10` branch of forked `genome/bam-readcount`
+To clone this fork and branch 
 
     git clone -b samtools-1.10 https://github.com/seqfu/bam-readcount
     cd bam-readcount
+
+Builds are failing under OS X, see `OS X` below.
+
+
+Vendored libraries
+------------------
+
+Any build requires downloading the vendored libraries.
 
 Already under `vendor/` are
   
@@ -24,8 +24,8 @@ Already under `vendor/` are
       boost-1.55-bamrc.tar.gz
       Makefile.disable_curl.patch
 
-Except for Boost the vendored libraries are not included in the
-repository. To fetch them, run 
+The patch is no longer used.  Except for Boost the vendored libraries
+are not included in the repository. To fetch them, run 
 
     # wget is required for this script
     0/populate_vendor.sh
@@ -46,11 +46,15 @@ tiny-cURL distribution, which builds a lighter cURL with HTTPS support,
 but the download process involves a form.
 
 
-### Run Docker container
+Build
+-----
+
+### Run minimal build Docker container
 
 If you have Docker running, build using the included Docker image
 
-    cd docker/minimal_cmake
+    cd docker/minimal-cmake
+    # This will start a container using image seqfu/minimal-cmake
     make interact
 
 This will start a minimal docker container with `build-essential` and
@@ -98,6 +102,26 @@ The reference is encoded in the CRAM as
 
 so `bam-readcount` should be run inside the `test-data` directory to
 find the reference.
+
+
+Docker container
+----------------
+
+To run the latest build from DockerHub on the test data
+
+  cd test-data
+
+  # Will mount current directory as /work and start in that directory
+  # in order to find the input files
+  docker run -v $(pwd):/work -w /work seqfu/bam-readcount /bin/bam-readcount -f rand1k.fa twolib.sorted.cram
+
+This is a two-stage build, copying the `bam-readcount` binary from the
+first stage (with build tools) into a minimal image as
+`/bin/bam-readcount`. To run the build yourself
+
+  cd docker/bam-readcount
+  # Change the NAME at the top of the Makefile first
+  make build
 
 
 Todo
