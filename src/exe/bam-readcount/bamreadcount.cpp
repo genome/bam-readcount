@@ -394,6 +394,7 @@ int main(int argc, char *argv[])
     bool insertion_centric = false;
     string fn_pos, fn_fa;
     int64_t max_warnings = -1;
+    char * fn_list = 0;
 
     pileup_data_t d {};
     fetch_data_t *f = (fetch_data_t*)calloc(1, sizeof(pileup_data_t));
@@ -467,6 +468,12 @@ int main(int argc, char *argv[])
     WARN.reset(new ReadWarnings(std::cerr, max_warnings));
 
     if (!fn_fa.empty()) d.fai = fai_load(fn_fa.c_str());
+
+    // Configure reference for CRAM
+    if (fn_list == 0 && !fn_fa.empty()) {
+      fn_list = samfaipath(fn_fa.c_str());
+    }
+
     d.beg = 0; d.end = 0x7fffffff;
     d.distribution = distribution;
     d.per_lib = per_lib;
@@ -476,6 +483,15 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Fail to open BAM file %s\n", argv[optind]);
         return 1;
     }
+
+    // Set reference for CRAM
+    if (fn_list) {
+      if (hts_set_fai_filename(d.in->file, fn_list) != 0) {
+        fprintf(stderr, "Fail to open reference file %s\n", fn_list);
+        return 1;
+      }
+    }
+
     //d.in->header->dict = sam_header_parse2(d.in->header->text);
     std::set<std::string> lib_names = find_library_names(d.in->header);
     for(std::set<std::string>::iterator it = lib_names.begin(); it != lib_names.end(); ++it) {
