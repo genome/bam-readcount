@@ -21,8 +21,8 @@ Any build requires downloading the vendored libraries.
 Already under `vendor/` are
   
     vendor/
-      boost-1.55-bamrc.tar.gz
-      Makefile.disable_curl.patch
+      boost-1.55-bamrc.tar.gz         # subset of Boost needed for bamrc
+      Makefile.disable_curl.patch     # Not used
 
 The patch is no longer used.  Except for Boost the vendored libraries
 are not included in the repository. To fetch them, run 
@@ -34,6 +34,7 @@ This should download
 
     vendor/
       bzip2-1.0.8.tar.gz
+      curl-7.67.0.tar.gz
       mbedtls-2.16.4-apache.tgz
       samtools-1.10.tar.bz2
       xz-5.2.4.tar.gz
@@ -48,6 +49,10 @@ but the download process involves a form.
 
 Build
 -----
+
+Before building, make sure to download the vendored libraries as in the
+section above.
+
 
 ### Run minimal build Docker container
 
@@ -84,6 +89,11 @@ This will build all the vendored libraries as well as `bam-readcount`.
 The final binary will be
 
     bin/bam-readcount
+
+Try it on a test CRAM
+
+    cd ../test-data
+    ../build/bin/bam-readcount -f rand1k.fa twolib.sorted.cram
 
 
 ### Test data
@@ -150,6 +160,10 @@ Add `URL_HASH` for vendored libraries for CMake verification.
 
 Lower CMake minimum version requirement in `BuildSamtools.cmake`, 
 and be consistent throughout.
+
+On MGI's LSF cluster, the curl/https lookup in the ENA CRAM registry
+fails. This might be expected due to network restrictions on cluster
+container.
 
 
 OS X
