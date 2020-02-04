@@ -134,6 +134,17 @@ first stage (with build tools) into a minimal image as
     make build
 
 
+CRAM reference
+--------------
+
+If no reference is given to `bam-readcount` with `-f`, the CRAM will
+attempt to use the reference encoded in the header, or do a lookup at
+ENA (this seems to have some issues when run on the LSF cluster). 
+
+If a reference is given with `-f FASTA`, it will override whatever is 
+in the CRAM header.
+
+
 Todo
 ----
 
@@ -149,12 +160,6 @@ has been removed (along with all of `sam_header.h`) and there is a new
 (`hrecs`?) API to access header data that we will need to use. Enabling
 `-p` still appears to work. It looks like the list is only used to print
 expected library names to `STDERR`.
-
-CRAM files will use the reference encoded in their header (or found by
-query to ENA CRAM registry, though I haven't tested that). We may want
-to propagate the command-line-specified reference (and maybe make it
-optional and use the CRAM-header reference as a default) as the
-reference. 
 
 Add `URL_HASH` for vendored libraries for CMake verification.
 
