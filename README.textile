@@ -136,4 +136,4 @@ This is a known bug that will be addressed in future versions. In most cases, yo
 
 h2. User Support
 
-p. Please first search "Biostar":http://www.biostars.org and then ask a question there if needed.  We automatically monitor "Biostar":http://www.biostars.org for questions related to our tools.
+p. Please first look at the "bam-readcount" tag on "Biostar":https://www.biostars.org/t/bam-readcount/ as many of the most-frequently asked questions about bam-readcount have been answered there.
