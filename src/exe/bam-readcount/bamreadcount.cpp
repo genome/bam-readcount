@@ -112,7 +112,7 @@ std::set<std::string> find_library_names(bam_header_t const* header) {
     return lib_names;
 }
 
-// callback for bam_fetch()
+// callback for samfetch()
 static int fetch_func(const bam1_t *b, void *data) {
     //retrieve reference
     fetch_data_t* fetch_data = (fetch_data_t*) data;
@@ -515,8 +515,15 @@ int main(int argc, char *argv[])
             cerr << "Failed to open region list file: " << fn_pos << endl;
             return 1;
         }
-        bam_index_t *idx;
-        idx = bam_index_load(vm["bam-file"].as<string>().c_str()); // load BAM index
+
+        // Load index
+        hts_idx_t *idx;
+        idx = sam_index_load3(
+            d.in->file, 
+            (const char *) vm["bam-file"].as<string>().c_str(), 
+            NULL,
+            HTS_IDX_SAVE_REMOTE);
+
         if (idx == 0) {
             fprintf(stderr, "BAM indexing file is not available.\n");
             return 1;
@@ -571,14 +578,14 @@ int main(int argc, char *argv[])
                     f->seq_name = 0;
                 }
                 f->ref_pointer = &(d.ref);
-                bam_fetch(d.in->x.bam, idx, ref, d.beg-1, d.end, f, fetch_func);
+                samfetch(d.in, idx, ref, d.beg-1, d.end, f, fetch_func);
                 bam_plbuf_push(0, buf); // finalize pileup
                 bam_plbuf_destroy(buf);
                 d.indel_queue_map.clear();
 
             }
         }
-        bam_index_destroy(idx);
+        hts_idx_destroy(idx);
         samclose(d.in);
         if(d.fai) {
             fai_destroy(d.fai);
@@ -596,9 +603,16 @@ int main(int argc, char *argv[])
             //FIXME this currently crashes and burns because it doesn't hit the pre-processing in fetch_func
             sampileup(d.in, -1, pileup_func, &d);
         } else {
-            int ref;
-            bam_index_t *idx;
-            idx = bam_index_load(vm["bam-file"].as<string>().c_str()); // load BAM index
+            int ref; 
+
+            // load index
+            hts_idx_t *idx;
+            idx = sam_index_load3(
+              d.in->file, 
+              (const char *) vm["bam-file"].as<string>().c_str(), 
+              NULL,
+              HTS_IDX_SAVE_REMOTE);
+
             if (idx == 0) {
                 fprintf(stderr, "BAM indexing file is not available.\n");
                 return 1;
@@ -616,11 +630,11 @@ int main(int argc, char *argv[])
                 bam_plp_set_maxcnt(buf->iter, d.max_cnt);
                 f->pileup_buffer = buf;
                 f->ref_pointer = &(d.ref);
-                bam_fetch(d.in->x.bam, idx, ref, d.beg-1, d.end, f, fetch_func);
+                samfetch(d.in, idx, ref, d.beg-1, d.end, f, fetch_func);
                 bam_plbuf_push(0, buf); // finalize pileup
                 bam_plbuf_destroy(buf);
             }
-            bam_index_destroy(idx);
+            hts_idx_destroy(idx);
         }
         if(d.ref) {
             free(d.ref);
