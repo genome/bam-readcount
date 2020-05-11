@@ -14,6 +14,7 @@
 #include <memory>
 #include <string.h>
 #include "sam.h"
+#include "header.h"
 #include "htslib/faidx.h"
 #include "htslib/khash.h"
 //#include "sam_header.h"
@@ -89,16 +90,25 @@ static inline void load_reference(pileup_data_t* data, int ref) {
 }
 
 std::set<std::string> find_library_names(bam_header_t const* header) {
-    //samtools doesn't do a good job of exposing this so this is a little more implementation
-    //dependent than I'd like and may be fragile.
     std::set<std::string> lib_names;
-    /*
-    void *iter = header->sdict;
-    const char *key, *val;
-    while( (iter = sam_header2key_val(iter, "RG", "ID", "LB", &key, &val)) ) {
-        lib_names.insert(val);
+    sam_hdr_t * sam_hdr = sam_hdr_parse(header->l_text, header->text);
+    sam_hrecs_t * sam_hrecs = sam_hdr->hrecs;
+    sam_hrec_rg_t * rg = sam_hrecs->rg;
+    int nrg = sam_hrecs->nrg;
+
+    printf("%d\n", nrg);
+
+    for (int i=0; i<nrg; i++) {
+      std::cerr << i << std::endl;
+      std::cerr << rg[i].name << std::endl;
+      sam_hrec_tag_t * tag = rg[i].ty->tag;
+      std::cerr << tag->str << std::endl;
+      while (tag->next) {
+        tag = tag->next;
+        std::cerr << tag->str << std::endl;
+      }
     }
-    */
+
     return lib_names;
 }
 
@@ -492,7 +502,6 @@ int main(int argc, char *argv[])
       }
     }
 
-    //d.in->header->dict = sam_header_parse2(d.in->header->text);
     std::set<std::string> lib_names = find_library_names(d.in->header);
     for(std::set<std::string>::iterator it = lib_names.begin(); it != lib_names.end(); ++it) {
         cerr << "Expect library: " << *it << " in BAM" << endl;
