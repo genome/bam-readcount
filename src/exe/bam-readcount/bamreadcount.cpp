@@ -270,7 +270,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
 
     if ((int)pos >= tmp->beg - 1 && (int)pos < tmp->end) {
 
-        int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold
+        int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold and the flag filters
 
         std::map<std::string, LibraryCounts> lib_counts;
 
@@ -288,6 +288,29 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             LibraryCounts &current_lib = lib_counts[library_name];
 
             if(!base->is_del && base->b->core.qual >= tmp->min_mapq && bam1_qual(base->b)[base->qpos] >= tmp->min_bq) {
+
+                // Flag filters
+                // This should not happen; unmapped reads should not be 
+                // in the pileup
+                // These should be combined for efficiency into a single 
+                // flag test
+                if (base->b->core.flag & BAM_FUNMAP) {
+                  fprintf(stderr, "BAM_FUNMAP\n");
+                  continue;
+                }
+                if (base->b->core.flag & BAM_FSECONDARY) {
+                  fprintf(stderr, "BAM_FSECONDARY\n");
+                  continue;
+                }
+                if (base->b->core.flag & BAM_FQCFAIL) {
+                  fprintf(stderr, "BAM_FQCFAIL\n");
+                  continue;
+                }
+                if (base->b->core.flag & BAM_FDUP) {
+                  fprintf(stderr, "BAM_FDUP\n");
+                  continue;
+                }
+
                 mapq_n++;
 
 
