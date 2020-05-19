@@ -96,7 +96,7 @@ std::set<std::string> find_library_names(bam_header_t const* header) {
     sam_hrec_rg_t * rg = sam_hrecs->rg;
     int nrg = sam_hrecs->nrg;
 
-    printf("%d\n", nrg);
+    //fprintf(stderr, "nrg: %d\n", nrg);
 
     for (int i=0; i<nrg; i++) {
       std::cerr << i << std::endl;
