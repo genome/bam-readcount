@@ -89,7 +89,12 @@ ExternalProject_Add(
     URL ${CMAKE_SOURCE_DIR}/vendor/curl-7.67.0.tar.gz
     SOURCE_DIR ${CURL_SRC}
     BINARY_DIR ${CURL_SRC}
-    CONFIGURE_COMMAND ./configure --prefix=${CURL_ROOT} --with-mbedtls=${MBEDTLS_ROOT}
+    # Disable everything we can except mbed with extreme prejudice
+    # --disable-ldap and --disable-ldaps should take care of -lldap and -llber
+    # which were causing problems on my OS X machine
+    # RTSP remains enabled in the minimal build container,
+    # so we leave out --disable-rtsp 
+    CONFIGURE_COMMAND ./configure --prefix=${CURL_ROOT} --with-mbedtls=${MBEDTLS_ROOT} --without-zlib --without-brotli --without-winssl --without-schannel --without-darwinssl --without-secure-transport --without-amissl --without-ssl --without-gnutls --without-wolfssl --without-mesalink --without-nss --without-libpsl --without-libmetalink --without-librtmp --without-winidn --without-libidn2 --without-nghttp2 --without-ngtcp2 --without-nghttp3 --without-quiche --without-zsh-functions-dir --without-fish-functions-dir --disable-ldap --disable-ldaps
     BUILD_COMMAND make
     INSTALL_COMMAND make install
     DEPENDS mbedtls

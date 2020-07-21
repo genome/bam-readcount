@@ -9,6 +9,7 @@ Testing/
 _CPack_Packages/
 bin/
 build/
+build-zeno/
 cmake_install.cmake
 debian/postinst
 debian/prerm
