@@ -117,6 +117,9 @@ find the reference.
 Docker container
 ----------------
 
+For development builds, use the method above. This method will remove
+and rebuild from scratch every time.
+
 To run the latest build from DockerHub on the test data
 
     cd test-data
@@ -130,8 +133,12 @@ first stage (with build tools) into a minimal image as
 `/bin/bam-readcount`. To run the build yourself
 
     cd docker/bam-readcount
-    # Change the NAME at the top of the Makefile first
     make build
+    # Try out interactively
+    make interact
+    # Change the NAME at the top of the Makefile first
+    # push to DockerHub with git hash as tag and also set to latest
+    make push
 
 
 CRAM reference
