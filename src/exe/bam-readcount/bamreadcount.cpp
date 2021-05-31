@@ -96,8 +96,9 @@ std::set<std::string> find_library_names(bam_header_t const* header) {
     sam_hrec_rg_t * rg = sam_hrecs->rg;
     int nrg = sam_hrecs->nrg;
 
+    // Debugging for RG tags
     //fprintf(stderr, "nrg: %d\n", nrg);
-
+    /*
     for (int i=0; i<nrg; i++) {
       std::cerr << i << std::endl;
       std::cerr << rg[i].name << std::endl;
@@ -108,6 +109,7 @@ std::set<std::string> find_library_names(bam_header_t const* header) {
         std::cerr << tag->str << std::endl;
       }
     }
+    */
 
     return lib_names;
 }
@@ -295,19 +297,19 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
                 // These should be combined for efficiency into a single 
                 // flag test
                 if (base->b->core.flag & BAM_FUNMAP) {
-                  fprintf(stderr, "BAM_FUNMAP\n");
+                  //fprintf(stderr, "BAM_FUNMAP\n");
                   continue;
                 }
                 if (base->b->core.flag & BAM_FSECONDARY) {
-                  fprintf(stderr, "BAM_FSECONDARY\n");
+                  //fprintf(stderr, "BAM_FSECONDARY\n");
                   continue;
                 }
                 if (base->b->core.flag & BAM_FQCFAIL) {
-                  fprintf(stderr, "BAM_FQCFAIL\n");
+                  //fprintf(stderr, "BAM_FQCFAIL\n");
                   continue;
                 }
                 if (base->b->core.flag & BAM_FDUP) {
-                  fprintf(stderr, "BAM_FDUP\n");
+                  //fprintf(stderr, "BAM_FDUP\n");
                   continue;
                 }
 
