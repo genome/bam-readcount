@@ -31,6 +31,7 @@ before_install:
 
 before_script:
     - cd $TRAVIS_BUILD_DIR
+    - 0/populate_vendor.sh
     - mkdir build
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=coverage
