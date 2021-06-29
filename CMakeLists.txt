@@ -30,9 +30,24 @@ include_directories(${Boost_INCLUDE_DIRS})
 include(BuildSamtools)
 include_directories(${Samtools_INCLUDE_DIRS} ${Htslib_INCLUDE_DIRS})
 
+option(CODE_COVERAGE "Enable coverage reporting" OFF)
+
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU|Clang")
-    set(CMAKE_CXX_FLAGS "-Wall -std=c++0x")
-endif ()
+    if(CODE_COVERAGE)
+        include(CodeCoverage)
+        set(CMAKE_CXX_FLAGS "-Wall -std=c++0x --coverage -g -O0")
+        #append_coverage_compiler_flags()
+        setup_target_for_coverage_lcov(
+            NAME codecoverage
+            EXECUTABLE ctest -V
+            BASE_DIRECTORY "./"
+            NO_DEMANGLE
+            EXCLUDE "build/*" "test/*"
+        )
+    else()
+        set(CMAKE_CXX_FLAGS "-Wall -std=c++0x")
+    endif()
+endif()
 
 find_package(Threads)
 link_libraries(${CMAKE_THREAD_LIBS_INIT})

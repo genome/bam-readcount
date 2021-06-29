@@ -33,7 +33,7 @@ class TestBamReadcount(IntegrationTest, unittest.TestCase):
         ref_fasta = "ref.fa"
         site_list = "site_list"
         output_file = self.tempFile("output")
-        cmdline = " ".join([self.exe_path, '-f', ref_fasta, '-l', site_list, bam_file, '>', output_file])
+        cmdline = " ".join([self.exe_path, '-w', '1', '-f', ref_fasta, '-l', site_list, bam_file, '>', output_file])
         print "Executing", cmdline
         print "CWD", os.getcwd()
         rv = subprocess.call(cmdline, shell=True)
@@ -47,7 +47,7 @@ class TestBamReadcount(IntegrationTest, unittest.TestCase):
         ref_fasta = "ref.fa"
         site_list = "site_list"
         output_file = self.tempFile("output")
-        cmdline = " ".join([self.exe_path, '-p', '-f', ref_fasta, '-l', site_list, bam_file, '>', output_file])
+        cmdline = " ".join([self.exe_path, '-w', '1', '-p', '-f', ref_fasta, '-l', site_list, bam_file, '>', output_file])
         print "Executing", cmdline
         print "CWD", os.getcwd()
         rv = subprocess.call(cmdline, shell=True)
@@ -62,7 +62,7 @@ class TestBamReadcount(IntegrationTest, unittest.TestCase):
         ref_fasta = "ref.fa"
         regions = "21:10402985-10402985 21:10405200-10405200"
         output_file = self.tempFile("output")
-        cmdline = " ".join([self.exe_path, '-f', ref_fasta, bam_file, regions, '>', output_file])
+        cmdline = " ".join([self.exe_path, '-w', '1', '-f', ref_fasta, bam_file, regions, '>', output_file])
         print "Executing", cmdline
         print "CWD", os.getcwd()
         rv = subprocess.call(cmdline, shell=True)
@@ -77,7 +77,7 @@ class TestBamReadcount(IntegrationTest, unittest.TestCase):
         ref_fasta = "ref.fa"
         regions = "21:10402985-10402985 21:10405200-10405200"
         output_file = self.tempFile("output")
-        cmdline = " ".join([self.exe_path, '-f', ref_fasta, bam_file, regions, '>', output_file])
+        cmdline = " ".join([self.exe_path, '-w', '1', '-f', ref_fasta, bam_file, regions, '>', output_file])
         print "Executing", cmdline
         print "CWD", os.getcwd()
         rv = subprocess.call(cmdline, shell=True)
@@ -92,7 +92,7 @@ class TestBamReadcount(IntegrationTest, unittest.TestCase):
         ref_fasta = "ref.fa"
         site_list = "site_list"
         output_file = self.tempFile("output")
-        cmdline = " ".join([self.exe_path, '-i', '-f', ref_fasta, '-l', site_list, bam_file, '>', output_file])
+        cmdline = " ".join([self.exe_path, '-w', '1', '-i', '-f', ref_fasta, '-l', site_list, bam_file, '>', output_file])
         print "Executing", cmdline
         print "CWD", os.getcwd()
         rv = subprocess.call(cmdline, shell=True)
@@ -107,7 +107,7 @@ class TestBamReadcount(IntegrationTest, unittest.TestCase):
         ref_fasta = "ref.fa"
         site_list = "site_list"
         output_file = self.tempFile("output")
-        cmdline = " ".join([self.exe_path, '-i', '-p', '-f', ref_fasta, '-l', site_list, bam_file, '>', output_file])
+        cmdline = " ".join([self.exe_path, '-w', '1', '-i', '-p', '-f', ref_fasta, '-l', site_list, bam_file, '>', output_file])
         print "Executing", cmdline
         print "CWD", os.getcwd()
         rv = subprocess.call(cmdline, shell=True)

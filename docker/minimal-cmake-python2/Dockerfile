@@ -19,3 +19,9 @@ RUN apt-get update && \
     apt-get clean all && \
     rm -rf /var/lib/apt/lists/* && rm -rf /tmp/* && rm -rf /var/tmp/*
 
+RUN apt-get update && \
+    apt-get install -y lcov && \
+    # Clean up
+    apt-get clean all && \
+    rm -rf /var/lib/apt/lists/* && rm -rf /tmp/* && rm -rf /var/tmp/*
+
