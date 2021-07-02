@@ -48,40 +48,6 @@ Try it on a test CRAM
     ../build/bin/bam-readcount -f rand1k.fa twolib.sorted.cram
 
 
-Build (Docker-based)
---------------------
-
-This is mainly useful when working on the `bam-readcount` code.
-  
-If you have Docker running, build using the included Docker image
-
-    cd docker/minimal-cmake
-    make interact
-
-This will start a minimal Docker container with `build-essential` and
-`cmake` installed, with this cloned repository mounted at 
-
-    /bam-readcount
-
-and starting in that directory. Then follow the build instructions 
-above.
-
-
-Build Docker image
-------------------
-
-This is a two-stage build, copying the `bam-readcount` binary from the
-first stage (with build tools) into a minimal image as
-`/bin/bam-readcount`. To run the build yourself
-
-    cd docker/bam-readcount
-    make build
-    # Try out interactively
-    make interact
-    # Change the NAME at the top of the Makefile first!
-    make push
-
-
 Test data
 ---------
 
