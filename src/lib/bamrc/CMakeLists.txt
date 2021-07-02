@@ -14,4 +14,4 @@ set(SOURCES
 )
 
 xadd_library(bamrc ${SOURCES})
-target_link_libraries(bamrc ${Boost_LIBRARIES} ${Samtools_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries(bamrc ${Boost_LIBRARIES} ${Samtools_LIBRARIES} ${Htslib_LIBRARIES} ${Support_LIBRARIES})

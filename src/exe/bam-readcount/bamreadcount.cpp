@@ -14,9 +14,10 @@
 #include <memory>
 #include <string.h>
 #include "sam.h"
-#include "faidx.h"
-#include "khash.h"
-#include "sam_header.h"
+#include "header.h"
+#include "htslib/faidx.h"
+#include "htslib/khash.h"
+//#include "sam_header.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <fstream>
@@ -66,6 +67,7 @@ typedef struct {
     bool insertion_centric;
     std::set<std::string> lib_names;
     indel_queue_map_t indel_queue_map;
+    void * hash;
 } pileup_data_t;
 
 //struct to store reference for passing to fetch func
@@ -88,18 +90,27 @@ static inline void load_reference(pileup_data_t* data, int ref) {
 }
 
 std::set<std::string> find_library_names(bam_header_t const* header) {
-    //samtools doesn't do a good job of exposing this so this is a little more implementation
-    //dependent than I'd like and may be fragile.
     std::set<std::string> lib_names;
-    void *iter = header->dict;
-    const char *key, *val;
-    while( (iter = sam_header2key_val(iter, "RG", "ID", "LB", &key, &val)) ) {
-        lib_names.insert(val);
+    sam_hdr_t * sam_hdr = sam_hdr_parse(header->l_text, header->text);
+    sam_hrecs_t * sam_hrecs = sam_hdr->hrecs;
+    sam_hrec_rg_t * rg = sam_hrecs->rg;
+    int nrg = sam_hrecs->nrg;
+
+    for (int i=0; i<nrg; i++) {
+      sam_hrec_tag_t * tag = rg[i].ty->tag;
+      while (tag->next) {
+        tag = tag->next;
+        std::string tag_str = tag->str; 
+        if (tag_str.substr(0,2) == "LB") {
+          lib_names.insert(tag_str.substr(3));
+        }
+      }
     }
+
     return lib_names;
 }
 
-// callback for bam_fetch()
+// callback for samfetch()
 static int fetch_func(const bam1_t *b, void *data) {
     //retrieve reference
     fetch_data_t* fetch_data = (fetch_data_t*) data;
@@ -257,7 +268,7 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
 
     if ((int)pos >= tmp->beg - 1 && (int)pos < tmp->end) {
 
-        int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold
+        int mapq_n = 0; //this tracks the number of reads that passed the mapping quality threshold and the flag filters
 
         std::map<std::string, LibraryCounts> lib_counts;
 
@@ -275,6 +286,29 @@ static int pileup_func(uint32_t tid, uint32_t pos, int n, const bam_pileup1_t *p
             LibraryCounts &current_lib = lib_counts[library_name];
 
             if(!base->is_del && base->b->core.qual >= tmp->min_mapq && bam1_qual(base->b)[base->qpos] >= tmp->min_bq) {
+
+                // Flag filters
+                // This should not happen; unmapped reads should not be 
+                // in the pileup
+                // These should be combined for efficiency into a single 
+                // flag test
+                if (base->b->core.flag & BAM_FUNMAP) {
+                  //fprintf(stderr, "BAM_FUNMAP\n");
+                  continue;
+                }
+                if (base->b->core.flag & BAM_FSECONDARY) {
+                  //fprintf(stderr, "BAM_FSECONDARY\n");
+                  continue;
+                }
+                if (base->b->core.flag & BAM_FQCFAIL) {
+                  //fprintf(stderr, "BAM_FQCFAIL\n");
+                  continue;
+                }
+                if (base->b->core.flag & BAM_FDUP) {
+                  //fprintf(stderr, "BAM_FDUP\n");
+                  continue;
+                }
+
                 mapq_n++;
 
 
@@ -391,6 +425,7 @@ int main(int argc, char *argv[])
     bool insertion_centric = false;
     string fn_pos, fn_fa;
     int64_t max_warnings = -1;
+    char * fn_list = 0;
 
     pileup_data_t d {};
     fetch_data_t *f = (fetch_data_t*)calloc(1, sizeof(pileup_data_t));
@@ -464,6 +499,12 @@ int main(int argc, char *argv[])
     WARN.reset(new ReadWarnings(std::cerr, max_warnings));
 
     if (!fn_fa.empty()) d.fai = fai_load(fn_fa.c_str());
+
+    // Configure reference for CRAM
+    if (fn_list == 0 && !fn_fa.empty()) {
+      fn_list = samfaipath(fn_fa.c_str());
+    }
+
     d.beg = 0; d.end = 0x7fffffff;
     d.distribution = distribution;
     d.per_lib = per_lib;
@@ -473,7 +514,15 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Fail to open BAM file %s\n", argv[optind]);
         return 1;
     }
-    d.in->header->dict = sam_header_parse2(d.in->header->text);
+
+    // Set reference for CRAM
+    if (fn_list) {
+      if (hts_set_fai_filename(d.in->file, fn_list) != 0) {
+        fprintf(stderr, "Fail to open reference file %s\n", fn_list);
+        return 1;
+      }
+    }
+
     std::set<std::string> lib_names = find_library_names(d.in->header);
     for(std::set<std::string>::iterator it = lib_names.begin(); it != lib_names.end(); ++it) {
         cerr << "Expect library: " << *it << " in BAM" << endl;
@@ -487,8 +536,15 @@ int main(int argc, char *argv[])
             cerr << "Failed to open region list file: " << fn_pos << endl;
             return 1;
         }
-        bam_index_t *idx;
-        idx = bam_index_load(vm["bam-file"].as<string>().c_str()); // load BAM index
+
+        // Load index
+        hts_idx_t *idx;
+        idx = sam_index_load3(
+            d.in->file, 
+            (const char *) vm["bam-file"].as<string>().c_str(), 
+            NULL,
+            HTS_IDX_SAVE_REMOTE);
+
         if (idx == 0) {
             fprintf(stderr, "BAM indexing file is not available.\n");
             return 1;
@@ -503,17 +559,17 @@ int main(int argc, char *argv[])
         //initialize the header hash
         khiter_t iter;
         khash_t(s) *h;
-        if (d.in->header->hash == 0) {
+        if (d.hash == 0) {
             int ret, i;
             khiter_t iter;
             khash_t(s) *h;
-            d.in->header->hash = h = kh_init(s);
+            d.hash = h = kh_init(s);
             for (i = 0; i < d.in->header->n_targets; ++i) {
                 iter = kh_put(s, h, d.in->header->target_name[i], &ret);
                 kh_value(h, iter) = i;
             }
         }
-        h = (khash_t(s)*)d.in->header->hash;
+        h = (khash_t(s)*)d.hash;
         std::string lineBuf;
         while(getline(fp, lineBuf)) {
             std::stringstream ss(lineBuf);
@@ -543,14 +599,14 @@ int main(int argc, char *argv[])
                     f->seq_name = 0;
                 }
                 f->ref_pointer = &(d.ref);
-                bam_fetch(d.in->x.bam, idx, ref, d.beg-1, d.end, f, fetch_func);
+                samfetch(d.in, idx, ref, d.beg-1, d.end, f, fetch_func);
                 bam_plbuf_push(0, buf); // finalize pileup
                 bam_plbuf_destroy(buf);
                 d.indel_queue_map.clear();
 
             }
         }
-        bam_index_destroy(idx);
+        hts_idx_destroy(idx);
         samclose(d.in);
         if(d.fai) {
             fai_destroy(d.fai);
@@ -568,9 +624,16 @@ int main(int argc, char *argv[])
             //FIXME this currently crashes and burns because it doesn't hit the pre-processing in fetch_func
             sampileup(d.in, -1, pileup_func, &d);
         } else {
-            int ref;
-            bam_index_t *idx;
-            idx = bam_index_load(vm["bam-file"].as<string>().c_str()); // load BAM index
+            int ref; 
+
+            // load index
+            hts_idx_t *idx;
+            idx = sam_index_load3(
+              d.in->file, 
+              (const char *) vm["bam-file"].as<string>().c_str(), 
+              NULL,
+              HTS_IDX_SAVE_REMOTE);
+
             if (idx == 0) {
                 fprintf(stderr, "BAM indexing file is not available.\n");
                 return 1;
@@ -588,11 +651,11 @@ int main(int argc, char *argv[])
                 bam_plp_set_maxcnt(buf->iter, d.max_cnt);
                 f->pileup_buffer = buf;
                 f->ref_pointer = &(d.ref);
-                bam_fetch(d.in->x.bam, idx, ref, d.beg-1, d.end, f, fetch_func);
+                samfetch(d.in, idx, ref, d.beg-1, d.end, f, fetch_func);
                 bam_plbuf_push(0, buf); // finalize pileup
                 bam_plbuf_destroy(buf);
             }
-            bam_index_destroy(idx);
+            hts_idx_destroy(idx);
         }
         if(d.ref) {
             free(d.ref);

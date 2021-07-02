@@ -1,0 +1,21 @@
+name: tests
+on: [push]
+jobs:
+  ubuntu-18_04:
+    runs-on: ubuntu-18.04
+    steps:
+      - run: sudo apt-get install lcov
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '2.7'
+          architecture: 'x64'
+      - name: Build
+        run: mkdir build && (cd build && cmake -DCODE_COVERAGE=ON .. && make)
+      - name: Coverage
+        run: (cd build && make codecoverage)
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: 'build/codecoverage.info'
