@@ -119,19 +119,8 @@ results, one for each library:
     chr	position	reference_base	depth	library_1_name	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}   ...   library_N_name	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}
 
 
-Bugs
-----
+Docker
+------
 
-### I get a segfault when attempting to run on a whole bam file
-
-This is a known bug that will be addressed in future versions. In most
-cases, you will only need read counts on a subset of positions and can
-use `[region]` or `-l` to specify the sites of interest. Should you need
-counts on an entire genome, a workaround is to run `bam-readcount` by
-chromosome and then concatenate the results (e.g. `bam-readcount -f
-ref.fasta some.bam chr1`).
-
-
-
-
+See [docker/README.md](docker/README.md). 
 

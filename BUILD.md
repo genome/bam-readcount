@@ -13,9 +13,9 @@ On a Debian Linux-based system such as Ubuntu
 
     apt install build-essential cmake
 
-will install the required software, or see `Build (Docker)` below.
+will install the required software.
 
-Builds are currently failing under OS X: see `OS X` below.
+Builds are currently failing under OS X.
 
 All required libraries are included in the repository under `vendor/`.
 See [vendor/README.md](vendor/README.md) for more information.
@@ -67,18 +67,3 @@ so `bam-readcount` should be run inside the `test-data` directory to
 find the reference.
 
 
-OS X
-----
-
-OS X builds fail on our High Sierra machine and under GitHub Actions
-with `macos-10.15` (Catalina) and `macos-11` (Big Sur).
-
-When linking Boost, there are pages of errors.
-
-This is also true of versions prior to the samtools-1.10 switch.
-
-
-Todo
-----
-
-Add `URL_HASH` for vendored libraries for CMake verification.
