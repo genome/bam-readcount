@@ -15,8 +15,20 @@ For support, please [search
 questions about `bam-readcount` have been answered there.
 
 
-Build
------
+Installation
+------------
+
+### Docker
+
+The latest release version of `bam-readcount` is available as a Docker image
+on [DockerHub](https://hub.docker.com/r/mgibio/bam-readcount)
+
+    docker pull mgibio/bam-readcount
+
+For details see [docker/README.md](docker/README.md). 
+
+
+### Build
 
 Requires a C++ toolchain and `cmake`. For details see
 [BUILD.md](BUILD.md). 
@@ -117,10 +129,3 @@ With the `-p` option, each output line will have a set of `{}`-delimited
 results, one for each library:
 
     chr	position	reference_base	depth	library_1_name	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}   ...   library_N_name	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}
-
-
-Docker
-------
-
-See [docker/README.md](docker/README.md). 
-
