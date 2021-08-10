@@ -1,0 +1,906 @@
+@ARTICLE{Bonfield2021-et,
+  title    = "{HTSlib}: {C} library for reading/writing high-throughput
+              sequencing data",
+  author   = "Bonfield, James K and Marshall, John and Danecek, Petr and Li,
+              Heng and Ohan, Valeriu and Whitwham, Andrew and Keane, Thomas and
+              Davies, Robert M",
+  abstract = "BACKGROUND: Since the original publication of the VCF and SAM
+              formats, an explosion of software tools have been created to
+              process these data files. To facilitate this a library was
+              produced out of the original SAMtools implementation, with a
+              focus on performance and robustness. The file formats themselves
+              have become international standards under the jurisdiction of the
+              Global Alliance for Genomics and Health. FINDINGS: We present a
+              software library for providing programmatic access to sequencing
+              alignment and variant formats. It was born out of the widely used
+              SAMtools and BCFtools applications. Considerable improvements
+              have been made to the original code plus many new features
+              including newer access protocols, the addition of the CRAM file
+              format, better indexing and iterators, and better use of
+              threading. CONCLUSION: Since the original Samtools release,
+              performance has been considerably improved, with a BAM read-write
+              loop running 5 times faster and BAM to SAM conversion 13 times
+              faster (both using 16 threads, compared to Samtools 0.1.19).
+              Widespread adoption has seen HTSlib downloaded >1 million times
+              from GitHub and conda. The C library has been used directly by an
+              estimated 900 GitHub projects and has been incorporated into
+              Perl, Python, Rust, and R, significantly expanding the number of
+              uses via other languages. HTSlib is open source and is freely
+              available from htslib.org under MIT/BSD license.",
+  journal  = "Gigascience",
+  volume   =  10,
+  number   =  2,
+  month    =  feb,
+  year     =  2021,
+  keywords = "bcftools; data analysis; high-throughput sequencing; next
+              generation sequencing; samtools; variant calling",
+  language = "en"
+}
+
+@ARTICLE{Xie2014-mm,
+  title    = "Age-related mutations associated with clonal hematopoietic
+              expansion and malignancies",
+  author   = "Xie, Mingchao and Lu, Charles and Wang, Jiayin and McLellan,
+              Michael D and Johnson, Kimberly J and Wendl, Michael C and
+              McMichael, Joshua F and Schmidt, Heather K and Yellapantula,
+              Venkata and Miller, Christopher A and Ozenberger, Bradley A and
+              Welch, John S and Link, Daniel C and Walter, Matthew J and
+              Mardis, Elaine R and Dipersio, John F and Chen, Feng and Wilson,
+              Richard K and Ley, Timothy J and Ding, Li",
+  abstract = "Several genetic alterations characteristic of leukemia and
+              lymphoma have been detected in the blood of individuals without
+              apparent hematological malignancies. The Cancer Genome Atlas
+              (TCGA) provides a unique resource for comprehensive discovery of
+              mutations and genes in blood that may contribute to the clonal
+              expansion of hematopoietic stem/progenitor cells. Here, we
+              analyzed blood-derived sequence data from 2,728 individuals from
+              TCGA and discovered 77 blood-specific mutations in
+              cancer-associated genes, the majority being associated with
+              advanced age. Remarkably, 83\% of these mutations were from 19
+              leukemia and/or lymphoma-associated genes, and nine were
+              recurrently mutated (DNMT3A, TET2, JAK2, ASXL1, TP53, GNAS,
+              PPM1D, BCORL1 and SF3B1). We identified 14 additional mutations
+              in a very small fraction of blood cells, possibly representing
+              the earliest stages of clonal expansion in hematopoietic stem
+              cells. Comparison of these findings to mutations in hematological
+              malignancies identified several recurrently mutated genes that
+              may be disease initiators. Our analyses show that the blood cells
+              of more than 2\% of individuals (5-6\% of people older than 70
+              years) contain mutations that may represent premalignant events
+              that cause clonal hematopoietic expansion.",
+  journal  = "Nat. Med.",
+  volume   =  20,
+  number   =  12,
+  pages    = "1472--1478",
+  month    =  dec,
+  year     =  2014,
+  language = "en"
+}
+
+@ARTICLE{Sun2020-fm,
+  title    = "Rapid genomic and phenotypic change in response to climate
+              warming in a widespread plant invader",
+  author   = "Sun, Yan and Bossdorf, Oliver and Grados, Ramon D and Liao,
+              Zhiyong and M{\"u}ller-Sch{\"a}rer, Heinz",
+  abstract = "Predicting plant distributions under climate change is
+              constrained by our limited understanding of potential rapid
+              adaptive evolution. In an experimental evolution study with the
+              invasive common ragweed (Ambrosia artemisiifolia L.) we subjected
+              replicated populations of the same initial genetic composition to
+              simulated climate warming. Pooled DNA sequencing of parental and
+              offspring populations showed that warming populations experienced
+              greater genetic divergence from their parents, than control
+              populations. In a common environment, offspring from warming
+              populations showed more convergent phenotypes in seven out of
+              nine plant traits, with later flowering and larger biomass, than
+              plants from control populations. For both traits, we also found a
+              significantly higher ratio of phenotypic to genetic
+              differentiation across generations for warming than for control
+              populations, indicating stronger response to selection under
+              warming conditions. As a measure for evolutionary rate, the
+              phenotypic and sequence divergence between generations were
+              assessed using the Haldane metric. Our approach combining
+              comparisons between generations (allochronic) and between
+              treatments (synchronic) in an experimental evolutionary field
+              study, and linking population genomic data with phenotyping
+              analyses provided a powerful test to detect rapid responses to
+              selection. Our findings demonstrate that ragweed populations can
+              rapidly evolve in response to climate change within a single
+              generation. Short-term evolutionary responses to climate change
+              may aggravate the impact of some plant invaders in the future and
+              should be considered when making predictions about future
+              distributions and impacts of plant invaders.",
+  journal  = "Glob. Chang. Biol.",
+  volume   =  26,
+  number   =  11,
+  pages    = "6511--6522",
+  month    =  nov,
+  year     =  2020,
+  keywords = " Ambrosia artemisiifolia ; biological invasions; climate change;
+              common ragweed; experimental evolution; phenotypic evolution;
+              selection experiment",
+  language = "en"
+}
+
+@ARTICLE{Anzar2019-vp,
+  title    = "{NeoMutate}: an ensemble machine learning framework for the
+              prediction of somatic mutations in cancer",
+  author   = "Anzar, Irantzu and Sverchkova, Angelina and Stratford, Richard
+              and Clancy, Trevor",
+  abstract = "BACKGROUND: The accurate screening of tumor genomic landscapes
+              for somatic mutations using high-throughput sequencing involves a
+              crucial step in precise clinical diagnosis and targeted therapy.
+              However, the complex inherent features of cancer tissue,
+              especially, tumor genetic intra-heterogeneity coupled with the
+              problem of sequencing and alignment artifacts, makes somatic
+              variant calling a challenging task. Current variant filtering
+              strategies, such as rule-based filtering and consensus voting of
+              different algorithms, have previously helped to increase
+              specificity, although comes at the cost of sensitivity. METHODS:
+              In light of this, we have developed the NeoMutate framework which
+              incorporates 7 supervised machine learning (ML) algorithms to
+              exploit the strengths of multiple variant callers, using a
+              non-redundant set of biological and sequence features. We
+              benchmarked NeoMutate by simulating more than 10,000 bona fide
+              cancer-related mutations into three well-characterized Genome in
+              a Bottle (GIAB) reference samples. RESULTS: A robust and
+              exhaustive evaluation of NeoMutate's performance based on 5-fold
+              cross validation experiments, in addition to 3 independent tests,
+              demonstrated a substantially improved variant detection accuracy
+              compared to any of its individual composite variant callers and
+              consensus calling of multiple tools. CONCLUSIONS: We show here
+              that integrating multiple tools in an ensemble ML layer optimizes
+              somatic variant detection rates, leading to a potentially
+              improved variant selection framework for the diagnosis and
+              treatment of cancer.",
+  journal  = "BMC Med. Genomics",
+  volume   =  12,
+  number   =  1,
+  pages    = "63",
+  month    =  may,
+  year     =  2019,
+  keywords = "Cancer genomics; Machine learning; Precision medicine; Somatic
+              variant detection",
+  language = "en"
+}
+
+@INPROCEEDINGS{Kothen-Hill2018-is,
+  title      = "Deep learning mutation prediction enables early stage lung
+                cancer detection in liquid biopsy",
+  author     = "Kothen-Hill, Steven T and Zviran, Asaf and Schulman, Rafael C
+                and Deochand, Sunil and Gaiti, Federico and Maloney, Dillon and
+                Huang, Kevin Y and Liao, Will and Robine, Nicolas and Omans,
+                Nathaniel D and Landau, Dan A",
+  abstract   = "Somatic cancer mutation detection at ultra-low variant allele
+                frequencies (VAFs) is an unmet challenge that is intractable
+                with current state-of-the-art mutation calling methods.
+                Specifically, the limit of VAF detection is closely related to
+                the depth of coverage, due to the requirement of multiple
+                supporting reads in extant methods, precluding the detection of
+                mutations at VAFs that are orders of magnitude lower than the
+                depth of coverage. Nevertheless, the ability to detect
+                cancer-associated mutations in ultra low VAFs is a fundamental
+                requirement for low-tumor burden cancer diagnostics
+                applications such as early detection, monitoring, and therapy
+                nomination using liquid biopsy methods (cell-free DNA). Here we
+                defined a spatial representation of sequencing information
+                adapted for convolutional architecture that enables variant
+                detection at VAFs, in a manner independent of the depth of
+                sequencing. This method enables the detection of cancer
+                mutations even in VAFs as low as 10x-4^, >2 orders of magnitude
+                below the current state-of-the-art. We validated our method on
+                both simulated plasma and on clinical cfDNA plasma samples from
+                cancer patients and non-cancer controls. This method introduces
+                a new domain within bioinformatics and personalized medicine --
+                somatic whole genome mutation calling for liquid biopsy.",
+  month      =  feb,
+  year       =  2018,
+  conference = "ICLR 2018 Conference"
+}
+
+@ARTICLE{Griffith2015-wx,
+  title    = "Genome Modeling System: A Knowledge Management Platform for
+              Genomics",
+  author   = "Griffith, Malachi and Griffith, Obi L and Smith, Scott M and
+              Ramu, Avinash and Callaway, Matthew B and Brummett, Anthony M and
+              Kiwala, Michael J and Coffman, Adam C and Regier, Allison A and
+              Oberkfell, Ben J and Sanderson, Gabriel E and Mooney, Thomas P
+              and Nutter, Nathaniel G and Belter, Edward A and Du, Feiyu and
+              Long, Robert L and Abbott, Travis E and Ferguson, Ian T and
+              Morton, David L and Burnett, Mark M and Weible, James V and Peck,
+              Joshua B and Dukes, Adam and McMichael, Joshua F and Lolofie,
+              Justin T and Derickson, Brian R and Hundal, Jasreet and Skidmore,
+              Zachary L and Ainscough, Benjamin J and Dees, Nathan D and
+              Schierding, William S and Kandoth, Cyriac and Kim, Kyung H and
+              Lu, Charles and Harris, Christopher C and Maher, Nicole and
+              Maher, Christopher A and Magrini, Vincent J and Abbott, Benjamin
+              S and Chen, Ken and Clark, Eric and Das, Indraniel and Fan, Xian
+              and Hawkins, Amy E and Hepler, Todd G and Wylie, Todd N and
+              Leonard, Shawn M and Schroeder, William E and Shi, Xiaoqi and
+              Carmichael, Lynn K and Weil, Matthew R and Wohlstadter, Richard W
+              and Stiehr, Gary and McLellan, Michael D and Pohl, Craig S and
+              Miller, Christopher A and Koboldt, Daniel C and Walker, Jason R
+              and Eldred, James M and Larson, David E and Dooling, David J and
+              Ding, Li and Mardis, Elaine R and Wilson, Richard K",
+  abstract = "In this work, we present the Genome Modeling System (GMS), an
+              analysis information management system capable of executing
+              automated genome analysis pipelines at a massive scale. The GMS
+              framework provides detailed tracking of samples and data coupled
+              with reliable and repeatable analysis pipelines. The GMS also
+              serves as a platform for bioinformatics development, allowing a
+              large team to collaborate on data analysis, or an individual
+              researcher to leverage the work of others effectively within its
+              data management system. Rather than separating ad-hoc analysis
+              from rigorous, reproducible pipelines, the GMS promotes
+              systematic integration between the two. As a demonstration of the
+              GMS, we performed an integrated analysis of whole genome, exome
+              and transcriptome sequencing data from a breast cancer cell line
+              (HCC1395) and matched lymphoblastoid line (HCC1395BL). These data
+              are available for users to test the software, complete tutorials
+              and develop novel GMS pipeline configurations. The GMS is
+              available at https://github.com/genome/gms.",
+  journal  = "PLoS Comput. Biol.",
+  volume   =  11,
+  number   =  7,
+  pages    = "e1004274",
+  month    =  jul,
+  year     =  2015,
+  language = "en"
+}
+
+@ARTICLE{Kockan2017-to,
+  title    = "{SiNVICT}: ultra-sensitive detection of single nucleotide
+              variants and indels in circulating tumour {DNA}",
+  author   = "Kockan, Can and Hach, Faraz and Sarrafi, Iman and Bell, Robert H
+              and McConeghy, Brian and Beja, Kevin and Haegert, Anne and Wyatt,
+              Alexander W and Volik, Stanislav V and Chi, Kim N and Collins,
+              Colin C and Sahinalp, S Cenk",
+  abstract = "MOTIVATION: Successful development and application of precision
+              oncology approaches require robust elucidation of the genomic
+              landscape of a patient's cancer and, ideally, the ability to
+              monitor therapy-induced genomic changes in the tumour in an
+              inexpensive and minimally invasive manner. Thanks to recent
+              advances in sequencing technologies, 'liquid biopsy', the
+              sampling of patient's bodily fluids such as blood and urine, is
+              considered as one of the most promising approaches to achieve
+              this goal. In many cancer patients, and especially those with
+              advanced metastatic disease, deep sequencing of circulating cell
+              free DNA (cfDNA) obtained from patient's blood yields a mixture
+              of reads originating from the normal DNA and from multiple tumour
+              subclones-called circulating tumour DNA or ctDNA. The ctDNA/cfDNA
+              ratio as well as the proportion of ctDNA originating from
+              specific tumour subclones depend on multiple factors, making
+              comprehensive detection of mutations difficult, especially at
+              early stages of cancer. Furthermore, sensitive and accurate
+              detection of single nucleotide variants (SNVs) and indels from
+              cfDNA is constrained by several factors such as the sequencing
+              errors and PCR artifacts, and mapping errors related to repeat
+              regions within the genome. In this article, we introduce SiNVICT,
+              a computational method that increases the sensitivity and
+              specificity of SNV and indel detection at very low variant allele
+              frequencies. SiNVICT has the capability to handle multiple
+              sequencing platforms with different error properties; it
+              minimizes false positives resulting from mapping errors and other
+              technology specific artifacts including strand bias and low base
+              quality at read ends. SiNVICT also has the capability to perform
+              time-series analysis, where samples from a patient sequenced at
+              multiple time points are jointly examined to report locations of
+              interest where there is a possibility that certain clones were
+              wiped out by some treatment while some subclones gained selective
+              advantage. RESULTS: We tested SiNVICT on simulated data as well
+              as prostate cancer cell lines and cfDNA obtained from
+              castration-resistant prostate cancer patients. On both simulated
+              and biological data, SiNVICT was able to detect SNVs and indels
+              with variant allele percentages as low as 0.5\%. The lowest
+              amounts of total DNA used for the biological data where SNVs and
+              indels could be detected with very high sensitivity were 2.5 ng
+              on the Ion Torrent platform and 10 ng on Illumina. With increased
+              sequencing and mapping accuracy, SiNVICT might be utilized in
+              clinical settings, making it possible to track the progress of
+              point mutations and indels that are associated with resistance to
+              cancer therapies and provide patients personalized treatment. We
+              also compared SiNVICT with other popular SNV callers such as
+              MuTect, VarScan2 and Freebayes. Our results show that SiNVICT
+              performs better than these tools in most cases and allows further
+              data exploration such as time-series analysis on cfDNA sequencing
+              data. AVAILABILITY AND IMPLEMENTATION: SiNVICT is available at:
+              https://sfu-compbio.github.io/sinvictSupplementary information:
+              Supplementary data are available at Bioinformatics online.
+              CONTACT: cenk@sfu.ca.",
+  journal  = "Bioinformatics",
+  volume   =  33,
+  number   =  1,
+  pages    = "26--34",
+  month    =  jan,
+  year     =  2017,
+  language = "en"
+}
+
+@ARTICLE{Alberti2018-wn,
+  title    = "Discriminating a common somatic {ASXL1} mutation (c.1934dup;
+              {p.G646Wfs*12}) from artifact in myeloid malignancies using {NGS}",
+  author   = "Alberti, Michael O and Srivatsan, Sridhar Nonavinkere and Shao,
+              Jin and McNulty, Samantha N and Chang, Gue Su and Miller,
+              Christopher A and Dunlap, Jennifer B and Yang, Fei and Press,
+              Richard D and Gao, Qingsong and Ding, Li and Heusel, Jonathan W
+              and Duncavage, Eric J and Walter, Matthew J",
+  journal  = "Leukemia",
+  volume   =  32,
+  number   =  8,
+  pages    = "1874--1878",
+  month    =  aug,
+  year     =  2018,
+  language = "en"
+}
+
+@ARTICLE{Wyatt2016-si,
+  title    = "Genomic Alterations in {Cell-Free} {DNA} and Enzalutamide
+              Resistance in {Castration-Resistant} Prostate Cancer",
+  author   = "Wyatt, Alexander W and Azad, Arun A and Volik, Stanislav V and
+              Annala, Matti and Beja, Kevin and McConeghy, Brian and Haegert,
+              Anne and Warner, Evan W and Mo, Fan and Brahmbhatt, Sonal and
+              Shukin, Robert and Le Bihan, Stephane and Gleave, Martin E and
+              Nykter, Matti and Collins, Colin C and Chi, Kim N",
+  abstract = "Importance: The molecular landscape underpinning response to the
+              androgen receptor (AR) antagonist enzalutamide in patients with
+              metastatic castration-resistant prostate cancer (mCRPC) is
+              undefined. Consequently, there is an urgent need for practical
+              biomarkers to guide therapy selection and elucidate resistance.
+              Although tissue biopsies are impractical to perform routinely in
+              the majority of patients with mCRPC, the analysis of plasma
+              cell-free DNA (cfDNA) has recently emerged as a minimally
+              invasive method to explore tumor characteristics. Objective: To
+              reveal genomic characteristics from cfDNA associated with
+              clinical outcomes during enzalutamide treatment. Design, Setting,
+              and Participants: Plasma samples were obtained from August 4,
+              2013, to July 31, 2015, at a single academic institution (British
+              Columbia Cancer Agency) from 65 patients with mCRPC. We collected
+              temporal plasma samples (at baseline, 12 weeks, end of treatment)
+              for circulating cfDNA and performed array comparative genomic
+              hybridization copy number profiling and deep AR gene sequencing.
+              Samples collected at end of treatment were also subjected to
+              targeted sequencing of 19 prostate cancer-associated genes.
+              Exposure: Enzalutamide, 160 mg, daily orally. Main Outcomes and
+              Measures: Prostate-specific antigen response rate (decline
+              $\geq$50\% from baseline confirmed $\geq$3 weeks later).
+              Radiographic (as per Prostate Cancer Working Group 2 Criteria)
+              and/or clinical progression (defined as worsening disease-related
+              symptoms necessitating a change in anticancer therapy and/or
+              deterioration in Eastern Cooperative Group performance status
+              $\geq$2 levels). Results: The 65 patients had a median
+              (interquartile range) age of 74 (68-79) years. Prostate-specific
+              antigen response rate to enzalutamide treatment was 38\% (25 of
+              65), while median clinical/radiographic progression-free survival
+              was 3.5 (95\% CI, 2.1-5.0) months. Cell-free DNA was isolated
+              from 122 of 125 plasma samples, and targeted sequencing was
+              successful in 119 of 122. AR mutations and/or copy number
+              alterations were robustly detected in 48\% (31 of 65) and 60\%
+              (18 of 30) of baseline and progression samples, respectively.
+              Detection of AR amplification, heavily mutated AR ($\geq$2
+              mutations), and RB1 loss were associated with worse
+              progression-free survival, with hazard ratios of 2.92 (95\% CI,
+              1.59-5.37), 3.94 (95\% CI, 1.46-10.64), and 4.46 (95\% CI,
+              2.28-8.74), respectively. AR mutations exhibited clonal selection
+              during treatment, including an increase in
+              glucocorticoid-sensitive AR L702H and promiscuous AR T878A in
+              patients with prior abiraterone treatment. At the time of
+              progression, cfDNA sequencing revealed mutations or copy number
+              changes in all patients tested, including clinically actionable
+              alterations in DNA damage repair genes and PI3K pathway genes,
+              and a high frequency (4 of 14) of activating CTNNB1 mutations.
+              Conclusions and Relevance: Clinically informative genomic
+              profiling of cfDNA was feasible in nearly all patients with mCRPC
+              and can provide important insights into enzalutamide response and
+              resistance.",
+  journal  = "JAMA Oncol",
+  volume   =  2,
+  number   =  12,
+  pages    = "1598--1606",
+  month    =  dec,
+  year     =  2016,
+  language = "en"
+}
+
+@ARTICLE{Griffith2015-gz,
+  title    = "Optimizing cancer genome sequencing and analysis",
+  author   = "Griffith, Malachi and Miller, Christopher A and Griffith, Obi L
+              and Krysiak, Kilannin and Skidmore, Zachary L and Ramu, Avinash
+              and Walker, Jason R and Dang, Ha X and Trani, Lee and Larson,
+              David E and Demeter, Ryan T and Wendl, Michael C and McMichael,
+              Joshua F and Austin, Rachel E and Magrini, Vincent and McGrath,
+              Sean D and Ly, Amy and Kulkarni, Shashikant and Cordes, Matthew G
+              and Fronick, Catrina C and Fulton, Robert S and Maher,
+              Christopher A and Ding, Li and Klco, Jeffery M and Mardis, Elaine
+              R and Ley, Timothy J and Wilson, Richard K",
+  abstract = "Tumors are typically sequenced to depths of 75-100$\times$
+              (exome) or 30-50$\times$ (whole genome). We demonstrate that
+              current sequencing paradigms are inadequate for tumors that are
+              impure, aneuploid or clonally heterogeneous. To reassess optimal
+              sequencing strategies, we performed ultra-deep (up to
+              ~312$\times$) whole genome sequencing (WGS) and exome capture (up
+              to ~433$\times$) of a primary acute myeloid leukemia, its
+              subsequent relapse, and a matched normal skin sample. We tested
+              multiple alignment and variant calling algorithms and validated
+              ~200,000 putative SNVs by sequencing them to depths of
+              ~1,000$\times$. Additional targeted sequencing provided over
+              10,000$\times$ coverage and ddPCR assays provided up to
+              ~250,000$\times$ sampling of selected sites. We evaluated the
+              effects of different library generation approaches, depth of
+              sequencing, and analysis strategies on the ability to effectively
+              characterize a complex tumor. This dataset, representing the most
+              comprehensively sequenced tumor described to date, will serve as
+              an invaluable community resource (dbGaP accession id phs000159).",
+  journal  = "Cell Syst",
+  volume   =  1,
+  number   =  3,
+  pages    = "210--223",
+  month    =  sep,
+  year     =  2015,
+  language = "en"
+}
+
+@ARTICLE{Jensen2017-gp,
+  title    = "The {NCI} Genomic Data Commons as an engine for precision
+              medicine",
+  author   = "Jensen, Mark A and Ferretti, Vincent and Grossman, Robert L and
+              Staudt, Louis M",
+  abstract = "The National Cancer Institute Genomic Data Commons (GDC) is an
+              information system for storing, analyzing, and sharing genomic
+              and clinical data from patients with cancer. The recent
+              high-throughput sequencing of cancer genomes and transcriptomes
+              has produced a big data problem that precludes many cancer
+              biologists and oncologists from gleaning knowledge from these
+              data regarding the nature of malignant processes and the
+              relationship between tumor genomic profiles and treatment
+              response. The GDC aims to democratize access to cancer genomic
+              data and to foster the sharing of these data to promote precision
+              medicine approaches to the diagnosis and treatment of cancer.",
+  journal  = "Blood",
+  volume   =  130,
+  number   =  4,
+  pages    = "453--459",
+  month    =  jul,
+  year     =  2017,
+  language = "en"
+}
+
+@ARTICLE{Depledge2018-mn,
+  title    = "High Viral Diversity and Mixed Infections in Cerebral Spinal
+              Fluid From Cases of Varicella Zoster Virus Encephalitis",
+  author   = "Depledge, Daniel P and Cudini, Juliana and Kundu, Samit and
+              Atkinson, Claire and Brown, Julianne R and Haque, Tanzina and
+              Houldcroft, Charlotte J and Koay, Evelyn S and McGill, Fiona and
+              Milne, Richard and Whitfield, Tom and Tang, Julian W and
+              Underhill, Gillian and Bergstrom, Tomas and Norberg, Peter and
+              Goldstein, Richard and Solomon, Tom and Breuer, Judith",
+  abstract = "Background: Varicella zoster virus (VZV) may cause encephalitis,
+              both with and without rash. Here we investigate whether viruses
+              recovered from the central nervous system (CNS; encephalitis or
+              meningitis) differ genetically from those recovered from non-CNS
+              samples. Methods: Enrichment-based deep sequencing of 45 VZV
+              genomes from cerebral spinal fluid (CSF), plasma, bronchoalveolar
+              lavage (BAL), and vesicles was carried out with samples collected
+              from 34 patients with and without VZV infection of the CNS.
+              Results: Viral sequences from multiple sites in the same patient
+              were identical at the consensus level. Virus from vesicle fluid
+              and CSF in cases of meningitis showed low-level diversity. By
+              contrast, plasma, BAL, and encephalitis had higher numbers of
+              variant alleles. Two CSF-encephalitis samples had high genetic
+              diversity, with variant frequency patterns typical of mixed
+              infections with different clades. Conclusions: Low viral genetic
+              diversity in vesicle fluid is compatible with previous
+              observations that VZV skin lesions arise from single or low
+              numbers of virions. A similar result was observed in VZV from
+              cases of VZV meningitis, a generally self-limiting infection. CSF
+              from cases of encephalitis had higher diversity with evidence for
+              mixed clade infections in 2 cases. We hypothesize that
+              reactivation from multiple neurons may contribute to the
+              pathogenesis of VZV encephalitis.",
+  journal  = "J. Infect. Dis.",
+  volume   =  218,
+  number   =  10,
+  pages    = "1592--1601",
+  month    =  oct,
+  year     =  2018,
+  language = "en"
+}
+
+@ARTICLE{Koboldt2013-cm,
+  title    = "Using {VarScan} 2 for Germline Variant Calling and Somatic
+              Mutation Detection",
+  author   = "Koboldt, Daniel C and Larson, David E and Wilson, Richard K",
+  abstract = "The identification of small sequence variants remains a
+              challenging but critical step in the analysis of next-generation
+              sequencing data. Our variant calling tool, VarScan 2, employs
+              heuristic and statistic thresholds based on user-defined criteria
+              to call variants using SAMtools mpileup data as input. Here, we
+              provide guidelines for generating that input, and describe
+              protocols for using VarScan 2 to (1) identify germline variants
+              in individual samples; (2) call somatic mutations, copy number
+              alterations, and LOH events in tumor-normal pairs; and (3)
+              identify germline variants, de novo mutations, and Mendelian
+              inheritance errors in family trios. Further, we describe a
+              strategy for variant filtering that removes likely false
+              positives associated with common sequencing- and
+              alignment-related artifacts.",
+  journal  = "Curr. Protoc. Bioinformatics",
+  volume   =  44,
+  pages    = "15.4.1--17",
+  month    =  dec,
+  year     =  2013,
+  keywords = "indels; mutation detection; next-generation sequencing; snvs;
+              trio calling; variant calling; varscan 2",
+  language = "en"
+}
+
+@ARTICLE{Paiva2020-za,
+  title    = "Multiple Introductions Followed by Ongoing Community Spread of
+              {SARS-CoV-2} at One of the Largest Metropolitan Areas of
+              Northeast Brazil",
+  author   = "Paiva, Marcelo Henrique Santos and Guedes, Duschinka Ribeiro
+              Duarte and Docena, C{\'a}ssia and Bezerra, Matheus Filgueira and
+              Dezordi, Filipe Zimmer and Machado, La{\'\i}s Ceschini and
+              Krokovsky, Larissa and Helvecio, Elisama and da Silva, Alexandre
+              Freitas and Vasconcelos, Luydson Richardson Silva and Rezende,
+              Antonio Mauro and da Silva, Severino Jefferson Ribeiro and Sales,
+              Kamila Gaud{\^e}ncio da Silva and de S{\'a}, Bruna Santos Lima
+              Figueiredo and da Cruz, Derciliano Lopes and Cavalcanti, Claudio
+              Eduardo and Neto, Armando de Menezes and da Silva, Caroline
+              Targino Alves and Mendes, Renata Pess{\^o}a Germano and da Silva,
+              Maria Almerice Lopes and Gr{\"a}f, Tiago and Resende, Paola
+              Cristina and Bello, Gonzalo and Barros, Michelle da Silva and do
+              Nascimento, Wheverton Ricardo Correia and Arcoverde, Rodrigo
+              Moraes Loyo and Bezerra, Luciane Caroline Albuquerque and Filho,
+              Sinval Pinto Brand{\~a}o and Ayres, Const{\^a}ncia Fl{\'a}via
+              Junqueira and Wallau, Gabriel Luz",
+  abstract = "Multiple epicenters of the SARS-CoV-2 pandemic have emerged since
+              the first pneumonia cases in Wuhan, China, such as Italy, USA,
+              and Brazil. Brazil is the third-most affected country worldwide,
+              but genomic sequences of SARS-CoV-2 strains are mostly restricted
+              to states from the Southeast region. Pernambuco state, located in
+              the Northeast region, is the sixth most affected Brazilian state,
+              but very few genomic sequences from the strains circulating in
+              this region are available. We sequenced 101 strains of SARS-CoV-2
+              from patients presenting Covid-19 symptoms that reside in
+              Pernambuco. Phylogenetic reconstructions revealed that all
+              genomes belong to the B lineage and most of the samples (88\%)
+              were classified as lineage B.1.1. We detected multiple viral
+              introductions from abroad (likely from Europe) as well as six
+              local B.1.1 clades composed by Pernambuco only strains. Local
+              clades comprise sequences from the capital city (Recife) and
+              other country-side cities, corroborating the community spread
+              between different municipalities of the state. These findings
+              demonstrate that different from Southeastern Brazilian states
+              where the epidemics were majorly driven by one dominant lineage
+              (B.1.1.28 or B.1.1.33), the early epidemic phase at the
+              Pernambuco state was driven by multiple B.1.1 lineages seeded
+              through both national and international traveling.",
+  journal  = "Viruses",
+  volume   =  12,
+  number   =  12,
+  month    =  dec,
+  year     =  2020,
+  keywords = "Brazil; SARS-CoV2; coronavirus; outbreak; phylogenetics",
+  language = "en"
+}
+
+@ARTICLE{Mondal2021-gw,
+  title    = "A direct capture method for purification and detection of viral
+              nucleic acid enables epidemiological surveillance of {SARS-CoV-2}",
+  author   = "Mondal, Subhanjan and Feirer, Nathan and Brockman, Michael and
+              Preston, Melanie A and Teter, Sarah J and Ma, Dongping and
+              Goueli, Said A and Moorji, Sameer and Saul, Brigitta and Cali,
+              James J",
+  abstract = "Studies have demonstrated that SARS-CoV-2 RNA can be detected in
+              the feces of infected individuals. This finding spurred
+              investigation into using wastewater-based epidemiology (WBE) to
+              monitor SARS-CoV-2 RNA and track the appearance and spread of
+              COVID-19 in communities. SARS-CoV-2 is present at low levels in
+              wastewater, making sample concentration a prerequisite for
+              sensitive detection and utility in WBE. Whereas common methods
+              for isolating viral genetic material are biased toward intact
+              virus isolation, it is likely that a relatively low percentage of
+              the total SARS-CoV-2 RNA genome in wastewater is contained within
+              intact virions. Therefore, we hypothesized that a direct unbiased
+              total nucleic acid(TNA) extraction method could overcome the
+              cumbersome protocols, variability and low recovery rates
+              associated with the former methods. This led to development of a
+              simple, rapid, and modular alternative to existing purification
+              methods. In an initial concentration step, chaotropic agents are
+              added to raw sewage allowing binding of nucleic acid from free
+              nucleoprotein complexes, partially intact, and intact virions to
+              a silica matrix. The eluted nucleic acid is then purified using
+              manual or semi-automated methods. RT-qPCR enzyme mixes were
+              formulated that demonstrate substantial inhibitor resistance. In
+              addition, multiplexed probe-based RT-qPCR assays detecting the
+              N1, N2 (nucleocapsid) and E (envelope) gene fragments of
+              SARS-CoV-2 were developed. The RT-qPCR assays also contain
+              primers and probes to detect Pepper Mild Mottle Virus (PMMoV), a
+              fecal indicator RNA virus present in wastewater, and an exogenous
+              control RNA to measure effects of RT-qPCR inhibitors. Using this
+              workflow, we monitored wastewater samples from three wastewater
+              treatment plants (WWTP) in Dane County, Wisconsin. We also
+              successfully sequenced a subset of samples to ensure
+              compatibility with a SARS-CoV-2 amplicon panel and demonstrated
+              the potential for SARS-CoV-2 variant detection. Data obtained
+              here underscore the potential for wastewater surveillance of
+              SARS-CoV-2 and other infectious agents in communities.",
+  journal  = "Sci. Total Environ.",
+  volume   =  795,
+  pages    = "148834",
+  month    =  jul,
+  year     =  2021,
+  keywords = "COVID-19; Nucleic acid purification; RT-qPCR; SARS-CoV-2;
+              Wastewater; Wastewater-based epidemiology",
+  language = "en"
+}
+
+@ARTICLE{Cancer_Genome_Atlas_Research_Network2013-kd,
+  title    = "Genomic and epigenomic landscapes of adult de novo acute myeloid
+              leukemia",
+  author   = "{Cancer Genome Atlas Research Network} and Ley, Timothy J and
+              Miller, Christopher and Ding, Li and Raphael, Benjamin J and
+              Mungall, Andrew J and Robertson, A Gordon and Hoadley, Katherine
+              and Triche, Jr, Timothy J and Laird, Peter W and Baty, Jack D and
+              Fulton, Lucinda L and Fulton, Robert and Heath, Sharon E and
+              Kalicki-Veizer, Joelle and Kandoth, Cyriac and Klco, Jeffery M
+              and Koboldt, Daniel C and Kanchi, Krishna-Latha and Kulkarni,
+              Shashikant and Lamprecht, Tamara L and Larson, David E and Lin,
+              Ling and Lu, Charles and McLellan, Michael D and McMichael,
+              Joshua F and Payton, Jacqueline and Schmidt, Heather and Spencer,
+              David H and Tomasson, Michael H and Wallis, John W and Wartman,
+              Lukas D and Watson, Mark A and Welch, John and Wendl, Michael C
+              and Ally, Adrian and Balasundaram, Miruna and Birol, Inanc and
+              Butterfield, Yaron and Chiu, Readman and Chu, Andy and Chuah,
+              Eric and Chun, Hye-Jung and Corbett, Richard and Dhalla, Noreen
+              and Guin, Ranabir and He, An and Hirst, Carrie and Hirst, Martin
+              and Holt, Robert A and Jones, Steven and Karsan, Aly and Lee,
+              Darlene and Li, Haiyan I and Marra, Marco A and Mayo, Michael and
+              Moore, Richard A and Mungall, Karen and Parker, Jeremy and
+              Pleasance, Erin and Plettner, Patrick and Schein, Jacquie and
+              Stoll, Dominik and Swanson, Lucas and Tam, Angela and Thiessen,
+              Nina and Varhol, Richard and Wye, Natasja and Zhao, Yongjun and
+              Gabriel, Stacey and Getz, Gad and Sougnez, Carrie and Zou, Lihua
+              and Leiserson, Mark D M and Vandin, Fabio and Wu, Hsin-Ta and
+              Applebaum, Frederick and Baylin, Stephen B and Akbani, Rehan and
+              Broom, Bradley M and Chen, Ken and Motter, Thomas C and Nguyen,
+              Khanh and Weinstein, John N and Zhang, Nianziang and Ferguson,
+              Martin L and Adams, Christopher and Black, Aaron and Bowen, Jay
+              and Gastier-Foster, Julie and Grossman, Thomas and Lichtenberg,
+              Tara and Wise, Lisa and Davidsen, Tanja and Demchok, John A and
+              Shaw, Kenna R Mills and Sheth, Margi and Sofia, Heidi J and Yang,
+              Liming and Downing, James R and Eley, Greg",
+  abstract = "BACKGROUND: Many mutations that contribute to the pathogenesis of
+              acute myeloid leukemia (AML) are undefined. The relationships
+              between patterns of mutations and epigenetic phenotypes are not
+              yet clear. METHODS: We analyzed the genomes of 200 clinically
+              annotated adult cases of de novo AML, using either whole-genome
+              sequencing (50 cases) or whole-exome sequencing (150 cases),
+              along with RNA and microRNA sequencing and DNA-methylation
+              analysis. RESULTS: AML genomes have fewer mutations than most
+              other adult cancers, with an average of only 13 mutations found
+              in genes. Of these, an average of 5 are in genes that are
+              recurrently mutated in AML. A total of 23 genes were
+              significantly mutated, and another 237 were mutated in two or
+              more samples. Nearly all samples had at least 1 nonsynonymous
+              mutation in one of nine categories of genes that are almost
+              certainly relevant for pathogenesis, including
+              transcription-factor fusions (18\% of cases), the gene encoding
+              nucleophosmin (NPM1) (27\%), tumor-suppressor genes (16\%),
+              DNA-methylation-related genes (44\%), signaling genes (59\%),
+              chromatin-modifying genes (30\%), myeloid transcription-factor
+              genes (22\%), cohesin-complex genes (13\%), and
+              spliceosome-complex genes (14\%). Patterns of cooperation and
+              mutual exclusivity suggested strong biologic relationships among
+              several of the genes and categories. CONCLUSIONS: We identified
+              at least one potential driver mutation in nearly all AML samples
+              and found that a complex interplay of genetic events contributes
+              to AML pathogenesis in individual patients. The databases from
+              this study are widely available to serve as a foundation for
+              further investigations of AML pathogenesis, classification, and
+              risk stratification. (Funded by the National Institutes of
+              Health.).",
+  journal  = "N. Engl. J. Med.",
+  volume   =  368,
+  number   =  22,
+  pages    = "2059--2074",
+  month    =  may,
+  year     =  2013,
+  language = "en"
+}
+
+@ARTICLE{Dreyer2020-zj,
+  title    = "Detection of low-frequency resistance-mediating {SNPs} in
+              next-generation sequencing data of Mycobacterium tuberculosis
+              complex strains with {binoSNP}",
+  author   = "Dreyer, Viola and Utpatel, Christian and Kohl, Thomas A and
+              Barilar, Ivan and Gr{\"o}schel, Matthias I and Feuerriegel, Silke
+              and Niemann, Stefan",
+  abstract = "Accurate drug resistance detection is key for guiding effective
+              tuberculosis treatment. While genotypic resistance can be rapidly
+              detected by molecular methods, their application is challenged by
+              mixed mycobacterial populations comprising both susceptible and
+              resistant cells (heteroresistance). For this, next-generation
+              sequencing (NGS) based approaches promise the determination of
+              variants even at low frequencies. However, accurate methods for a
+              valid detection of low-frequency variants in NGS data are
+              currently lacking. To tackle this problem, we developed the
+              variant detection tool binoSNP which allows the determination of
+              low-frequency single nucleotide polymorphisms (SNPs) in NGS
+              datasets from Mycobacterium tuberculosis complex (MTBC) strains.
+              By taking a reference-mapped file as input, binoSNP evaluates
+              each genomic position of interest using a binomial test
+              procedure. binoSNP was validated using in-silico, in-vitro, and
+              serial patient isolates datasets comprising varying genomic
+              coverage depths (100-500$\times$) and SNP allele frequencies
+              (1-30\%). Overall, the detection limit for low-frequency SNPs
+              depends on the combination of coverage depth and allele frequency
+              of the resistance-associated mutation. binoSNP allows for valid
+              detection of resistance associated SNPs at a 1\% frequency with a
+              coverage $\geq$400$\times$. In conclusion, binoSNP provides a
+              valid approach to detect low-frequency resistance-mediating SNPs
+              in NGS data from clinical MTBC strains. It can be implemented in
+              automated, end-user friendly analysis tools for NGS data and is a
+              step forward towards individualized TB therapy.",
+  journal  = "Sci. Rep.",
+  volume   =  10,
+  number   =  1,
+  pages    = "7874",
+  month    =  may,
+  year     =  2020,
+  language = "en"
+}
+
+@ARTICLE{Sandmann2018-hq,
+  title    = "appreci8: a pipeline for precise variant calling integrating 8
+              tools",
+  author   = "Sandmann, Sarah and Karimi, Mohsen and de Graaf, Aniek O and
+              Rohde, Christian and G{\"o}llner, Stefanie and Varghese, Julian
+              and Ernsting, Jan and Walldin, Gunilla and van der Reijden, Bert
+              A and M{\"u}ller-Tidow, Carsten and Malcovati, Luca and
+              Hellstr{\"o}m-Lindberg, Eva and Jansen, Joop H and Dugas, Martin",
+  abstract = "Motivation: The application of next-generation sequencing in
+              research and particularly in clinical routine requires valid
+              variant calling results. However, evaluation of several commonly
+              used tools has pointed out that not a single tool meets this
+              requirement. False positive as well as false negative calls
+              necessitate additional experiments and extensive manual work.
+              Intelligent combination and output filtration of different tools
+              could significantly improve the current situation. Results: We
+              developed appreci8, an automatic variant calling pipeline for
+              calling single nucleotide variants and short indels by combining
+              and filtering the output of eight open-source variant calling
+              tools, based on a novel artifact- and polymorphism score.
+              Appreci8 was trained on two data sets from patients with
+              myelodysplastic syndrome, covering 165 Illumina samples.
+              Subsequently, appreci8's performance was tested on five
+              independent data sets, covering 513 samples. Variation in
+              sequencing platform, target region and disease entity was
+              considered. All calls were validated by re-sequencing on the same
+              platform, a different platform or expert-based review.
+              Sensitivity of appreci8 ranged between 0.93 and 1.00, while
+              positive predictive value ranged between 0.65 and 1.00. In all
+              cases, appreci8 showed superior performance compared to any
+              evaluated alternative approach. Availability and implementation:
+              Appreci8 is freely available at
+              https://hub.docker.com/r/wwuimi/appreci8/. Sequencing data (BAM
+              files) of the 678 patients analyzed with appreci8 have been
+              deposited into the NCBI Sequence Read Archive (BioProjectID:
+              388411; https://www.ncbi.nlm.nih.gov/bioproject/PRJNA388411).
+              Supplementary information: Supplementary data are available at
+              Bioinformatics online.",
+  journal  = "Bioinformatics",
+  volume   =  34,
+  number   =  24,
+  pages    = "4205--4212",
+  month    =  dec,
+  year     =  2018,
+  language = "en"
+}
+
+@ARTICLE{Miller2018-od,
+  title    = "Resistance-promoting effects of ependymoma treatment revealed
+              through genomic analysis of multiple recurrences in a single
+              patient",
+  author   = "Miller, Christopher A and Dahiya, Sonika and Li, Tiandao and
+              Fulton, Robert S and Smyth, Matthew D and Dunn, Gavin P and
+              Rubin, Joshua B and Mardis, Elaine R",
+  abstract = "As in other brain tumors, multiple recurrences after complete
+              resection and irradiation of supratentorial ependymoma are common
+              and frequently result in patient death. This standard-of-care
+              treatment was established in the pregenomic era without the
+              ability to evaluate the effect that mutagenic therapies may exert
+              on tumor evolution and in promoting resistance, recurrence, and
+              death. We seized a rare opportunity to characterize treatment
+              effects and the evolution of a single patient's ependymoma across
+              four recurrences after different therapies. A combination of
+              high-depth whole-genome and exome-based DNA sequencing of
+              germline and tumor specimens, RNA sequencing of tumor specimens,
+              and advanced computational analyses were used. Treatment with
+              radiation and chemotherapies resulted in a substantial increase
+              in mutational burden and diversification of the tumor subclonal
+              architecture without eradication of the founding clone. Notable
+              somatic alterations included a MEN1 driver, several epigenetic
+              modifiers, and therapy-induced mutations that impacted multiple
+              other cancer-relevant pathways and altered the neoantigen
+              landscape. These genomic data provided new mechanistic insights
+              into the genesis of ependymoma and pathways of resistance. They
+              also revealed that radiation and chemotherapy were significant
+              forces in shaping the increased subclonal complexity of each
+              tumor recurrence while also failing to eradicate the founding
+              clone. This raises the question of whether standard-of-care
+              treatments have similar consequences in other patients with
+              ependymoma and other types of brain tumors. If so, the
+              perspective obtained by real-time genomic characterization of a
+              tumor may be essential for making effective patient-specific and
+              adaptive clinical decisions.",
+  journal  = "Cold Spring Harb Mol Case Stud",
+  volume   =  4,
+  number   =  2,
+  month    =  apr,
+  year     =  2018,
+  keywords = "ependymoma; neoplasm of the central nervous system; neoplasm of
+              the nervous system",
+  language = "en"
+}
+
+@ARTICLE{Ainscough2018-yp,
+  title    = "A deep learning approach to automate refinement of somatic
+              variant calling from cancer sequencing data",
+  author   = "Ainscough, Benjamin J and Barnell, Erica K and Ronning, Peter and
+              Campbell, Katie M and Wagner, Alex H and Fehniger, Todd A and
+              Dunn, Gavin P and Uppaluri, Ravindra and Govindan, Ramaswamy and
+              Rohan, Thomas E and Griffith, Malachi and Mardis, Elaine R and
+              Swamidass, S Joshua and Griffith, Obi L",
+  abstract = "Cancer genomic analysis requires accurate identification of
+              somatic variants in sequencing data. Manual review to refine
+              somatic variant calls is required as a final step after automated
+              processing. However, manual variant refinement is time-consuming,
+              costly, poorly standardized, and non-reproducible. Here, we
+              systematized and standardized somatic variant refinement using a
+              machine learning approach. The final model incorporates 41,000
+              variants from 440 sequencing cases. This model accurately
+              recapitulated manual refinement labels for three independent
+              testing sets (13,579 variants) and accurately predicted somatic
+              variants confirmed by orthogonal validation sequencing data
+              (212,158 variants). The model improves on manual somatic
+              refinement by reducing bias on calls otherwise subject to high
+              inter-reviewer variability.",
+  journal  = "Nat. Genet.",
+  volume   =  50,
+  number   =  12,
+  pages    = "1735--1743",
+  month    =  dec,
+  year     =  2018,
+  language = "en"
+}
+
+@ARTICLE{Muller2018-vy,
+  title    = "{CONICS} integrates {scRNA-seq} with {DNA} sequencing to map gene
+              expression to tumor sub-clones",
+  author   = "M{\"u}ller, S{\"o}ren and Cho, Ara and Liu, Siyuan J and Lim,
+              Daniel A and Diaz, Aaron",
+  abstract = "Motivation: Single-cell RNA-sequencing (scRNA-seq) has enabled
+              studies of tissue composition at unprecedented resolution.
+              However, the application of scRNA-seq to clinical cancer samples
+              has been limited, partly due to a lack of scRNA-seq algorithms
+              that integrate genomic mutation data. Results: To address this,
+              we present. CONICS: COpy-Number analysis In single-Cell
+              RNA-Sequencing. CONICS is a software tool for mapping gene
+              expression from scRNA-seq to tumor clones and phylogenies, with
+              routines enabling: the quantitation of copy-number alterations in
+              scRNA-seq, robust separation of neoplastic cells from
+              tumor-infiltrating stroma, inter-clone differential-expression
+              analysis and intra-clone co-expression analysis. Availability and
+              implementation: CONICS is written in Python and R, and is
+              available from https://github.com/diazlab/CONICS. Supplementary
+              information: Supplementary data are available at Bioinformatics
+              online.",
+  journal  = "Bioinformatics",
+  volume   =  34,
+  number   =  18,
+  pages    = "3217--3219",
+  month    =  sep,
+  year     =  2018,
+  language = "en"
+}
