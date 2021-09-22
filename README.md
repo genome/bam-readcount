@@ -4,10 +4,14 @@ bam-readcount
 ![tests](https://github.com/seqfu/bam-readcount/actions/workflows/tests.yml/badge.svg?branch=samtools-1.10)
 ![coverage](https://coveralls.io/repos/seqfu/bam-readcount/badge.svg?branch=samtools-1.10&service=github)
 
+`bam-readcount` is a utility that runs on a `BAM` or `CRAM` file and generates low-level information about
+sequencing data at specific nucleotide positions. Its outputs include observed bases,
+readcounts, summarized mapping and base qualities, strandedness information, 
+mismatch counts, and position within the reads. (see "Output" section below)
 
-`bam-readcount` runs on a `BAM` or `CRAM` file and generates metrics at
-single nucleotide positions. These metrics can be useful for filtering
-out false positive variant calls.
+Originally designed to help filter genomic mutation calls, the metrics it outputs 
+are also useful as input for variant detection tools and for resolving ambiguity between
+variant callers.
 
 For support, please [search
 `bam-readcount`](https://www.biostars.org/post/search/?query=bam-readcount) on
