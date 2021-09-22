@@ -61,22 +61,28 @@ input for variant detection tools and for resolving ambiguity between
 variant callers [@Koboldt2013-cm; @Kothen-Hill2018-is]. In addition, it
 has found broad applicability in diverse fields including tumor
 evolution, single-cell genomics, climate change ecology, and tracking
-community spread of SARS-CoV-2. [@Paiva2020-za; @Miller2018-od;
+community spread of SARS-CoV-2 [@Paiva2020-za; @Miller2018-od;
 @Muller2018-vy; @Sun2020-fm].
 
 # Statement of need
 
-Though many tools exist that can call simple genotypes from sequence
-data, there is frequently a need for rapid and comprehensive reporting
-of sequencing metrics at specific genomic locations. The `bam-readcount`
-tool reports 15 metrics chosen specifically because they are known to be
-associated with the quality of sequence reads and individual base calls.
-These include summarized mapping and base qualities, strandedness
-information, mismatch counts, and position within the reads. This
-information can be useful in a large number of contexts, with one
-frequent application being variant filtering and ensemble variant
-calling situations where consistent, tool-agnostic metrics are useful
-[@Anzar2019-vp; @Kothen-Hill2018-is; @Kockan2017-to].
+Bam-readcount is designed to meet two related needs related to genomic
+sequence analysis. The first is rapid genotyping of specific locations from
+a bam file, reporting not just the dominant bases, but counts of
+all bases. One context in which this is important is residual disease
+monitoring, where base changes with frequency below the sensitivity of
+standard genomic variant callers may still be informative. The second
+is reporting 15 key metrics for each reported base, including summarized
+mapping and base qualities, strandedness information, mismatch counts,
+and position within the reads. This information can be useful in a large
+number of contexts, with one frequent application being variant filtering,
+to remove false-positive calls, either with straightforward application of
+heuristic cutoffs or with semi-automated machine-learning approaches
+[@Ainscough2018-yp; @Koboldt2013-us]. Another common use case is in ensemble
+variant calling situations where there is disagreement about base counts or
+key metrics at particular sites. Bam-readcount can be used to produce
+consistent, tool-agnostic metrics that are helpful in resolving such
+ambiguity [@Anzar2019-vp; @Kothen-Hill2018-is; @Kockan2017-to].
 
 # Implementation and results
 
@@ -86,7 +92,7 @@ here utilizes an updated version of HTSlib to support rapid CRAM file
 access [@Bonfield2021-et]. This has also improved performance, and
 `bam-readcount` can report on 100,000 randomly selected sites from a 30x
 whole-genome sequencing (WGS) BAM in around 5 minutes
-[@Griffith2015-gz]. It’s performance scales nearly linearly with the
+[@Griffith2015-gz]. Its performance scales nearly linearly with the
 number of genomic sites queried and average sequencing depth (Figure 1).
 Querying the same 100,000 sites from a BAM with 300x WGS takes 48
 minutes, roughly 10x as long.  
@@ -117,7 +123,7 @@ as part of the VAtools package
 
 `bam-readcount` plays a central role in many genomic pipelines and there
 is a rich ecosystem of tools built on top of it that enable discovery.
-It has many uses in benchmarking and variant discovery, and it’s
+It has many uses in benchmarking and variant discovery, and its
 feature-rich output has enabled deep learning approaches to variant
 calling and filtering [@Ainscough2018-yp; @Anzar2019-vp]. In cancer
 genomics, it has been used for understanding pre-leukemic phenotypes and
