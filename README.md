@@ -9,7 +9,7 @@ sequencing data at specific nucleotide positions. Its outputs include observed b
 readcounts, summarized mapping and base qualities, strandedness information, 
 mismatch counts, and position within the reads. (see "Output" section below)
 
-Originally designed to help filter genomic mutation calls, the metrics it outputs 
+Originally designed to help filter genomic mutation calls, the metrics `bam-readcount` outputs 
 are also useful as input for variant detection tools and for resolving ambiguity between
 variant callers.
 
