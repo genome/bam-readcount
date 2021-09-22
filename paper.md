@@ -156,8 +156,9 @@ and is shared under a MIT license to enable broad re-use.
 
 The WGS data used for benchmarking is available through dbGaP study
 [phs000159](https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000159),
-under sample id `452198/AML31`. An archived snapshot of this 1.0 release
-is available at
+under sample id `452198/AML31`. The summary data and scripts used to generate the figure are
+available at https://github.com/genome/bam-readcount/tree/joss-paper/figures.
+An archived snapshot of this 1.0 release is available at
 [https://doi.org/10.5281/zenodo.5142454](https://doi.org/10.5281/zenodo.5142454)
 
 # Authors' contributions
