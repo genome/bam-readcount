@@ -121,26 +121,28 @@ as part of the VAtools package
 
 # Conclusions
 
-`bam-readcount` plays a central role in many genomic pipelines and there
-is a rich ecosystem of tools built on top of it that enable discovery.
-It has many uses in benchmarking and variant discovery, and its
-feature-rich output has enabled deep learning approaches to variant
-calling and filtering [@Ainscough2018-yp; @Anzar2019-vp]. In cancer
-genomics, it has been used for understanding pre-leukemic phenotypes and
-for detecting therapy-altering mutations from cell-free DNA
-[@Wyatt2016-si; @Xie2014-mm]. Viral researchers have applied it to
-understand diversity in Varicella Zoster Virus Encephalitis and to
-perform epidemiological surveillance in wastewater of SARS-CoV-2
-[@Depledge2018-mn; @Mondal2021-gw]. Those with RNA-sequencing data have
-found it useful for identifying allele-specific expression in cancer, or
-for enabling copy-number detection in single-cell RNA sequencing
-[@Cancer_Genome_Atlas_Research_Network2013-kd; @Muller2018-vy]. It also
-serves as core infrastructure that supports genomics pipelines of all
-sizes, from bespoke workflows produced by small research groups to the
-NCI’s Genomic Data Commons pipelines, where it has been run on tens of
-thousands of genomes [@Jensen2017-gp; @Griffith2015-wx;
-@Sandmann2018-hq]. 
- 
+`bam-readcount` provides fast and accurate genomic readcounts and
+associated metrics, which allow it to fill a key niche in many
+genomic workflows. It has been adopted as a lightweight variant caller,
+finding known mutations in pre-leukemic phenotypes and used for
+detecting therapy-altering mutations from cell-free DNA
+[@Wyatt2016-si; @Xie2014-mm]. Viral researchers have tracked nucleotide
+chnages across samples to understand diversity in Varicella Zoster
+Virus Encephalitis and to perform epidemiological surveillance in
+wastewater of SARS-CoV-2 [@Depledge2018-mn; @Mondal2021-gw]. Those
+with RNA-sequencing data have found it useful for identifying
+allele-specific expression in cancer, or for enabling copy-number
+detection in single-cell RNA sequencing by retrieving allele frequencies
+[@Cancer_Genome_Atlas_Research_Network2013-kd; @Muller2018-vy]. Its
+feature-rich output has also enabled deep learning approaches to variant
+calling and filtering [@Ainscough2018-yp; @Anzar2019-vp]. In these
+roles, and other related ones, `bam-readcount` has served as key
+infrastructure that supports groups of all sizes, from exploratory
+analyses to core facility pipelines to large multi-institution
+workflows [@Jensen2017-gp; @Griffith2015-wx; @Sandmann2018-hq]. In the
+NCI’s Genomic Data Commons pipelines alone, its use in variant filtering
+means that it has been run on tens of thousands of cancer genomes. 
+
 Looking forward, we anticipate that as machine learning makes deeper
 inroads into genomics, the ability to extract highly informative
 features from large cohorts in a rapid manner will continue to make
