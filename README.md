@@ -16,8 +16,8 @@ variant callers.
 For support, please [search
 `bam-readcount`](https://www.biostars.org/post/search/?query=bam-readcount) on
 [Biostars](https://www.biostars.org) as many of the most frequently asked
-questions about `bam-readcount` have been answered there.
-
+questions about `bam-readcount` have been answered there. For problems not addressed there, 
+please open an github issue or make a BioStar post.
 
 Installation
 ------------
@@ -135,3 +135,7 @@ With the `-p` option, each output line will have a set of `{}`-delimited
 results, one for each library:
 
     chr	position	reference_base	depth	library_1_name	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}   ...   library_N_name	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}    
+
+Contributing
+------
+We welcome contributions! See [Contributing](https://github.com/genome/bam-readcount/blob/master/CONTRIBUTING.md) for more details
