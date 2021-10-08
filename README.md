@@ -29,7 +29,9 @@ on [DockerHub](https://hub.docker.com/r/mgibio/bam-readcount)
 
     docker pull mgibio/bam-readcount
 
-For details see [docker/README.md](docker/README.md). 
+For details see the 
+[`docker-bam-readcount`](https://github.com/genome/docker-bam-readcount)
+repository. 
 
 
 ### Build
