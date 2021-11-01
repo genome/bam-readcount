@@ -14,7 +14,7 @@ are also useful as input for variant detection tools and for resolving ambiguity
 variant callers.
 
 Contents
-========
+---------
  * [Installation](#installation)
  * [Usage](#usage)
  * [Support](#support)
