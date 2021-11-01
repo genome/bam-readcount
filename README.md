@@ -13,11 +13,13 @@ Originally designed to help filter genomic mutation calls, the metrics `bam-read
 are also useful as input for variant detection tools and for resolving ambiguity between
 variant callers.
 
-For support, please [search
-`bam-readcount`](https://www.biostars.org/post/search/?query=bam-readcount) on
-[Biostars](https://www.biostars.org) as many of the most frequently asked
-questions about `bam-readcount` have been answered there. For problems not addressed there, 
-please open an github issue or make a BioStar post.
+Contents
+========
+ * [Installation](#installation)
+ * [Usage](#usage)
+ * [Support](#support)
+ * [Contributing](#contributing)
+
 
 Installation
 ------------
@@ -93,14 +95,16 @@ header, one region per line:
 
 ### CRAM support
 
-`bam-readcount` now supports CRAM files as input. 
-
-If a reference is specified with `-f`, it will override whatever is in
-the CRAM header.
-
-Otherwise, the reference(s) encoded in the CRAM header or a lookup by
+When using CRAM files as input, if a reference is specified with `-f`, it will override whatever is in
+the CRAM header. Otherwise, the reference(s) encoded in the CRAM header or a lookup by
 MD5 at ENA will be used.
 
+### Wrappers/Parsers
+
+Add bam-readcount counts to VCF
+ - [VAtools](https://github.com/griffithlab/VAtools/blob/master/vatools/vcf_readcount_annotator.py) allows you to add read-counts to VCF from modern variant callers. [Additional details](https://vatools.readthedocs.io/en/latest/vcf_readcount_annotator.html)
+Create csv file
+ - [brc-parser](https://github.com/sridhar0605/brc-parser) parser to convert bam-readcount output to comma seperated long format file.
 
 Output
 ------
@@ -137,6 +141,16 @@ With the `-p` option, each output line will have a set of `{}`-delimited
 results, one for each library:
 
     chr	position	reference_base	depth	library_1_name	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}   ...   library_N_name	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}    
+
+
+Support
+-----
+For support, please [search
+`bam-readcount`](https://www.biostars.org/post/search/?query=bam-readcount) on
+[Biostars](https://www.biostars.org) as many of the most frequently asked
+questions about `bam-readcount` have been answered there. For problems not addressed there, 
+please open an github issue or make a BioStar post.
+
 
 Contributing
 ------
