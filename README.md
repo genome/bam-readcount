@@ -146,7 +146,7 @@ results, one for each library:
 
 Tutorial
 -----
-For those who learn best by example, a [brief tutorial is available here](https://github.com/genome/bam-readcount/tree/master/tutorial)
+For those who learn best by example, a [brief tutorial is available here](https://github.com/genome/bam-readcount/tree/master/tutorial) that uses bam-readcount to identify the Omicron SARS-CoV-2 variant of concern from raw sequence data.
 
 
 Support
