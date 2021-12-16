@@ -109,7 +109,7 @@ files is somewhat slower than BAMs with comparable amounts of data, due
 to the increased CPU usage for decompression, but as depth increases,
 retrieval from disk becomes the bottleneck and operations on CRAMs
 exceed the speed of BAM. In our testing, on a fast SSD tier of networked
-disk, this transition occurs at a depth of about 180x. The problem is
+disks, this transition occurs at a depth of about 180x. The problem is
 also embarrassingly parallel, so assuming adequate disk I/O, a roughly
 linear increase in speed can be achieved with a scatter/gather approach. 
 
@@ -127,7 +127,7 @@ genomic workflows. It has been adopted as a lightweight variant caller,
 finding known mutations in pre-leukemic phenotypes and used for
 detecting therapy-altering mutations from cell-free DNA
 [@Wyatt2016-si; @Xie2014-mm]. Viral researchers have tracked nucleotide
-chnages across samples to understand diversity in Varicella Zoster
+changes across samples to understand diversity in Varicella Zoster
 Virus Encephalitis and to perform epidemiological surveillance in
 wastewater of SARS-CoV-2 [@Depledge2018-mn; @Mondal2021-gw]. Those
 with RNA-sequencing data have found it useful for identifying
