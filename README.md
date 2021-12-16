@@ -17,6 +17,7 @@ Contents
 ---------
  * [Installation](#installation)
  * [Usage](#usage)
+ * [Tutorial](#tutorial)
  * [Support](#support)
  * [Contributing](#contributing)
 
@@ -141,6 +142,11 @@ With the `-p` option, each output line will have a set of `{}`-delimited
 results, one for each library:
 
     chr	position	reference_base	depth	library_1_name	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}   ...   library_N_name	{	base:count:avg_mapping_quality:avg_basequality:avg_se_mapping_quality:num_plus_strand:num_minus_strand:avg_pos_as_fraction:avg_num_mismatches_as_fraction:avg_sum_mismatch_qualities:num_q2_containing_reads:avg_distance_to_q2_start_in_q2_reads:avg_clipped_length:avg_distance_to_effective_3p_end	}    
+
+
+Tutorial
+-----
+For those who learn best by example, a [brief tutorial is available here](https://github.com/genome/bam-readcount/tree/master/tutorial)
 
 
 Support
