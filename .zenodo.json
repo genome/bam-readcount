@@ -1,0 +1,58 @@
+{
+  "creators": [
+    {
+      "name": "Ajay Khanna^[co-first author]",
+      "affiliation": "Division of Oncology, Department of Internal Medicine, Washington University School of Medicine, St. Louis, MO"
+    },
+    {
+      "name": "David E. Larson^[co-first author]",
+      "affiliation": "1. McDonnell Genome Institute, Washington University School of Medicine, St. Louis, MO, 2. Current Affiliation: Benson Hill, Inc. St. Louis, MO"
+    },
+    {
+      "name": "Sridhar Nonavinkere Srivatsan",
+      "affiliation": "Division of Oncology, Department of Internal Medicine, Washington University School of Medicine, St. Louis, MO"
+    },
+    {
+      "name": "Matthew Mosior",
+      "affiliation": "1. Division of Oncology, Department of Internal Medicine, Washington University School of Medicine, St. Louis, MO, 2. Moffitt Cancer Center, Tampa, FL"
+    },
+    {
+      "name": "Travis E. Abbott",
+      "affiliation": "1. McDonnell Genome Institute, Washington University School of Medicine, St. Louis, MO, 2. Google, Inc. Mountain View, CA"
+    },
+    {
+      "name": "Susanna Kiwala",
+      "affiliation": "McDonnell Genome Institute, Washington University School of Medicine, St. Louis, MO"
+    },
+    {
+      "name": "Timothy J. Ley",
+      "affiliation": "1. Division of Oncology, Department of Internal Medicine, Washington University School of Medicine, St. Louis, MO, 2. Siteman Cancer Center, Washington University School of Medicine, St. Louis, MO"
+    },
+    {
+      "name": "Eric J. Duncavage",
+      "affiliation": "Department of Pathology, Washington University School of Medicine, St. Louis, MO"
+    },
+    {
+      "name": "Matthew J. Walter",
+      "affiliation": "1. Division of Oncology, Department of Internal Medicine, Washington University School of Medicine, St. Louis, MO, 2. Siteman Cancer Center, Washington University School of Medicine, St. Louis, MO"
+    },
+    {
+      "name": "Jason R. Walker",
+      "affiliation": "McDonnell Genome Institute, Washington University School of Medicine, St. Louis, MO"
+    },
+    {
+      "name": "Obi L. Griffith",
+      "affiliation": "1. Division of Oncology, Department of Internal Medicine, Washington University School of Medicine, St. Louis, MO, 2.McDonnell Genome Institute, Washington University School of Medicine, St. Louis, MO, 3. Siteman Cancer Center, Washington University School of Medicine, St. Louis, MO, 4.Department of Genetics, Washington University School of Medicine, St. Louis, MO"
+    },
+    {
+      "name": "Malachi Griffith",
+      "affiliation": "1. Division of Oncology, Department of Internal Medicine, Washington University School of Medicine, St. Louis, MO, 2.McDonnell Genome Institute, Washington University School of Medicine, St. Louis, MO, 3. Siteman Cancer Center, Washington University School of Medicine, St. Louis, MO, 4.Department of Genetics, Washington University School of Medicine, St. Louis, MO"
+    },
+    {
+      "name": "Christopher A. Miller^[corresponding author]",
+      "affiliation": "1. Division of Oncology, Department of Internal Medicine, Washington University School of Medicine, St. Louis, MO, 2. Siteman Cancer Center, Washington University School of Medicine, St. Louis, MO"
+    }
+  ],
+   
+  "licence": "MIT"
+}
