@@ -59,7 +59,7 @@ Run with no arguments for command-line help:
 
     $ bam-readcount
 
-    Usage: bam-readcount [OPTIONS] <bam_file> [region]
+    Usage: bam-readcount [OPTIONS] <bam_file|cram_file> [region]
     Generate metrics for bam_file at single nucleotide positions.
     Example: bam-readcount -f ref.fa some.bam
 

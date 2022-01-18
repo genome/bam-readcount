@@ -431,7 +431,7 @@ int main(int argc, char *argv[])
     fetch_data_t *f = (fetch_data_t*)calloc(1, sizeof(pileup_data_t));
     d.tid = -1, d.min_bq = 0, d.max_cnt = 10000000;
 
-    po::options_description desc("Usage: bam-readcount [OPTIONS] <bam_file>|<cram_file> [region]\nGenerate metrics for bam_file at single nucleotide positions.\nExample: bam-readcount -f ref.fa some.bam|some.cram\n\nAvailable options");
+    po::options_description desc("Usage: bam-readcount [OPTIONS] <bam_file|cram_file> [region]\nGenerate metrics for bam_file at single nucleotide positions.\nExample: bam-readcount -f ref.fa some.bam|some.cram\n\nAvailable options");
     desc.add_options()
         ("help,h", "produce this message")
         ("version,v", "output the version number")
@@ -478,7 +478,7 @@ int main(int argc, char *argv[])
     /*
     if (argc - optind == 0) {
         fprintf(stderr, "\n");
-        fprintf(stderr, "Usage: bam-readcount <bam_file>|<cram_file> [region]\n");
+        fprintf(stderr, "Usage: bam-readcount <bam_file|cram_file> [region]\n");
         fprintf(stderr, "        -q INT    filtering reads with mapping quality less than INT [%d]\n", d.min_mapq);
         fprintf(stderr, "        -b INT    don't include reads where the base quality is less than INT [%d]\n", d.min_bq);
         fprintf(stderr, "        -d INT    max depth to avoid excessive memory usage [%d]\n", d.max_cnt);
