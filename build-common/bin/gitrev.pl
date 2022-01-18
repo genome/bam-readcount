@@ -24,7 +24,7 @@ sub is_dirty {
 }
 
 sub is_tagged {
-    my $status = git("describe --always --dirty --long");
+    my $status = git("describe --always --dirty --long --tags");
     return 0 if $status =~ /-dirty/;
     if ($status =~ /^.*-([0-9]+)-g[^-]+$/) {
         return $1 == 0;
@@ -34,13 +34,13 @@ sub is_tagged {
 
 sub tagged_version {
     my $rev;
-    eval { $rev = git("describe --long --match $vtag"); };
+    eval { $rev = git("describe --long --tags --match $vtag"); };
     return unless !$@ and $rev ne "";
     return $rev;
 }
 
 sub untagged_version {
-    my $rev = git("describe --always");
+    my $rev = git("describe --always --tags");
     return $rev;
 }
 
