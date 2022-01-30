@@ -8,7 +8,8 @@ bam-readcount
 ![Docker Pulls](https://img.shields.io/docker/pulls/mgibio/bam-readcount?style=plastic)
 ![GitHub](https://img.shields.io/github/license/genome/bam-readcount)  
 Paper for bam-reacound can be found [here](https://doi.org/10.21105/joss.03722)  
-Please cite it if you found bam-readcount useful for your research.
+Please cite it if you found bam-readcount useful for your research.  
+Khanna et al., (2022). Bam-readcount - rapid generation of basepair-resolution sequence metrics. Journal of Open Source Software, 7(69), 3722, https://doi.org/10.21105/joss.03722  
 
 
 `bam-readcount` is a utility that runs on a `BAM` or `CRAM` file and generates low-level information about
