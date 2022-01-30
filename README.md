@@ -7,7 +7,7 @@ bam-readcount
 ![coverage](https://coveralls.io/repos/seqfu/bam-readcount/badge.svg?branch=samtools-1.10&service=github)
 ![Docker Pulls](https://img.shields.io/docker/pulls/mgibio/bam-readcount?style=plastic)
 ![GitHub](https://img.shields.io/github/license/genome/bam-readcount)  
-Paper for bam-reacound can be found [here](https://doi.org/10.21105/joss.03722)  
+Paper for bam-readcount can be found [here](https://doi.org/10.21105/joss.03722)  
 Please cite it if you found bam-readcount useful for your research.  
 Khanna et al., (2022). Bam-readcount - rapid generation of basepair-resolution sequence metrics. Journal of Open Source Software, 7(69), 3722, https://doi.org/10.21105/joss.03722  
 
