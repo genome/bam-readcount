@@ -1,7 +1,7 @@
 bam-readcount
 =============
 
-![DOI](https://joss.theoj.org/papers/10.21105/joss.03722/status.svg)](https://doi.org/10.21105/joss.03722)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.03722/status.svg)](https://doi.org/10.21105/joss.03722)  
 ![latest release](https://img.shields.io/github/v/release/genome/bam-readcount)
 ![tests](https://github.com/seqfu/bam-readcount/actions/workflows/tests.yml/badge.svg?branch=samtools-1.10)
 ![coverage](https://coveralls.io/repos/seqfu/bam-readcount/badge.svg?branch=samtools-1.10&service=github)
