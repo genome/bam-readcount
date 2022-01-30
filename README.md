@@ -1,8 +1,15 @@
 bam-readcount
 =============
 
+![DOI](https://joss.theoj.org/papers/10.21105/joss.03722/status.svg)](https://doi.org/10.21105/joss.03722)
+![latest release](https://img.shields.io/github/v/release/genome/bam-readcount)
 ![tests](https://github.com/seqfu/bam-readcount/actions/workflows/tests.yml/badge.svg?branch=samtools-1.10)
 ![coverage](https://coveralls.io/repos/seqfu/bam-readcount/badge.svg?branch=samtools-1.10&service=github)
+![Docker Pulls](https://img.shields.io/docker/pulls/mgibio/bam-readcount?style=plastic)
+![GitHub](https://img.shields.io/github/license/genome/bam-readcount)  
+Paper for bam-reacound can be found [here](https://doi.org/10.21105/joss.03722)  
+Please cite it if you found bam-readcount useful for your research.
+
 
 `bam-readcount` is a utility that runs on a `BAM` or `CRAM` file and generates low-level information about
 sequencing data at specific nucleotide positions. Its outputs include observed bases,
