@@ -18,6 +18,10 @@ Originally designed to help filter genomic mutation calls, the metrics `bam-read
 are also useful as input for variant detection tools and for resolving ambiguity between
 variant callers.
 
+If you find `bam-readcount` useful in your work, please cite our [paper](https://doi.org/10.21105/joss.03722):
+
+> Khanna et al., (2022). Bam-readcount - rapid generation of basepair-resolution sequence metrics. _Journal of Open Source Software_, 7(69), 3722. https://doi.org/10.21105/joss.03722
+
 Contents
 ---------
  * [Installation](#installation)
@@ -25,10 +29,6 @@ Contents
  * [Tutorial](#tutorial)
  * [Support](#support)
  * [Contributing](#contributing)
-
-If you find `bam-readcount` useful in your work, please cite our [paper](https://doi.org/10.21105/joss.03722):
-
-> Khanna et al., (2022). Bam-readcount - rapid generation of basepair-resolution sequence metrics. _Journal of Open Source Software_, 7(69), 3722. https://doi.org/10.21105/joss.03722
 
 
 Installation
