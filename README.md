@@ -1,8 +1,13 @@
 bam-readcount
 =============
 
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.03722/status.svg)](https://doi.org/10.21105/joss.03722)
+![latest release](https://img.shields.io/github/v/release/genome/bam-readcount)
 ![tests](https://github.com/seqfu/bam-readcount/actions/workflows/tests.yml/badge.svg?branch=samtools-1.10)
 ![coverage](https://coveralls.io/repos/seqfu/bam-readcount/badge.svg?branch=samtools-1.10&service=github)
+![Docker Pulls](https://img.shields.io/docker/pulls/mgibio/bam-readcount?style=plastic)
+![GitHub](https://img.shields.io/github/license/genome/bam-readcount)  
+
 
 `bam-readcount` is a utility that runs on a `BAM` or `CRAM` file and generates low-level information about
 sequencing data at specific nucleotide positions. Its outputs include observed bases,
@@ -12,6 +17,10 @@ mismatch counts, and position within the reads. (see "Output" section below)
 Originally designed to help filter genomic mutation calls, the metrics `bam-readcount` outputs 
 are also useful as input for variant detection tools and for resolving ambiguity between
 variant callers.
+
+If you find `bam-readcount` useful in your work, please cite our [paper](https://doi.org/10.21105/joss.03722):
+
+> Khanna et al., (2022). Bam-readcount - rapid generation of basepair-resolution sequence metrics. _Journal of Open Source Software_, 7(69), 3722. https://doi.org/10.21105/joss.03722
 
 Contents
 ---------
