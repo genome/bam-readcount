@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ostream>
-#include <vector>
 #include "sam.h"
 
 class BasicStat {
@@ -22,8 +21,6 @@ class BasicStat {
         mutable unsigned int sum_of_clipped_lengths;
         mutable float sum_3p_distance;
         mutable unsigned int sum_base_qualities;
-        mutable std::vector<unsigned int> mapping_qualities;
-        mutable std::vector<float> distances_to_3p;
         bool is_indel;
 };
 

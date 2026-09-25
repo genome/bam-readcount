@@ -26,6 +26,7 @@
 #include <cmath>
 #include <map>
 #include <set>
+#include <vector>
 
 using namespace std;
 namespace po = boost::program_options;
@@ -536,6 +537,9 @@ int main(int argc, char *argv[])
             cerr << "Failed to open region list file: " << fn_pos << endl;
             return 1;
         }
+
+        // Reuse decompressed BAM blocks when nearby sites revisit the same data.
+        hts_set_cache_size(d.in->file, 16 * 1024 * 1024);
 
         // Load index
         hts_idx_t *idx;

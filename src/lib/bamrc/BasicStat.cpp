@@ -62,7 +62,6 @@ void BasicStat::process_read(bam_pileup1_t const* base) {
             sum_q2_distance += (float) std::abs(base->qpos - q2_val) / (float) base->b->core.l_qseq;
             num_q2_reads++;
         }
-        distances_to_3p.push_back( (float) std::abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq);
         sum_3p_distance += (float) std::abs(base->qpos - three_prime_index) / (float) base->b->core.l_qseq;
 
         sum_of_clipped_lengths += clipped_length;
@@ -99,7 +98,6 @@ void BasicStat::process_read(bam_pileup1_t const* base) {
     else {
         WARN->warn(ReadWarnings::NM_TAG_MISSING, bam1_qname(base->b));
     }
-    mapping_qualities.push_back(static_cast<unsigned int>(base->b->core.qual));
     if(!is_indel) {
         sum_base_qualities += bam1_qual(base->b)[base->qpos];
     }
