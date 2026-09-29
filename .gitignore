@@ -10,6 +10,7 @@ _CPack_Packages/
 bin/
 build/
 build-zeno/
+build-*/
 cmake_install.cmake
 debian/postinst
 debian/prerm
@@ -20,3 +21,5 @@ debian/files
 debian/joinx*/
 debian/*.log
 debian/*.substvars
+.cache/
+__pycache__/

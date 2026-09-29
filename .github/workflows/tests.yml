@@ -1,17 +1,21 @@
 name: tests
-on: [push]
+on: [push, pull_request]
 jobs:
-  ubuntu-18_04:
-    runs-on: ubuntu-18.04
+  ubuntu-22_04:
+    runs-on: ubuntu-22.04
     steps:
-      - run: sudo apt-get install lcov
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - run: sudo apt-get update && sudo apt-get install -y lcov
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '2.7'
-          architecture: 'x64'
+          python-version: '3.11'
+      - name: Install test dependencies
+        run: pip install pytest pytest-xdist pysam
       - name: Build
+        # The vendored libraries must be built before bamrc, so build serially.
         run: mkdir build && (cd build && cmake -DCODE_COVERAGE=ON .. && make)
+      - name: Test
+        run: (cd build && ctest --output-on-failure)
       - name: Coverage
         run: (cd build && make codecoverage)
       - name: Coveralls

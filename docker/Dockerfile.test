@@ -1,0 +1,21 @@
+# Build and test environment for bam-readcount.
+#
+# Uses the same base as genome/docker-bam-readcount (ubuntu:focal) and adds
+# the tools needed by the pytest integration suite and fixture generation.
+#
+#   docker build -t bam-readcount-test -f docker/Dockerfile.test docker
+#   docker run --rm -v "$PWD":/src -w /src bam-readcount-test \
+#       sh -c 'mkdir -p build && cd build && cmake .. && make && ctest --output-on-failure'
+FROM ubuntu:focal
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBCONF_NONINTERACTIVE_SEEN=true
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential cmake git ca-certificates curl \
+        lcov valgrind \
+        python3 python3-pip python3-pytest python3-pytest-xdist python3-pysam \
+        samtools tabix bcftools && \
+    apt-get clean all && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
