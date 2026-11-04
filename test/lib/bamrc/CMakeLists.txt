@@ -10,4 +10,5 @@ add_unit_tests(TestBamrcLib
     TestReadWarnings.cpp 
     TestIndelQueue.cpp
     TestIndelQueueEntry.cpp
+    TestBasicStat.cpp
     )
